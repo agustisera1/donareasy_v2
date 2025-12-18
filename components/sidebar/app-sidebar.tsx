@@ -12,6 +12,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -60,6 +61,11 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarContent className="bg-background w-[12rem]">
+        <SidebarHeader className="p-4 pb-0">
+          <Link className="text-xl font-bold" href={"/"}>
+            Donareasy
+          </Link>
+        </SidebarHeader>
         <SidebarGroup>
           <SidebarGroupLabel>Navegación</SidebarGroupLabel>
 
