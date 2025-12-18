@@ -1,14 +1,18 @@
+"use client";
 import {
   Banknote,
   Building,
   ChartLine,
+  ChevronUp,
   HandCoins,
   ListChecks,
+  User2,
 } from "lucide-react";
 
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -18,7 +22,13 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
+import { DropdownMenuContent, DropdownMenuItem } from "../ui/dropdown-menu";
 import { Separator } from "../ui/separator";
+import { DropdownMenu, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { User } from "@supabase/supabase-js";
+import { useEffect, useState } from "react";
 
 const items = [
   {
@@ -56,8 +66,36 @@ const items = [
 ];
 
 export function AppSidebar() {
+  const [user, setUser] = useState<User | null>(null);
   const groupItems = items.filter((item) => item.children);
   const simpleItems = items.filter((item) => !item.children);
+  const router = useRouter();
+
+  const popAccountDialog = () => {
+    console.log("popAccountDialog");
+  };
+
+  const popEditDialog = () => {
+    console.log("popEditDialog");
+  };
+
+  const getUser = async () => {
+    const supabase = createClient();
+    const { data } = await supabase.auth.getClaims();
+    return data?.claims;
+  };
+
+  useEffect(() => {
+    getUser().then((user) => setUser(user as unknown as User));
+  }, []);
+
+  console.log(user);
+  const logout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/auth/login");
+  };
+
   return (
     <Sidebar>
       <SidebarContent className="bg-background w-[12rem]">
@@ -101,8 +139,42 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
-        <SidebarGroup></SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton className="max-w-[11rem]">
+                  <User2 /> <span className="truncate">{user?.email}</span>
+                  <ChevronUp className="ml-auto" />
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                side="top"
+                className="w-[--radix-popper-anchor-width]"
+              >
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={popAccountDialog}
+                >
+                  <span>Cuenta</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={popEditDialog}
+                >
+                  <span>Editar perfil</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer" onClick={logout}>
+                  <span>Cerrar Sesión</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }
