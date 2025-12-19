@@ -97,6 +97,7 @@ export function AppSidebar({
 
   useEffect(() => {
     const getUser = async () => {
+      if (mode !== "onboarding") return;
       setLoadingUser(true);
       const response = await fetch("/api/user");
       const { data: user } = await response.json();
@@ -104,7 +105,7 @@ export function AppSidebar({
       setLoadingUser(false);
     };
 
-    if (mode !== "onboarding") getUser();
+    getUser();
 
     return () => {
       setLoadingUser(false);

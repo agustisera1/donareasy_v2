@@ -13,6 +13,10 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { createClient } from "@/lib/supabase/client";
+import { createDonor } from "@/actions/user/create";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export const donorSchema = z.object({
   name: z
@@ -63,6 +67,10 @@ export type DonorFormSchema = z.infer<typeof donorSchema>;
 type DonorFormData = DonorFormSchema;
 
 export function DonorForm() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -71,13 +79,40 @@ export function DonorForm() {
     resolver: zodResolver(donorSchema),
   });
 
-  const onSubmit = (data: DonorFormData) => {
-    // Transformar DNI de string a número para enviar a la DB
-    const formData = {
-      ...data,
-      dni: parseInt(data.dni, 10),
-    };
-    console.log("form submitted", formData);
+  const onSubmit = async (data: DonorFormData) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const supabase = createClient();
+      const { data: user, error: userError } = await supabase.auth.getUser();
+
+      if (userError) {
+        throw new Error(`Error getting user: ${userError.message}`);
+      }
+
+      const userId = user.user?.id;
+      if (!userId) {
+        throw new Error("User ID not found");
+      }
+
+      // Llamar al server action
+      const result = await createDonor(data, userId);
+
+      if (!result.success) {
+        throw new Error(result.error || "Error al crear el donante");
+      }
+
+      // Redirigir al dashboard después de éxito
+      router.push("/dashboard");
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Ocurrió un error inesperado";
+      setError(errorMessage);
+      console.error("Error submitting form:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -90,6 +125,11 @@ export function DonorForm() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {error && (
+            <div className="p-3 text-sm text-red-500 bg-red-50 dark:bg-red-900/20 rounded-md border border-red-200 dark:border-red-800">
+              {error}
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="name">Nombre</Label>
@@ -175,8 +215,8 @@ export function DonorForm() {
             )}
           </div>
 
-          <Button type="submit" className="w-full">
-            Continuar
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Guardando..." : "Continuar"}
           </Button>
         </form>
       </CardContent>
