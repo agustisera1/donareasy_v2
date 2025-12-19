@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export type InstitutionData = unknown;
-export type DonnorData = {
-  role: "donnor";
+export type DonorData = {
+  role: "donor";
   email: string;
   username: string;
   created_at: string;
@@ -51,16 +51,16 @@ export async function GET() {
     if (!role) throw new Error("Role not found");
 
     let roleBasedData = {};
-    if (role === "donnor") {
-      const { data: donnorData, error: donnorError } = await supabase
-        .from("donnors")
+    if (role === "donor") {
+      const { data: donorData, error: donorError } = await supabase
+        .from("donors")
         .select("*")
         .eq("user_id", userId)
         .single();
 
-      if (donnorError) throw donnorError;
+      if (donorError) throw donorError;
       roleBasedData = {
-        ...donnorData,
+        ...donorData,
       };
     }
 

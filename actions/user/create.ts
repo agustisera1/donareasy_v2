@@ -6,7 +6,7 @@ export async function createUser() {
   return NextResponse.json({ success: true });
 }
 
-export async function createDonnor() {
+export async function createDonor() {
   // create user in supabase depending on the type of user
 
   return NextResponse.json({ success: true });

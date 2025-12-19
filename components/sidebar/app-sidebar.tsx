@@ -39,7 +39,7 @@ import {
 } from "../ui/drawer";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { DonnorData } from "@/app/api/user/route";
+import { DonorData } from "@/app/api/user/route";
 
 const items = [
   {
@@ -84,7 +84,7 @@ export function AppSidebar({
   const router = useRouter();
   const groupItems = items.filter((item) => item.children);
   const simpleItems = items.filter((item) => !item.children);
-  const [user, setUser] = useState<DonnorData | null>(null);
+  const [user, setUser] = useState<DonorData | null>(null);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [loadingUser, setLoadingUser] = useState(false);
@@ -104,13 +104,13 @@ export function AppSidebar({
       setLoadingUser(false);
     };
 
-    getUser();
+    if (mode !== "onboarding") getUser();
 
     return () => {
       setLoadingUser(false);
       setUser(null);
     };
-  }, []);
+  }, [mode]);
 
   const popAccountDialog = () => setProfileDialogOpen(true);
   const popEditDialog = () => setEditDialogOpen(true);
@@ -312,12 +312,14 @@ export function AppSidebar({
                 className="w-[--radix-popper-anchor-width]"
               >
                 <DropdownMenuItem
+                  disabled={mode === "onboarding"}
                   className="cursor-pointer"
                   onClick={popAccountDialog}
                 >
                   <span>Cuenta</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
+                  disabled={mode === "onboarding"}
                   className="cursor-pointer"
                   onClick={popEditDialog}
                 >

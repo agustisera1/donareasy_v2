@@ -8,7 +8,7 @@ export async function updateUser() {
   return NextResponse.json({ success: true });
 }
 
-export async function updateDonnor() {
+export async function update() {
   // update user in supabase
 
   return NextResponse.json({ success: true });
