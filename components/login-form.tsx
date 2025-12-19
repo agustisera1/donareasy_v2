@@ -37,9 +37,18 @@ export function LoginForm({
         email,
         password,
       });
+
       if (error) throw error;
       // Update this route to redirect to an authenticated route. The user already has an active session.
-      router.push("/dashboard");
+      const {
+        data: { onboarding_complete },
+      } = (await supabase
+        .from("users")
+        .select("onboarding_complete")
+        .eq("email", email)
+        .single()) as { data: { onboarding_complete: boolean } };
+      if (!!onboarding_complete) router.push("/dashboard");
+      else router.push("/onboarding");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {

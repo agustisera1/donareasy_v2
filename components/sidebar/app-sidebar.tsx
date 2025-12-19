@@ -6,6 +6,7 @@ import {
   ChevronUp,
   HandCoins,
   ListChecks,
+  Loader2,
   User2,
 } from "lucide-react";
 
@@ -27,11 +28,9 @@ import { Separator } from "../ui/separator";
 import { DropdownMenu, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { User } from "@supabase/supabase-js";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
   DrawerDescription,
   DrawerFooter,
@@ -40,17 +39,18 @@ import {
 } from "../ui/drawer";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { DonnorData } from "@/app/api/user/route";
 
 const items = [
-  {
-    title: "Instituciones",
-    url: `/dashboard/institutions`,
-    icon: Building,
-  },
   {
     title: "Campañas",
     url: `/dashboard/campaign`,
     icon: ListChecks,
+  },
+  {
+    title: "Instituciones",
+    url: `/dashboard/institutions`,
+    icon: Building,
   },
   {
     title: "Metricas",
@@ -76,13 +76,19 @@ const items = [
   },
 ];
 
-export function AppSidebar() {
-  const [user, setUser] = useState<User | null>(null);
+export function AppSidebar({
+  mode = "dashboard",
+}: {
+  mode?: "dashboard" | "onboarding";
+}) {
+  const router = useRouter();
   const groupItems = items.filter((item) => item.children);
   const simpleItems = items.filter((item) => !item.children);
+  const [user, setUser] = useState<DonnorData | null>(null);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const router = useRouter();
+  const [loadingUser, setLoadingUser] = useState(false);
+
   const logout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -91,14 +97,19 @@ export function AppSidebar() {
 
   useEffect(() => {
     const getUser = async () => {
-      const supabase = createClient();
-      const { data } = await supabase.auth.getClaims();
-      if (data?.claims) {
-        setUser(data.claims as unknown as User);
-      }
+      setLoadingUser(true);
+      const response = await fetch("/api/user");
+      const { data: user } = await response.json();
+      setUser(user);
+      setLoadingUser(false);
     };
 
     getUser();
+
+    return () => {
+      setLoadingUser(false);
+      setUser(null);
+    };
   }, []);
 
   const popAccountDialog = () => setProfileDialogOpen(true);
@@ -112,41 +123,46 @@ export function AppSidebar() {
             Donareasy
           </Link>
         </SidebarHeader>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navegación</SidebarGroupLabel>
 
-          {simpleItems.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild>
-                <Link href={item.url}>
-                  <item.icon />
-                  <span>{item.title}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarGroup>
+        {mode === "onboarding" ? null : (
+          <Fragment>
+            <SidebarGroup>
+              <SidebarGroupLabel>Navegación</SidebarGroupLabel>
 
-        <Separator />
-        {groupItems.map((item) => (
-          <SidebarGroup key={item.title}>
-            <SidebarGroupLabel>{item.title}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {item.children!.map((child) => (
-                  <SidebarMenuItem key={child.title}>
-                    <SidebarMenuButton asChild>
-                      <Link href={child.url}>
-                        <child.icon />
-                        <span>{child.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+              {simpleItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <Link href={item.url}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarGroup>
+
+            <Separator />
+            {groupItems.map((item) => (
+              <SidebarGroup key={item.title}>
+                <SidebarGroupLabel>{item.title}</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {item.children!.map((child) => (
+                      <SidebarMenuItem key={child.title}>
+                        <SidebarMenuButton asChild>
+                          <Link href={child.url}>
+                            <child.icon />
+                            <span>{child.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            ))}
+          </Fragment>
+        )}
       </SidebarContent>
 
       <SidebarFooter>
@@ -165,38 +181,67 @@ export function AppSidebar() {
 
             <div className="grid grid-cols-2 gap-2 p-4">
               <span className="font-bold">Nombre</span>
-              <Input type="text" placeholder="Nombre" value="Juan" />
+              <Input
+                type="text"
+                placeholder="Nombre"
+                value={user?.name}
+                onChange={() => {}}
+              />
 
               <span className="font-bold">Apellido</span>
-              <Input type="text" placeholder="Apellido" value="Perez" />
+              <Input
+                type="text"
+                placeholder="Apellido"
+                value={user?.lastname}
+                onChange={() => {}}
+              />
 
               <span className="font-bold">Contacto</span>
               <Input
                 type="text"
                 placeholder="Contacto"
-                value="+54 9 11 1234-5678"
+                value={user?.phone}
+                onChange={() => {}}
               />
 
               <span className="font-bold">Correo</span>
-              <Input type="email" placeholder="Correo" value={user?.email} />
+              <Input
+                type="email"
+                placeholder="Correo"
+                value={user?.email}
+                onChange={() => {}}
+              />
 
               <span className="font-bold">Provincia</span>
-              <Input type="text" placeholder="Provincia" value="Buenos Aires" />
+              <Input
+                type="text"
+                placeholder="Provincia"
+                value={user?.province}
+                onChange={() => {}}
+              />
 
               <span className="font-bold">Localidad</span>
               <Input
                 type="text"
                 placeholder="Localidad"
-                value="Capital Federal"
+                value={user?.city}
+                onChange={() => {}}
               />
             </div>
 
             <DrawerFooter>
-              <DrawerClose>
-                <Button variant="outline">Cancelar</Button>
-              </DrawerClose>
-
-              <Button variant="default">Guardar Cambios</Button>
+              <Button
+                variant="outline"
+                onClick={() => setEditDialogOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="default"
+                onClick={() => setEditDialogOpen(false)}
+              >
+                Guardar Cambios
+              </Button>
             </DrawerFooter>
           </DrawerContent>
         </Drawer>
@@ -214,28 +259,31 @@ export function AppSidebar() {
 
             <div className="grid grid-cols-2 gap-4 p-4">
               <span className="font-bold">Nombre</span>
-              <span>Juan</span>
+              <span>{user?.name}</span>
 
               <span className="font-bold">Apellido</span>
-              <span>Perez</span>
+              <span>{user?.lastname}</span>
 
               <span className="font-bold">Contacto</span>
-              <span>+54 9 11 1234-5678</span>
+              <span>{user?.phone}</span>
 
               <span className="font-bold">Correo</span>
               <span>{user?.email}</span>
 
               <span className="font-bold">Provincia</span>
-              <span>Buenos Aires</span>
+              <span>{user?.province}</span>
 
               <span className="font-bold">Localidad</span>
-              <span>Capital Federal</span>
+              <span>{user?.city}</span>
             </div>
 
             <DrawerFooter>
-              <DrawerClose>
-                <Button variant="default">Cerrar</Button>
-              </DrawerClose>
+              <Button
+                className="w-1/2 mx-auto"
+                onClick={() => setProfileDialogOpen(false)}
+              >
+                Cerrar
+              </Button>
             </DrawerFooter>
           </DrawerContent>
         </Drawer>
@@ -244,9 +292,19 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton className="max-w-[11rem]">
-                  <User2 /> <span className="truncate">{user?.email}</span>
-                  <ChevronUp className="ml-auto" />
+                <SidebarMenuButton
+                  disabled={!!loadingUser}
+                  className="max-w-[11rem]"
+                >
+                  {loadingUser ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <Fragment>
+                      <User2 />
+                      <span className="truncate">{user?.username}</span>
+                      <ChevronUp className="ml-auto" />
+                    </Fragment>
+                  )}
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent
