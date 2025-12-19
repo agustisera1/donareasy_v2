@@ -39,7 +39,7 @@ import {
 } from "../ui/drawer";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { DonorData } from "@/app/api/user/route";
+import { DonorData, InstitutionData } from "@/app/api/user/route";
 
 const items = [
   {
@@ -84,7 +84,7 @@ export function AppSidebar({
   const router = useRouter();
   const groupItems = items.filter((item) => item.children);
   const simpleItems = items.filter((item) => !item.children);
-  const [user, setUser] = useState<DonorData | null>(null);
+  const [user, setUser] = useState<DonorData | InstitutionData | null>(null);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [loadingUser, setLoadingUser] = useState(false);
@@ -97,7 +97,7 @@ export function AppSidebar({
 
   useEffect(() => {
     const getUser = async () => {
-      if (mode !== "onboarding") return;
+      if (mode === "onboarding") return;
       setLoadingUser(true);
       const response = await fetch("/api/user");
       const { data: user } = await response.json();
@@ -193,7 +193,7 @@ export function AppSidebar({
               <Input
                 type="text"
                 placeholder="Apellido"
-                value={user?.lastname}
+                value={user?.name}
                 onChange={() => {}}
               />
 
@@ -263,7 +263,7 @@ export function AppSidebar({
               <span>{user?.name}</span>
 
               <span className="font-bold">Apellido</span>
-              <span>{user?.lastname}</span>
+              <span>{user?.role === "donor" ? user?.lastname : ""}</span>
 
               <span className="font-bold">Contacto</span>
               <span>{user?.phone}</span>
@@ -302,7 +302,11 @@ export function AppSidebar({
                   ) : (
                     <Fragment>
                       <User2 />
-                      <span className="truncate">{user?.username}</span>
+                      <span className="truncate">
+                        {user?.role === "donor"
+                          ? user?.name + " " + user?.lastname
+                          : user?.name}
+                      </span>
                       <ChevronUp className="ml-auto" />
                     </Fragment>
                   )}
