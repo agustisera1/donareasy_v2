@@ -29,17 +29,9 @@ import { DropdownMenu, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Fragment, useEffect, useState } from "react";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from "../ui/drawer";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
 import { DonorData, InstitutionData } from "@/app/api/user/route";
+import { ProfileDrawer } from "./profile-drawer";
+import { EditDrawer } from "./edit-drawer";
 
 const items = [
   {
@@ -167,127 +159,17 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarFooter>
-        <Drawer
-          direction="right"
+        <EditDrawer
           open={editDialogOpen}
           onOpenChange={setEditDialogOpen}
-        >
-          <DrawerContent>
-            <DrawerHeader aria-describedby={undefined}>
-              <DrawerTitle>Editar perfil</DrawerTitle>
-              <DrawerDescription>
-                Editar los datos del Usuario
-              </DrawerDescription>
-            </DrawerHeader>
+          user={user}
+        />
 
-            <div className="grid grid-cols-2 gap-2 p-4">
-              <span className="font-bold">Nombre</span>
-              <Input
-                type="text"
-                placeholder="Nombre"
-                value={user?.name}
-                onChange={() => {}}
-              />
-
-              <span className="font-bold">Apellido</span>
-              <Input
-                type="text"
-                placeholder="Apellido"
-                value={user?.name}
-                onChange={() => {}}
-              />
-
-              <span className="font-bold">Contacto</span>
-              <Input
-                type="text"
-                placeholder="Contacto"
-                value={user?.phone}
-                onChange={() => {}}
-              />
-
-              <span className="font-bold">Correo</span>
-              <Input
-                type="email"
-                placeholder="Correo"
-                value={user?.email}
-                onChange={() => {}}
-              />
-
-              <span className="font-bold">Provincia</span>
-              <Input
-                type="text"
-                placeholder="Provincia"
-                value={user?.province}
-                onChange={() => {}}
-              />
-
-              <span className="font-bold">Localidad</span>
-              <Input
-                type="text"
-                placeholder="Localidad"
-                value={user?.city}
-                onChange={() => {}}
-              />
-            </div>
-
-            <DrawerFooter>
-              <Button
-                variant="outline"
-                onClick={() => setEditDialogOpen(false)}
-              >
-                Cancelar
-              </Button>
-              <Button
-                variant="default"
-                onClick={() => setEditDialogOpen(false)}
-              >
-                Guardar Cambios
-              </Button>
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer>
-
-        <Drawer
-          direction="right"
+        <ProfileDrawer
           open={profileDialogOpen}
           onOpenChange={setProfileDialogOpen}
-        >
-          <DrawerContent>
-            <DrawerHeader aria-describedby={undefined}>
-              <DrawerTitle>Cuenta</DrawerTitle>
-              <DrawerDescription>Datos del Usuario</DrawerDescription>
-            </DrawerHeader>
-
-            <div className="grid grid-cols-2 gap-4 p-4">
-              <span className="font-bold">Nombre</span>
-              <span>{user?.name}</span>
-
-              <span className="font-bold">Apellido</span>
-              <span>{user?.role === "donor" ? user?.lastname : ""}</span>
-
-              <span className="font-bold">Contacto</span>
-              <span>{user?.phone}</span>
-
-              <span className="font-bold">Correo</span>
-              <span>{user?.email}</span>
-
-              <span className="font-bold">Provincia</span>
-              <span>{user?.province}</span>
-
-              <span className="font-bold">Localidad</span>
-              <span>{user?.city}</span>
-            </div>
-
-            <DrawerFooter>
-              <Button
-                className="w-1/2 mx-auto"
-                onClick={() => setProfileDialogOpen(false)}
-              >
-                Cerrar
-              </Button>
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer>
+          user={user}
+        />
 
         <SidebarMenu>
           <SidebarMenuItem>

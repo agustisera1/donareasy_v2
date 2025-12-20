@@ -14,6 +14,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { createClient } from "@/lib/supabase/client";
+import { createInstitution } from "@/actions/user/create";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export const institutionSchema = z.object({
   name: z
@@ -90,6 +94,10 @@ export type InstitutionFormSchema = z.infer<typeof institutionSchema>;
 type InstitutionFormData = InstitutionFormSchema;
 
 export function InstitutionForm() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -98,8 +106,40 @@ export function InstitutionForm() {
     resolver: zodResolver(institutionSchema),
   });
 
-  const onSubmit = (data: InstitutionFormData) => {
-    console.log("form submitted", data);
+  const onSubmit = async (data: InstitutionFormData) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const supabase = createClient();
+      const { data: user, error: userError } = await supabase.auth.getUser();
+
+      if (userError) {
+        throw new Error(`Error getting user: ${userError.message}`);
+      }
+
+      const userId = user.user?.id;
+      if (!userId) {
+        throw new Error("User ID not found");
+      }
+
+      // Llamar al server action
+      const result = await createInstitution(data, userId);
+
+      if (!result.success) {
+        throw new Error(result.error || "Error al crear la institución");
+      }
+
+      // Redirigir al dashboard después de éxito
+      router.push("/dashboard");
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Ocurrió un error inesperado";
+      setError(errorMessage);
+      console.error("Error submitting form:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -112,6 +152,11 @@ export function InstitutionForm() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {error && (
+            <div className="p-3 text-sm text-red-500 bg-red-50 dark:bg-red-900/20 rounded-md border border-red-200 dark:border-red-800">
+              {error}
+            </div>
+          )}
           <div className="grid gap-2">
             <Label htmlFor="institution-name">Nombre de la Institución</Label>
             <Input
@@ -224,8 +269,8 @@ export function InstitutionForm() {
             )}
           </div>
 
-          <Button type="submit" className="w-full">
-            Continuar
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Guardando..." : "Continuar"}
           </Button>
         </form>
       </CardContent>
