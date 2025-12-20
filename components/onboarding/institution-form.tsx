@@ -2,7 +2,6 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,78 +17,10 @@ import { createClient } from "@/lib/supabase/client";
 import { createInstitution } from "@/actions/user/create";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-
-export const institutionSchema = z.object({
-  name: z
-    .string()
-    .min(3, "El nombre de la institución debe tener al menos 3 caracteres")
-    .max(200, "El nombre no puede exceder 200 caracteres"),
-  director: z
-    .string()
-    .min(2, "El nombre del director debe tener al menos 2 caracteres")
-    .max(100, "El nombre del director no puede exceder 100 caracteres"),
-  address: z
-    .string()
-    .min(5, "La dirección debe tener al menos 5 caracteres")
-    .max(200, "La dirección no puede exceder 200 caracteres"),
-  province: z
-    .string()
-    .min(2, "La provincia es requerida")
-    .max(100, "La provincia no puede exceder 100 caracteres"),
-  city: z
-    .string()
-    .min(2, "La ciudad es requerida")
-    .max(100, "La ciudad no puede exceder 100 caracteres"),
-  phone: z
-    .string()
-    .min(10, "El teléfono debe tener al menos 10 caracteres")
-    .max(20, "El teléfono no puede exceder 20 caracteres")
-    .regex(
-      /^[\d\s\+\-\(\)]+$/,
-      "El teléfono solo puede contener números, espacios, +, - y paréntesis"
-    ),
-  foundation_date: z
-    .string()
-    .min(1, "La fecha de fundación es requerida")
-    .refine(
-      (date) => {
-        const dateObj = new Date(date);
-        return !isNaN(dateObj.getTime()) && dateObj <= new Date();
-      },
-      {
-        message:
-          "La fecha de fundación debe ser una fecha válida y no puede ser futura",
-      }
-    ),
-  bank: z
-    .string()
-    .min(1, "El CBU o alias es requerido")
-    .max(50, "El CBU o alias no puede exceder 50 caracteres")
-    .refine(
-      (val) => {
-        // CBU: exactamente 22 dígitos
-        if (/^\d{22}$/.test(val)) {
-          return true;
-        }
-        // Alias: 6-20 caracteres, puede contener letras, números y puntos
-        if (
-          /^[A-Za-z0-9.]+$/.test(val) &&
-          val.length >= 6 &&
-          val.length <= 20
-        ) {
-          return true;
-        }
-        return false;
-      },
-      {
-        message:
-          "Debe ser un CBU (22 dígitos) o un alias bancario (6-20 caracteres, letras, números y puntos)",
-      }
-    ),
-  lore: z.string().max(2000, "La descripción no puede exceder 2000 caracteres"),
-});
-
-export type InstitutionFormSchema = z.infer<typeof institutionSchema>;
+import {
+  institutionSchema,
+  type InstitutionFormSchema,
+} from "@/lib/validations";
 
 type InstitutionFormData = InstitutionFormSchema;
 

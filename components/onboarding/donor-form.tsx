@@ -2,7 +2,6 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,52 +16,7 @@ import { createClient } from "@/lib/supabase/client";
 import { createDonor } from "@/actions/user/create";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-
-export const donorSchema = z.object({
-  name: z
-    .string()
-    .min(2, "El nombre debe tener al menos 2 caracteres")
-    .max(100, "El nombre no puede exceder 100 caracteres"),
-  lastname: z
-    .string()
-    .min(2, "El apellido debe tener al menos 2 caracteres")
-    .max(100, "El apellido no puede exceder 100 caracteres"),
-  dni: z
-    .string()
-    .min(1, "El DNI es requerido")
-    .regex(/^\d+$/, "El DNI solo puede contener números")
-    .refine(
-      (val) => {
-        const num = parseInt(val, 10);
-        return num >= 1000000 && num <= 99999999;
-      },
-      {
-        message: "El DNI debe tener entre 7 y 8 dígitos",
-      }
-    ),
-  address: z
-    .string()
-    .min(5, "La dirección debe tener al menos 5 caracteres")
-    .max(200, "La dirección no puede exceder 200 caracteres"),
-  province: z
-    .string()
-    .min(2, "La provincia es requerida")
-    .max(100, "La provincia no puede exceder 100 caracteres"),
-  city: z
-    .string()
-    .min(2, "La ciudad es requerida")
-    .max(100, "La ciudad no puede exceder 100 caracteres"),
-  phone: z
-    .string()
-    .min(10, "El teléfono debe tener al menos 10 caracteres")
-    .max(20, "El teléfono no puede exceder 20 caracteres")
-    .regex(
-      /^[\d\s\+\-\(\)]+$/,
-      "El teléfono solo puede contener números, espacios, +, - y paréntesis"
-    ),
-});
-
-export type DonorFormSchema = z.infer<typeof donorSchema>;
+import { donorSchema, type DonorFormSchema } from "@/lib/validations";
 
 type DonorFormData = DonorFormSchema;
 

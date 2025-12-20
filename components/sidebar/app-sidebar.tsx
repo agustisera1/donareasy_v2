@@ -28,10 +28,10 @@ import { Separator } from "../ui/separator";
 import { DropdownMenu, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Fragment, useEffect, useState } from "react";
-import { DonorData, InstitutionData } from "@/app/api/user/route";
+import { Fragment, useState } from "react";
 import { ProfileDrawer } from "./profile-drawer";
 import { EditDrawer } from "./edit-drawer";
+import { useUser } from "@/hooks/use-user";
 
 const items = [
   {
@@ -76,34 +76,23 @@ export function AppSidebar({
   const router = useRouter();
   const groupItems = items.filter((item) => item.children);
   const simpleItems = items.filter((item) => !item.children);
-  const [user, setUser] = useState<DonorData | InstitutionData | null>(null);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [loadingUser, setLoadingUser] = useState(false);
+
+  // Usar el hook useUser para manejar el estado del usuario
+  const {
+    user,
+    loading: loadingUser,
+    refetch,
+  } = useUser({
+    enabled: mode !== "onboarding",
+  });
 
   const logout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/auth/login");
   };
-
-  useEffect(() => {
-    const getUser = async () => {
-      if (mode === "onboarding") return;
-      setLoadingUser(true);
-      const response = await fetch("/api/user");
-      const { data: user } = await response.json();
-      setUser(user);
-      setLoadingUser(false);
-    };
-
-    getUser();
-
-    return () => {
-      setLoadingUser(false);
-      setUser(null);
-    };
-  }, [mode]);
 
   const popAccountDialog = () => setProfileDialogOpen(true);
   const popEditDialog = () => setEditDialogOpen(true);
@@ -163,6 +152,7 @@ export function AppSidebar({
           open={editDialogOpen}
           onOpenChange={setEditDialogOpen}
           user={user}
+          onUpdateSuccess={refetch}
         />
 
         <ProfileDrawer

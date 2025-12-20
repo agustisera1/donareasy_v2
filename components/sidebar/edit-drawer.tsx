@@ -2,7 +2,6 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { useEffect } from "react";
 import {
   Drawer,
@@ -17,123 +16,38 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DonorData, InstitutionData } from "@/app/api/user/route";
-import { toast } from "sonner";
+import {
+  donorEditSchema,
+  institutionEditSchema,
+  type DonorEditFormSchema,
+  type InstitutionEditFormSchema,
+} from "@/lib/validations";
+import { useUpdateUser } from "@/hooks/use-update-user";
 
-// Schema para donor - usando los mismos validadores que el formulario de onboarding
-const donorEditSchema = z.object({
-  name: z
-    .string()
-    .min(2, "El nombre debe tener al menos 2 caracteres")
-    .max(100, "El nombre no puede exceder 100 caracteres"),
-  lastname: z
-    .string()
-    .min(2, "El apellido debe tener al menos 2 caracteres")
-    .max(100, "El apellido no puede exceder 100 caracteres"),
-  dni: z
-    .string()
-    .min(1, "El DNI es requerido")
-    .regex(/^\d+$/, "El DNI solo puede contener números")
-    .refine(
-      (val) => {
-        const num = parseInt(val, 10);
-        return num >= 1000000 && num <= 99999999;
-      },
-      {
-        message: "El DNI debe tener entre 7 y 8 dígitos",
-      }
-    ),
-  phone: z
-    .string()
-    .min(10, "El teléfono debe tener al menos 10 caracteres")
-    .max(20, "El teléfono no puede exceder 20 caracteres")
-    .regex(
-      /^[\d\s\+\-\(\)]+$/,
-      "El teléfono solo puede contener números, espacios, +, - y paréntesis"
-    ),
-  address: z
-    .string()
-    .min(5, "La dirección debe tener al menos 5 caracteres")
-    .max(200, "La dirección no puede exceder 200 caracteres"),
-  province: z
-    .string()
-    .min(2, "La provincia es requerida")
-    .max(100, "La provincia no puede exceder 100 caracteres"),
-  city: z
-    .string()
-    .min(2, "La ciudad es requerida")
-    .max(100, "La ciudad no puede exceder 100 caracteres"),
-});
-
-// Schema para institution - usando los mismos validadores que el formulario de onboarding
-const institutionEditSchema = z.object({
-  director: z
-    .string()
-    .min(2, "El nombre del director debe tener al menos 2 caracteres")
-    .max(100, "El nombre del director no puede exceder 100 caracteres"),
-  phone: z
-    .string()
-    .min(10, "El teléfono debe tener al menos 10 caracteres")
-    .max(20, "El teléfono no puede exceder 20 caracteres")
-    .regex(
-      /^[\d\s\+\-\(\)]+$/,
-      "El teléfono solo puede contener números, espacios, +, - y paréntesis"
-    ),
-  address: z
-    .string()
-    .min(5, "La dirección debe tener al menos 5 caracteres")
-    .max(200, "La dirección no puede exceder 200 caracteres"),
-  province: z
-    .string()
-    .min(2, "La provincia es requerida")
-    .max(100, "La provincia no puede exceder 100 caracteres"),
-  city: z
-    .string()
-    .min(2, "La ciudad es requerida")
-    .max(100, "La ciudad no puede exceder 100 caracteres"),
-  bank: z
-    .string()
-    .min(1, "El CBU o alias es requerido")
-    .max(50, "El CBU o alias no puede exceder 50 caracteres")
-    .refine(
-      (val) => {
-        // CBU: exactamente 22 dígitos
-        if (/^\d{22}$/.test(val)) {
-          return true;
-        }
-        // Alias: 6-20 caracteres, puede contener letras, números y puntos
-        if (
-          /^[A-Za-z0-9.]+$/.test(val) &&
-          val.length >= 6 &&
-          val.length <= 20
-        ) {
-          return true;
-        }
-        return false;
-      },
-      {
-        message:
-          "Debe ser un CBU (22 dígitos) o un alias bancario (6-20 caracteres, letras, números y puntos)",
-      }
-    ),
-  lore: z.string().max(2000, "La descripción no puede exceder 2000 caracteres"),
-});
-
-type DonorEditFormData = z.infer<typeof donorEditSchema>;
-type InstitutionEditFormData = z.infer<typeof institutionEditSchema>;
+type DonorEditFormData = DonorEditFormSchema;
+type InstitutionEditFormData = InstitutionEditFormSchema;
 
 interface EditDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user: DonorData | InstitutionData | null;
+  onUpdateSuccess?: () => void; // Callback opcional para refrescar datos después de actualizar
 }
 
-export function EditDrawer({ open, onOpenChange, user }: EditDrawerProps) {
+export function EditDrawer({
+  open,
+  onOpenChange,
+  user,
+  onUpdateSuccess,
+}: EditDrawerProps) {
   const isDonor = user?.role === "donor";
   const isInstitution = user?.role === "institution";
+  const { updateUser, isLoading } = useUpdateUser();
 
   // Form para donor
   const donorForm = useForm<DonorEditFormData>({
     resolver: zodResolver(donorEditSchema),
+    mode: "onChange", // Validar en tiempo real
     defaultValues: {
       name: "",
       lastname: "",
@@ -148,6 +62,7 @@ export function EditDrawer({ open, onOpenChange, user }: EditDrawerProps) {
   // Form para institution
   const institutionForm = useForm<InstitutionEditFormData>({
     resolver: zodResolver(institutionEditSchema),
+    mode: "onChange", // Validar en tiempo real
     defaultValues: {
       director: "",
       phone: "",
@@ -186,12 +101,14 @@ export function EditDrawer({ open, onOpenChange, user }: EditDrawerProps) {
     }
   }, [open, user, isDonor, isInstitution, donorForm, institutionForm]);
 
-  const onSubmit = (data: DonorEditFormData | InstitutionEditFormData) => {
-    console.log("form submitted", data);
-    toast("Datos actualizados!", {
-      description: "Los cambios se han guardado correctamente.",
-    });
-    onOpenChange(false);
+  const onSubmit = async (
+    data: DonorEditFormData | InstitutionEditFormData
+  ) => {
+    const success = await updateUser(data, user);
+    if (success) {
+      onOpenChange(false);
+      onUpdateSuccess?.(); // Refrescar datos después de actualizar exitosamente
+    }
   };
 
   return (
@@ -209,6 +126,7 @@ export function EditDrawer({ open, onOpenChange, user }: EditDrawerProps) {
                 <Label htmlFor="name">Nombre</Label>
                 <Input
                   id="name"
+                  disabled
                   {...donorForm.register("name")}
                   placeholder="Nombre"
                 />
@@ -223,6 +141,7 @@ export function EditDrawer({ open, onOpenChange, user }: EditDrawerProps) {
                 <Label htmlFor="lastname">Apellido</Label>
                 <Input
                   id="lastname"
+                  disabled
                   {...donorForm.register("lastname")}
                   placeholder="Apellido"
                 />
@@ -236,6 +155,7 @@ export function EditDrawer({ open, onOpenChange, user }: EditDrawerProps) {
               <div className="grid gap-2">
                 <Label htmlFor="dni">DNI</Label>
                 <Input
+                  disabled
                   id="dni"
                   type="text"
                   inputMode="numeric"
@@ -318,8 +238,9 @@ export function EditDrawer({ open, onOpenChange, user }: EditDrawerProps) {
                 type="button"
                 variant="default"
                 onClick={donorForm.handleSubmit(onSubmit)}
+                disabled={isLoading}
               >
-                Guardar Cambios
+                {isLoading ? "Actualizando..." : "Guardar Cambios"}
               </Button>
             </DrawerFooter>
           </>
@@ -438,8 +359,9 @@ export function EditDrawer({ open, onOpenChange, user }: EditDrawerProps) {
                 type="button"
                 variant="default"
                 onClick={institutionForm.handleSubmit(onSubmit)}
+                disabled={isLoading}
               >
-                Guardar Cambios
+                {isLoading ? "Guardando..." : "Guardar Cambios"}
               </Button>
             </DrawerFooter>
           </>

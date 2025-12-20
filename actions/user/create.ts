@@ -1,8 +1,10 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { DonorFormSchema } from "@/components/onboarding/donor-form";
-import { InstitutionFormSchema } from "@/components/onboarding/institution-form";
+import {
+  type DonorFormSchema,
+  type InstitutionFormSchema,
+} from "@/lib/validations";
 
 export async function createUser() {
   // create user in supabase depending
