@@ -48,6 +48,10 @@ export const campaignSchema = z.object({
   termination_date: campaignTerminationDateSchema,
 });
 
+// Schema para edición de campaña (mismo que creación, ya que todos los campos son editables)
+export const campaignEditSchema = campaignSchema;
+
 // Tipo inferido del schema
 export type CampaignFormSchema = z.infer<typeof campaignSchema>;
+export type CampaignEditFormSchema = z.infer<typeof campaignEditSchema>;
 
