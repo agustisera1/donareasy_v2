@@ -5,6 +5,7 @@ export type InstitutionData = {
   role: "institution";
   email: string;
   created_at: string;
+  id: string;
   name: string;
   director: string;
   address: string;
