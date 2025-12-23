@@ -150,6 +150,7 @@ export function CreateCampaignDrawer() {
               Fecha de finalización (opcional)
             </Label>
             <Input
+              lang="es-AR"
               id="termination_date"
               type="date"
               {...register("termination_date")}

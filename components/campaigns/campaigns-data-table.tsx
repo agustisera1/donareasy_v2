@@ -13,7 +13,7 @@ import {
   type SortingState,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, Edit, X, Eye } from "lucide-react";
+import { ArrowUpDown, Edit, Check, Eye } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,22 +25,24 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Skeleton } from "../ui/skeleton";
 import { ViewCampaignDrawer } from "./view-campaign-drawer";
 import { EditCampaignDrawer } from "./edit-campaign-drawer";
+import { FinishCampaignDialog } from "./finish-campaign-dialog";
 import { useCampaignsContext } from "@/contexts/campaigns-context";
 import { Campaign } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
+import { Skeleton } from "../ui/skeleton";
 
 export function CampaignsDataTable() {
   const {
+    loading,
     campaigns: data,
-    loading: isLoading,
     institution,
     isInstitution,
     openCreateDrawer,
     openEditDrawer,
     openViewDrawer,
+    openFinishDialog,
   } = useCampaignsContext();
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -116,6 +118,25 @@ export function CampaignsDataTable() {
         },
       },
       {
+        accessorKey: "finished",
+        header: "Estado",
+        cell: ({ row }) => {
+          const finished = row.getValue("finished") as boolean | null;
+          const isFinished = finished === true;
+          return (
+            <div
+              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                isFinished
+                  ? "bg-muted text-muted-foreground"
+                  : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+              }`}
+            >
+              {isFinished ? "Finalizada" : "Activa"}
+            </div>
+          );
+        },
+      },
+      {
         id: "actions",
         enableHiding: false,
         header: "Acciones",
@@ -150,12 +171,11 @@ export function CampaignsDataTable() {
                     variant="ghost"
                     size="sm"
                     className="h-8 w-8 p-0"
-                    onClick={() => {
-                      console.log("Finalizar campaña:", campaign.id);
-                    }}
+                    onClick={() => openFinishDialog(campaign)}
                     title="Finalizar"
+                    disabled={campaign.finished === true}
                   >
-                    <X className="h-4 w-4" />
+                    <Check className="h-4 w-4" />
                   </Button>
                 </>
               )}
@@ -164,7 +184,13 @@ export function CampaignsDataTable() {
         },
       },
     ],
-    [isInstitution, institution, openEditDrawer, openViewDrawer]
+    [
+      isInstitution,
+      institution,
+      openEditDrawer,
+      openViewDrawer,
+      openFinishDialog,
+    ]
   );
 
   const table = useReactTable({
@@ -219,64 +245,58 @@ export function CampaignsDataTable() {
           <Button onClick={openCreateDrawer}>Nueva Campaña</Button>
         )}
       </div>
+
       <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  <Skeleton className="h-24 w-full" />
-                </TableCell>
-              </TableRow>
-            ) : table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+        {loading ? (
+          <Skeleton className="h-24 w-full" />
+        ) : (
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No hay resultados
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-12 text-center"
+                  />
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
       </div>
       <div className="flex items-center justify-end space-x-2">
         <div className="flex-1 text-sm text-muted-foreground">
@@ -304,6 +324,7 @@ export function CampaignsDataTable() {
 
       <ViewCampaignDrawer />
       <EditCampaignDrawer />
+      <FinishCampaignDialog />
     </div>
   );
 }

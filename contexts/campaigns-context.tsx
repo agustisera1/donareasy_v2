@@ -21,6 +21,9 @@ interface CampaignsContextType {
   editDrawerOpen: boolean;
   viewDrawerOpen: boolean;
 
+  // AlertDialog state
+  finishDialogOpen: boolean;
+
   // Selected campaign
   selectedCampaign: Campaign | null;
 
@@ -31,6 +34,10 @@ interface CampaignsContextType {
   closeEditDrawer: () => void;
   openViewDrawer: (campaign: Campaign) => void;
   closeViewDrawer: () => void;
+
+  // AlertDialog actions
+  openFinishDialog: (campaign: Campaign) => void;
+  closeFinishDialog: () => void;
 }
 
 const CampaignsContext = createContext<CampaignsContextType | undefined>(
@@ -50,6 +57,7 @@ export function CampaignsProvider({ children }: { children: React.ReactNode }) {
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
   const [viewDrawerOpen, setViewDrawerOpen] = useState(false);
+  const [finishDialogOpen, setFinishDialogOpen] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
     null
   );
@@ -83,6 +91,17 @@ export function CampaignsProvider({ children }: { children: React.ReactNode }) {
     setSelectedCampaign(null);
   }, []);
 
+  // AlertDialog actions
+  const openFinishDialog = useCallback((campaign: Campaign) => {
+    setSelectedCampaign(campaign);
+    setFinishDialogOpen(true);
+  }, []);
+
+  const closeFinishDialog = useCallback(() => {
+    setFinishDialogOpen(false);
+    setSelectedCampaign(null);
+  }, []);
+
   return (
     <CampaignsContext.Provider
       value={{
@@ -94,6 +113,7 @@ export function CampaignsProvider({ children }: { children: React.ReactNode }) {
         createDrawerOpen,
         editDrawerOpen,
         viewDrawerOpen,
+        finishDialogOpen,
         selectedCampaign,
         openCreateDrawer,
         closeCreateDrawer,
@@ -101,6 +121,8 @@ export function CampaignsProvider({ children }: { children: React.ReactNode }) {
         closeEditDrawer,
         openViewDrawer,
         closeViewDrawer,
+        openFinishDialog,
+        closeFinishDialog,
       }}
     >
       {children}

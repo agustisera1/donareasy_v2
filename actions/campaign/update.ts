@@ -62,22 +62,14 @@ export async function updateCampaign(
       };
     }
 
-    // 4. Preparar los datos para actualizar
-    // Convertir termination_date de "YYYY-MM-DD" a formato timestamptz para Supabase
-    // Supabase acepta formato ISO 8601, así que agregamos la hora a medianoche UTC
-    const terminationDate =
-      formData.termination_date && formData.termination_date.trim() !== ""
-        ? `${formData.termination_date}T00:00:00.000Z`
-        : null;
-
-    // 5. Actualizar la campaña
+    // 4. Actualizar la campaña
     const { error: updateError } = await supabase
       .from("campaigns")
       .update({
         type: formData.type,
         description: formData.description,
         quantity: formData.quantity || null,
-        termination_date: terminationDate,
+        termination_date: formData.termination_date || null,
       })
       .eq("id", campaignId);
 

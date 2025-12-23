@@ -55,11 +55,7 @@ export function EditCampaignDrawer() {
       type: selectedCampaign.type,
       description: selectedCampaign.description,
       quantity: selectedCampaign.quantity || "",
-      termination_date: selectedCampaign.termination_date
-        ? new Date(selectedCampaign.termination_date)
-            .toISOString()
-            .split("T")[0]
-        : "",
+      termination_date: selectedCampaign.termination_date || "",
     });
   }, [editDrawerOpen, selectedCampaign, reset]);
 
@@ -166,6 +162,7 @@ export function EditCampaignDrawer() {
             </Label>
             <Input
               id="termination_date"
+              lang="es-AR"
               type="date"
               {...register("termination_date")}
             />
