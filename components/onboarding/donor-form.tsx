@@ -1,0 +1,179 @@
+"use client";
+
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { createClient } from "@/lib/supabase/client";
+import { createDonor } from "@/actions/user/create";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { donorSchema, type DonorFormSchema } from "@/lib/validations";
+
+type DonorFormData = DonorFormSchema;
+
+export function DonorForm() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<DonorFormData>({
+    resolver: zodResolver(donorSchema),
+  });
+
+  const onSubmit = async (data: DonorFormData) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const supabase = createClient();
+      const { data: user, error: userError } = await supabase.auth.getUser();
+
+      if (userError) {
+        throw new Error(`Error getting user: ${userError.message}`);
+      }
+
+      const userId = user.user?.id;
+      if (!userId) {
+        throw new Error("User ID not found");
+      }
+
+      // Llamar al server action
+      const result = await createDonor(data, userId);
+
+      if (!result.success) {
+        throw new Error(result.error || "Error al crear el donante");
+      }
+
+      // Redirigir al dashboard después de éxito
+      router.push("/dashboard");
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Ocurrió un error inesperado";
+      setError(errorMessage);
+      console.error("Error submitting form:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Card className="w-full max-w-2xl shadow-none">
+      <CardHeader>
+        <CardTitle>Información de Donante</CardTitle>
+        <CardDescription>
+          Te pedimos algunos datos para registrate como donante
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {error && (
+            <div className="p-3 text-sm text-red-500 bg-red-50 dark:bg-red-900/20 rounded-md border border-red-200 dark:border-red-800">
+              {error}
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name">Nombre</Label>
+              <Input id="name" {...register("name")} placeholder="Juan" />
+              {errors.name && (
+                <p className="text-sm text-red-500">{errors.name.message}</p>
+              )}
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="lastname">Apellido</Label>
+              <Input
+                id="lastname"
+                {...register("lastname")}
+                placeholder="Pérez"
+              />
+              {errors.lastname && (
+                <p className="text-sm text-red-500">
+                  {errors.lastname.message}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="dni">DNI</Label>
+            <Input
+              id="dni"
+              type="text"
+              inputMode="numeric"
+              {...register("dni")}
+              placeholder="12345678"
+              maxLength={8}
+            />
+            {errors.dni && (
+              <p className="text-sm text-red-500">{errors.dni.message}</p>
+            )}
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="address">Dirección</Label>
+            <Input
+              id="address"
+              {...register("address")}
+              placeholder="Zeballos 1342"
+            />
+            {errors.address && (
+              <p className="text-sm text-red-500">{errors.address.message}</p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="province">Provincia</Label>
+              <Input
+                id="province"
+                {...register("province")}
+                placeholder="Santa Fe"
+              />
+              {errors.province && (
+                <p className="text-sm text-red-500">
+                  {errors.province.message}
+                </p>
+              )}
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="city">Ciudad</Label>
+              <Input id="city" {...register("city")} placeholder="Rosario" />
+              {errors.city && (
+                <p className="text-sm text-red-500">{errors.city.message}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="phone">Teléfono</Label>
+            <Input
+              id="phone"
+              {...register("phone")}
+              placeholder="+54 11 1234-5678"
+            />
+            {errors.phone && (
+              <p className="text-sm text-red-500">{errors.phone.message}</p>
+            )}
+          </div>
+
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Guardando..." : "Continuar"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}

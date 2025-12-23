@@ -1,24 +1,5 @@
-import { AuthButton } from "@/components/auth-button";
-import { ThemeSwitcher } from "@/components/theme-switcher";
-import { Suspense } from "react";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  return (
-    <main className="min-h-screen flex flex-col items-center">
-      <div className="flex-1 w-full flex flex-col gap-20 items-center">
-        <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
-          <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
-            <Suspense>
-              <AuthButton />
-            </Suspense>
-          </div>
-        </nav>
-        <div className="flex-1 flex flex-col gap-20 max-w-5xl p-5">Content</div>
-
-        <footer className="w-full flex items-center justify-end text-center text-xs gap-8 px-4 py-4 ">
-          <ThemeSwitcher />
-        </footer>
-      </div>
-    </main>
-  );
+  redirect("/dashboard");
 }
