@@ -164,6 +164,7 @@ export function CampaignsDataTable() {
                     className="h-8 w-8 p-0"
                     onClick={() => openEditDrawer(campaign)}
                     title="Editar"
+                    disabled={campaign.finished === true}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
