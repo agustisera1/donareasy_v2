@@ -14,30 +14,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  campaignSchema,
-  type CampaignFormSchema,
-} from "@/lib/validations";
+import { campaignSchema, type CampaignFormSchema } from "@/lib/validations";
 import { createCampaign } from "@/actions/campaign/create";
 import { useState } from "react";
 import { toast } from "sonner";
-import { InstitutionData } from "@/app/api/user/route";
+import { useCampaignsContext } from "@/contexts/campaigns-context";
 
 type CampaignFormData = CampaignFormSchema;
 
-interface CreateCampaignDrawerProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  institution: InstitutionData | null;
-  onSuccess?: () => void; // Callback para refrescar la lista después de crear
-}
-
-export function CreateCampaignDrawer({
-  open,
-  onOpenChange,
-  institution,
-  onSuccess,
-}: CreateCampaignDrawerProps) {
+export function CreateCampaignDrawer() {
+  const { createDrawerOpen, closeCreateDrawer, institution, refetch } =
+    useCampaignsContext();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -59,7 +46,7 @@ export function CreateCampaignDrawer({
   // Resetear el formulario cuando se cierra el drawer
   const handleClose = () => {
     reset();
-    onOpenChange(false);
+    closeCreateDrawer();
   };
 
   const onSubmit = async (data: CampaignFormData) => {
@@ -87,8 +74,8 @@ export function CreateCampaignDrawer({
       });
 
       reset();
-      onOpenChange(false);
-      onSuccess?.(); // Refrescar la lista después de crear exitosamente
+      closeCreateDrawer();
+      refetch(); // Refrescar la lista después de crear exitosamente
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Ocurrió un error inesperado";
@@ -102,7 +89,11 @@ export function CreateCampaignDrawer({
   };
 
   return (
-    <Drawer direction="right" open={open} onOpenChange={handleClose}>
+    <Drawer
+      direction="right"
+      open={createDrawerOpen}
+      onOpenChange={handleClose}
+    >
       <DrawerContent>
         <DrawerHeader aria-describedby={undefined} className="border-b">
           <DrawerTitle>Crear nueva campaña</DrawerTitle>
@@ -111,7 +102,10 @@ export function CreateCampaignDrawer({
           </DrawerDescription>
         </DrawerHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-2 gap-4 p-4">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="grid grid-cols-2 gap-4 p-4"
+        >
           <div className="grid gap-2 col-span-2">
             <Label htmlFor="type">Tipo de campaña</Label>
             <Input
@@ -152,8 +146,11 @@ export function CreateCampaignDrawer({
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="termination_date">Fecha de terminación (opcional)</Label>
+            <Label htmlFor="termination_date">
+              Fecha de finalización (opcional)
+            </Label>
             <Input
+              lang="es-AR"
               id="termination_date"
               type="date"
               {...register("termination_date")}
@@ -188,4 +185,3 @@ export function CreateCampaignDrawer({
     </Drawer>
   );
 }
-

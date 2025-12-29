@@ -44,7 +44,11 @@ export async function createCampaign(
       };
     }
 
-    // 3. Insertar la campaña
+    // 3. Preparar la fecha de inicio (fecha actual en formato YYYY-MM-DD)
+    const today = new Date();
+    const startDate = today.toISOString().split("T")[0]; // Formato YYYY-MM-DD
+
+    // 4. Insertar la campaña
     const { data: campaign, error: campaignError } = await supabase
       .from("campaigns")
       .insert({
@@ -52,6 +56,7 @@ export async function createCampaign(
         description: formData.description,
         quantity: formData.quantity || null,
         termination_date: formData.termination_date || null,
+        start_date: startDate,
         institution_id: institutionId,
       })
       .select("id")
