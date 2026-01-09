@@ -1,6 +1,5 @@
 "use client";
 import {
-  Banknote,
   Building,
   ChartLine,
   ChevronUp,
@@ -15,7 +14,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
-  SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
@@ -24,7 +22,6 @@ import {
 } from "@/components/ui/sidebar";
 import Link from "next/link";
 import { DropdownMenuContent, DropdownMenuItem } from "../ui/dropdown-menu";
-import { Separator } from "../ui/separator";
 import { DropdownMenu, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -40,6 +37,11 @@ const items = [
     icon: ListChecks,
   },
   {
+    title: "Donaciones",
+    url: `/dashboard/donations`,
+    icon: HandCoins,
+  },
+  {
     title: "Instituciones",
     url: `/dashboard/institutions`,
     icon: Building,
@@ -49,23 +51,6 @@ const items = [
     url: `/dashboard/metrics`,
     icon: ChartLine,
   },
-  {
-    title: "Donaciones",
-    url: `/dashboard/donations/`,
-    icon: HandCoins,
-    children: [
-      {
-        title: "Monetarias",
-        url: `/dashboard/donations/money`,
-        icon: Banknote,
-      },
-      {
-        title: "Bienes",
-        url: `/dashboard/donations/needs`,
-        icon: HandCoins,
-      },
-    ],
-  },
 ];
 
 export function AppSidebar({
@@ -74,8 +59,6 @@ export function AppSidebar({
   mode?: "dashboard" | "onboarding";
 }) {
   const router = useRouter();
-  const groupItems = items.filter((item) => item.children);
-  const simpleItems = items.filter((item) => !item.children);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
@@ -107,43 +90,20 @@ export function AppSidebar({
         </SidebarHeader>
 
         {mode === "onboarding" ? null : (
-          <Fragment>
-            <SidebarGroup>
-              <SidebarGroupLabel>Navegación</SidebarGroupLabel>
+          <SidebarGroup>
+            <SidebarGroupLabel>Navegación</SidebarGroupLabel>
 
-              {simpleItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarGroup>
-
-            <Separator />
-            {groupItems.map((item) => (
-              <SidebarGroup key={item.title}>
-                <SidebarGroupLabel>{item.title}</SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {item.children!.map((child) => (
-                      <SidebarMenuItem key={child.title}>
-                        <SidebarMenuButton asChild>
-                          <Link href={child.url}>
-                            <child.icon />
-                            <span>{child.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
+            {items.map((item) => (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton asChild>
+                  <Link href={item.url}>
+                    <item.icon />
+                    <span>{item.title}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             ))}
-          </Fragment>
+          </SidebarGroup>
         )}
       </SidebarContent>
 

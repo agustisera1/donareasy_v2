@@ -1,7 +1,95 @@
-import { NextResponse } from "next/server";
+"use server";
 
-export async function updateDonation() {
-  // update donation in supabase
+import { createClient } from "@/lib/supabase/server";
 
-  return NextResponse.json({ success: true });
+interface UpdateDonationData {
+  type?: string | null;
+  amount?: number | null;
+  transfer_receipt?: string | null;
+  receipt_url?: string;
+}
+
+export async function updateDonation(
+  donationId: number,
+  formData: UpdateDonationData
+) {
+  const supabase = await createClient();
+
+  try {
+    // 1. Verificar que el usuario esté autenticado
+    const {
+      data: { user: authUser },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !authUser) {
+      return {
+        success: false,
+        error: "Usuario no autenticado",
+      };
+    }
+
+    // 2. Verificar que la donación existe y pertenece al usuario autenticado
+    const { data: donation, error: donationError } = await supabase
+      .from("donations")
+      .select("id, donnor_id")
+      .eq("id", donationId)
+      .maybeSingle();
+
+    if (donationError) {
+      throw new Error(`Error verificando donación: ${donationError.message}`);
+    }
+
+    if (!donation) {
+      return {
+        success: false,
+        error: "Donación no encontrada",
+      };
+    }
+
+    // 3. Verificar que el donante pertenece al usuario autenticado
+    const { data: donor, error: donorError } = await supabase
+      .from("donors")
+      .select("id, user_id")
+      .eq("id", donation.donnor_id)
+      .eq("user_id", authUser.id)
+      .maybeSingle();
+
+    if (donorError) {
+      throw new Error(`Error verificando donante: ${donorError.message}`);
+    }
+
+    if (!donor) {
+      return {
+        success: false,
+        error: "No tienes permisos para editar esta donación",
+      };
+    }
+
+    // 4. Actualizar la donación
+    const updateData: Partial<UpdateDonationData> = {};
+    if (formData.type !== undefined) updateData.type = formData.type;
+    if (formData.amount !== undefined) updateData.amount = formData.amount;
+    if (formData.transfer_receipt !== undefined)
+      updateData.transfer_receipt = formData.transfer_receipt;
+    if (formData.receipt_url !== undefined)
+      updateData.receipt_url = formData.receipt_url;
+
+    const { error: updateError } = await supabase
+      .from("donations")
+      .update(updateData)
+      .eq("id", donationId);
+
+    if (updateError) {
+      throw new Error(`Error actualizando donación: ${updateError.message}`);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error in updateDonation:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
 }

@@ -110,9 +110,13 @@ export function CampaignsDataTable() {
           const terminationDate = row.getValue("termination_date") as
             | string
             | null;
+
+          console.log(terminationDate, formatDate(terminationDate!));
           return (
             <div>
-              {terminationDate ? formatDate(terminationDate) : "Sin fecha"}
+              {terminationDate
+                ? formatDate(terminationDate)
+                : "Sin especificar"}
             </div>
           );
         },
@@ -139,7 +143,7 @@ export function CampaignsDataTable() {
       {
         id: "actions",
         enableHiding: false,
-        header: "Acciones",
+        header: "",
         cell: ({ row }) => {
           const campaign = row.original;
           const canEdit =
