@@ -49,11 +49,11 @@ export function EditDonationDrawer() {
     defaultValues: {
       type: "",
       amount: "",
-      transfer_receipt: null,
+      attachment_name: null,
     },
   });
 
-  const transferReceipt = watch("transfer_receipt");
+  const transferReceipt = watch("attachment_name");
 
   // Actualizar valores del formulario cuando se abre el drawer o cuando cambian los datos de la donación
   useEffect(() => {
@@ -62,7 +62,7 @@ export function EditDonationDrawer() {
     reset({
       type: selectedDonation.type || "",
       amount: selectedDonation.amount?.toString() || "",
-      transfer_receipt: null,
+      attachment_name: null,
     });
 
     // Guardar la URL de la imagen actual de la DB
@@ -111,7 +111,7 @@ export function EditDonationDrawer() {
 
   // Resetear el input de imagen
   const handleClearImage = () => {
-    setValue("transfer_receipt", null);
+    setValue("attachment_name", null);
     setImagePreview(currentImageUrl); // Volver a mostrar la imagen de la DB
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -133,8 +133,8 @@ export function EditDonationDrawer() {
       let receiptUrl: string | undefined = undefined;
       let transferReceiptText: string | null = null;
 
-      if (data.transfer_receipt && data.transfer_receipt.length > 0) {
-        const file = data.transfer_receipt[0];
+      if (data.attachment_name && data.attachment_name.length > 0) {
+        const file = data.attachment_name[0];
         // Por ahora, usar un mock URL (imagen pública de ejemplo)
         receiptUrl =
           "https://images.unsplash.com/photo-1556740758-90de374c12ad?w=800&h=600&fit=crop";
@@ -144,7 +144,7 @@ export function EditDonationDrawer() {
       const updateData: {
         type?: string | null;
         amount?: number | null;
-        transfer_receipt?: string | null;
+        attachment_name?: string | null;
         attachment_url?: string;
       } = {};
 
@@ -161,9 +161,9 @@ export function EditDonationDrawer() {
       // Si se subió un nuevo archivo, actualizar ambos campos
       if (receiptUrl && transferReceiptText) {
         updateData.attachment_url = receiptUrl;
-        updateData.transfer_receipt = transferReceiptText;
+        updateData.attachment_name = transferReceiptText;
       }
-      // Si no se subió archivo, no actualizar attachment_url ni transfer_receipt
+      // Si no se subió archivo, no actualizar attachment_url ni attachment_name
 
       const result = await updateDonation(selectedDonation.id, updateData);
 
@@ -215,7 +215,7 @@ export function EditDonationDrawer() {
             <Fragment>
               <div className="grid gap-2 col-span-2">
                 <div className="flex items-center gap-2">
-                  <Label htmlFor="transfer_receipt" className="flex-1">
+                  <Label htmlFor="attachment_name" className="flex-1">
                     Comprobante de transferencia
                   </Label>
                   {imagePreview && (
@@ -232,20 +232,20 @@ export function EditDonationDrawer() {
                   )}
                 </div>
                 <Input
-                  id="transfer_receipt"
+                  id="attachment_name"
                   type="file"
                   lang="es"
                   accept=".png,.jpg,.jpeg,.pdf"
-                  {...register("transfer_receipt")}
+                  {...register("attachment_name")}
                   disabled={isLoading}
                   ref={(e) => {
-                    register("transfer_receipt").ref(e);
+                    register("attachment_name").ref(e);
                     fileInputRef.current = e;
                   }}
                 />
-                {errors.transfer_receipt && (
+                {errors.attachment_name && (
                   <p className="text-sm text-red-500">
-                    {errors.transfer_receipt.message as string}
+                    {errors.attachment_name.message as string}
                   </p>
                 )}
                 {imagePreview && (
@@ -278,7 +278,7 @@ export function EditDonationDrawer() {
             <Fragment>
               <div className="grid gap-2 col-span-2">
                 <div className="flex items-center gap-2">
-                  <Label htmlFor="transfer_receipt_goods" className="flex-1">
+                  <Label htmlFor="attachment_name" className="flex-1">
                     Vista previa
                   </Label>
                   {imagePreview && (
@@ -295,20 +295,20 @@ export function EditDonationDrawer() {
                   )}
                 </div>
                 <Input
-                  id="transfer_receipt_goods"
+                  id="attachment_name"
                   type="file"
                   lang="es"
                   accept=".png,.jpg,.jpeg,.pdf"
-                  {...register("transfer_receipt")}
+                  {...register("attachment_name")}
                   disabled={isLoading}
                   ref={(e) => {
-                    register("transfer_receipt").ref(e);
+                    register("attachment_name").ref(e);
                     fileInputRef.current = e;
                   }}
                 />
-                {errors.transfer_receipt && (
+                {errors.attachment_name && (
                   <p className="text-sm text-red-500">
-                    {errors.transfer_receipt.message as string}
+                    {errors.attachment_name.message as string}
                   </p>
                 )}
                 {imagePreview && (

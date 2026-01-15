@@ -9,7 +9,7 @@ interface CreateDonationData {
   status: "pending";
   type?: string | null;
   amount?: number | null;
-  transfer_receipt?: string | null;
+  attachment_name?: string | null;
 }
 
 export async function createDonation(formData: CreateDonationData) {
@@ -78,7 +78,7 @@ export async function createDonation(formData: CreateDonationData) {
         status: formData.status,
         type: formData.type || null,
         amount: formData.amount || null,
-        transfer_receipt: formData.transfer_receipt || null,
+        attachment_name: formData.attachment_name || null,
       })
       .select("id")
       .single();

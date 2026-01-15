@@ -47,13 +47,13 @@ export function ViewDonationDrawer() {
                 ${selectedDonation.amount?.toLocaleString()}
               </span>
 
-              {selectedDonation.transfer_receipt && (
+              {selectedDonation.attachment_name && (
                 <Fragment>
                   <span className="text-sm font-medium">
                     Nombre del comprobante
                   </span>
                   <span className="text-sm">
-                    {selectedDonation.transfer_receipt}
+                    {selectedDonation.attachment_name}
                   </span>
                 </Fragment>
               )}

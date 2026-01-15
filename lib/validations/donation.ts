@@ -61,7 +61,7 @@ export const donationSchema = z
     institution_id: institutionIdSchema,
     donation_type: donationTypeSchema,
     amount: z.string().optional().or(z.literal("")),
-    transfer_receipt: z.any().nullable().optional(),
+    attachment_name: z.any().nullable().optional(),
     type: z.string().optional().or(z.literal("")),
   })
   .refine(
@@ -85,19 +85,19 @@ export const donationSchema = z
   )
   .refine(
     (data) => {
-      // transfer_receipt es obligatorio tanto para donaciones monetarias como de bienes
-      return data.transfer_receipt && data.transfer_receipt.length > 0;
+      // attachment_name es obligatorio tanto para donaciones monetarias como de bienes
+      return data.attachment_name && data.attachment_name.length > 0;
     },
     {
       message: "La imagen es obligatoria",
-      path: ["transfer_receipt"],
+      path: ["attachment_name"],
     }
   )
   .refine(
     (data) => {
       // Validar el archivo para ambos tipos de donación
-      if (data.transfer_receipt && data.transfer_receipt.length > 0) {
-        const file = data.transfer_receipt[0];
+      if (data.attachment_name && data.attachment_name.length > 0) {
+        const file = data.attachment_name[0];
         const validTypes = [
           "image/png",
           "image/jpeg",
@@ -110,7 +110,7 @@ export const donationSchema = z
     },
     {
       message: "El archivo debe ser PNG, JPG o PDF",
-      path: ["transfer_receipt"],
+      path: ["attachment_name"],
     }
   )
   .refine(
@@ -135,7 +135,7 @@ export type DonationFormSchema = z.infer<typeof donationSchema>;
 export const donationEditSchema = z
   .object({
     amount: z.string().optional().or(z.literal("")),
-    transfer_receipt: z.any().nullable().optional(),
+    attachment_name: z.any().nullable().optional(),
     type: z.string().optional().or(z.literal("")),
   })
   .refine(
@@ -156,9 +156,9 @@ export const donationEditSchema = z
   )
   .refine(
     (data) => {
-      // Si hay transfer_receipt, validar el archivo
-      if (data.transfer_receipt && data.transfer_receipt.length > 0) {
-        const file = data.transfer_receipt[0];
+      // Si hay attachment_name, validar el archivo
+      if (data.attachment_name && data.attachment_name.length > 0) {
+        const file = data.attachment_name[0];
         const validTypes = [
           "image/png",
           "image/jpeg",
@@ -171,7 +171,7 @@ export const donationEditSchema = z
     },
     {
       message: "El archivo debe ser PNG, JPG o PDF",
-      path: ["transfer_receipt"],
+      path: ["attachment_name"],
     }
   );
 

@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 interface UpdateDonationData {
   type?: string | null;
   amount?: number | null;
-  transfer_receipt?: string | null;
+  attachment_name?: string | null;
   attachment_url?: string;
 }
 
@@ -70,8 +70,8 @@ export async function updateDonation(
     const updateData: Partial<UpdateDonationData> = {};
     if (formData.type !== undefined) updateData.type = formData.type;
     if (formData.amount !== undefined) updateData.amount = formData.amount;
-    if (formData.transfer_receipt !== undefined)
-      updateData.transfer_receipt = formData.transfer_receipt;
+    if (formData.attachment_name !== undefined)
+      updateData.attachment_name = formData.attachment_name;
     if (formData.attachment_url !== undefined)
       updateData.attachment_url = formData.attachment_url;
 

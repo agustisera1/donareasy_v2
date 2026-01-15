@@ -67,13 +67,13 @@ export function CreateDonationDrawer() {
       institution_id: "",
       donation_type: "goods",
       amount: "",
-      transfer_receipt: null,
+      attachment_name: null,
       type: "",
     },
   });
 
   const donationType = watch("donation_type") as "money" | "goods";
-  const transferReceipt = watch("transfer_receipt");
+  const transferReceipt = watch("attachment_name");
 
   // Cargar instituciones al abrir el drawer
   useEffect(() => {
@@ -155,7 +155,7 @@ export function CreateDonationDrawer() {
 
   // Resetear el input de imagen
   const handleClearImage = () => {
-    setValue("transfer_receipt", null);
+    setValue("attachment_name", null);
     setImagePreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -178,8 +178,8 @@ export function CreateDonationDrawer() {
       let transferReceiptText = "";
 
       // El archivo ya está validado por Zod
-      if (data.transfer_receipt && data.transfer_receipt.length > 0) {
-        const file = data.transfer_receipt[0];
+      if (data.attachment_name && data.attachment_name.length > 0) {
+        const file = data.attachment_name[0];
         // Por ahora, usar un mock URL (imagen pública de ejemplo)
         receiptUrl =
           "https://images.unsplash.com/photo-1556740758-90de374c12ad?w=800&h=600&fit=crop";
@@ -193,7 +193,7 @@ export function CreateDonationDrawer() {
         status: "pending";
         type?: string | null;
         amount?: number | null;
-        transfer_receipt?: string | null;
+        attachment_name?: string | null;
       } = {
         institution_id: data.institution_id,
         donnor_id: donor.id,
@@ -208,11 +208,11 @@ export function CreateDonationDrawer() {
             donationData.amount = amountNum;
           }
         }
-        donationData.transfer_receipt = transferReceiptText || null;
+        donationData.attachment_name = transferReceiptText || null;
         donationData.type = null;
       } else {
         donationData.type = data.type || null;
-        donationData.transfer_receipt = transferReceiptText || null;
+        donationData.attachment_name = transferReceiptText || null;
         donationData.amount = null;
       }
 
@@ -332,7 +332,7 @@ export function CreateDonationDrawer() {
 
               <div className="grid gap-2 col-span-2">
                 <div className="flex items-center gap-2">
-                  <Label htmlFor="transfer_receipt" className="flex-1">
+                  <Label htmlFor="attachment_name" className="flex-1">
                     Comprobante de transferencia
                   </Label>
                   {imagePreview && (
@@ -349,20 +349,20 @@ export function CreateDonationDrawer() {
                   )}
                 </div>
                 <Input
-                  id="transfer_receipt"
+                  id="attachment_name"
                   type="file"
                   lang="es"
                   accept=".png,.jpg,.jpeg,.pdf"
-                  {...register("transfer_receipt")}
+                  {...register("attachment_name")}
                   disabled={isLoading}
                   ref={(e) => {
-                    register("transfer_receipt").ref(e);
+                    register("attachment_name").ref(e);
                     fileInputRef.current = e;
                   }}
                 />
-                {errors.transfer_receipt && (
+                {errors.attachment_name && (
                   <p className="text-sm text-red-500">
-                    {errors.transfer_receipt.message as string}
+                    {errors.attachment_name.message as string}
                   </p>
                 )}
                 {imagePreview && (
@@ -377,7 +377,7 @@ export function CreateDonationDrawer() {
             <Fragment>
               <div className="grid gap-2 col-span-2">
                 <div className="flex items-center gap-2">
-                  <Label htmlFor="transfer_receipt_goods" className="flex-1">
+                  <Label htmlFor="attachment_name" className="flex-1">
                     {imagePreview ? "Imagen adjunta" : "Adjuntar imagen"}
                   </Label>
                   {imagePreview && (
@@ -394,20 +394,19 @@ export function CreateDonationDrawer() {
                   )}
                 </div>
                 <Input
-                  id="transfer_receipt_goods"
                   type="file"
                   lang="es"
                   accept=".png,.jpg,.jpeg,.pdf"
-                  {...register("transfer_receipt")}
+                  {...register("attachment_name")}
                   disabled={isLoading}
                   ref={(e) => {
-                    register("transfer_receipt").ref(e);
+                    register("attachment_name").ref(e);
                     fileInputRef.current = e;
                   }}
                 />
-                {errors.transfer_receipt && (
+                {errors.attachment_name && (
                   <p className="text-sm text-red-500">
-                    {errors.transfer_receipt.message as string}
+                    {errors.attachment_name.message as string}
                   </p>
                 )}
                 {imagePreview && (
