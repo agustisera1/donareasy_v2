@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useEffect, useRef } from "react";
-import { Trash2 } from "lucide-react";
+import { Eraser, ImagePlus } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { donationSchema, type DonationFormSchema } from "@/lib/validations";
 import { createDonation } from "@/actions/donations/create";
+import { uploadFile } from "@/actions/storage/upload";
 import { toast } from "sonner";
 import { useDonationsContext } from "@/contexts/donations-context";
 import { createClient } from "@/lib/supabase/client";
@@ -74,7 +75,7 @@ export function CreateDonationDrawer() {
   });
 
   const donationType = watch("donation_type") as "money" | "goods";
-  const transferReceipt = watch("attachment_name");
+  const attachment = watch("attachment_name");
 
   // Cargar instituciones al abrir el drawer
   useEffect(() => {
@@ -88,8 +89,8 @@ export function CreateDonationDrawer() {
     let objectUrl: string | null = null;
 
     // Si hay un archivo nuevo seleccionado, mostrar su preview
-    if (transferReceipt && transferReceipt.length > 0) {
-      const file = transferReceipt[0];
+    if (attachment && attachment.length > 0) {
+      const file = attachment[0];
       if (file.type.startsWith("image/")) {
         // Crear preview del archivo nuevo
         objectUrl = URL.createObjectURL(file);
@@ -109,7 +110,7 @@ export function CreateDonationDrawer() {
         URL.revokeObjectURL(objectUrl);
       }
     };
-  }, [transferReceipt]);
+  }, [attachment]);
 
   useEffect(() => {
     if (campaignId && institutionId) {
@@ -155,7 +156,7 @@ export function CreateDonationDrawer() {
   };
 
   // Resetear el input de imagen
-  const handleClearImage = () => {
+  const clearImage = () => {
     setValue("attachment_name", null);
     setImagePreview(null);
     if (fileInputRef.current) {
@@ -175,16 +176,34 @@ export function CreateDonationDrawer() {
 
     try {
       // Procesar archivo (obligatorio para ambos tipos de donación)
-      let receiptUrl = "";
-      let transferReceiptText = "";
+      let attachmentUrl = "";
+      let attachmentFileName = "";
 
       // El archivo ya está validado por Zod
       if (data.attachment_name && data.attachment_name.length > 0) {
         const file = data.attachment_name[0];
-        // Por ahora, usar un mock URL (imagen pública de ejemplo)
-        receiptUrl =
-          "https://images.unsplash.com/photo-1556740758-90de374c12ad?w=800&h=600&fit=crop";
-        transferReceiptText = file.name;
+
+        // Determinar el nombre del archivo según el tipo de donación
+        let fileName: string | undefined;
+        if (data.donation_type === "goods" && data.name) {
+          // Para donaciones de bienes, usar el nombre del formulario
+          fileName = data.name;
+        }
+        // Para donaciones monetarias, no se provee fileName, se usará file.name por defecto
+
+        // Subir el archivo a Supabase Storage
+        const uploadResult = await uploadFile(file, fileName);
+
+        if (!uploadResult.success) {
+          toast.error("Error al subir el archivo", {
+            description: uploadResult.error || "No se pudo subir el archivo",
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        attachmentUrl = uploadResult.url || "";
+        attachmentFileName = uploadResult.fileName || file.name;
       }
 
       const donationData: {
@@ -199,7 +218,7 @@ export function CreateDonationDrawer() {
       } = {
         institution_id: data.institution_id,
         donnor_id: donor.id,
-        attachment_url: receiptUrl,
+        attachment_url: attachmentUrl,
         status: "pending",
       };
 
@@ -210,13 +229,13 @@ export function CreateDonationDrawer() {
             donationData.amount = amountNum;
           }
         }
-        donationData.attachment_name = transferReceiptText || null;
+        donationData.attachment_name = attachmentFileName || null;
         donationData.name = null;
         donationData.description = null;
       } else {
         donationData.name = data.name || null;
         donationData.description = data.description || null;
-        donationData.attachment_name = transferReceiptText || null;
+        donationData.attachment_name = attachmentFileName || null;
         donationData.amount = null;
       }
 
@@ -336,26 +355,38 @@ export function CreateDonationDrawer() {
 
               <div className="grid gap-2 col-span-2">
                 <div className="flex items-center gap-2">
-                  <Label htmlFor="attachment_name" className="flex-1">
-                    Comprobante de transferencia
-                  </Label>
-                  {imagePreview && (
+                  <Label className="flex-1">Comprobante de transferencia</Label>
+                  {attachment && attachment.length > 0 ? (
                     <Button
                       type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleClearImage}
+                      variant="outline"
+                      onClick={clearImage}
                       disabled={isLoading}
                       className="h-8 w-8"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Eraser className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        if (fileInputRef.current) {
+                          fileInputRef.current.click();
+                        }
+                      }}
+                      disabled={isLoading}
+                      className="h-8 w-8"
+                    >
+                      <ImagePlus className="h-4 w-4" />
                     </Button>
                   )}
                 </div>
-                <Input
+                <input
                   id="attachment_name"
                   type="file"
                   lang="es"
+                  className="hidden"
                   accept=".png,.jpg,.jpeg,.pdf"
                   {...register("attachment_name")}
                   disabled={isLoading}
@@ -370,10 +401,12 @@ export function CreateDonationDrawer() {
                   </p>
                 )}
                 {imagePreview && (
-                  <ImagePreview
-                    src={imagePreview}
-                    alt="Preview del comprobante"
-                  />
+                  <div className="mt-2">
+                    <ImagePreview
+                      src={imagePreview}
+                      alt="Preview del comprobante"
+                    />
+                  </div>
                 )}
               </div>
             </Fragment>
@@ -414,25 +447,37 @@ export function CreateDonationDrawer() {
 
               <div className="grid gap-2 col-span-2">
                 <div className="flex items-center gap-2">
-                  <Label htmlFor="attachment_name" className="flex-1">
-                    {imagePreview ? "Imagen adjunta" : "Adjuntar imagen"}
-                  </Label>
-                  {imagePreview && (
+                  <Label className="flex-1">Imagen adjunta</Label>
+                  {attachment && attachment.length > 0 ? (
                     <Button
                       type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleClearImage}
+                      variant="outline"
+                      onClick={clearImage}
                       disabled={isLoading}
                       className="h-8 w-8"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Eraser className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        if (fileInputRef.current) {
+                          fileInputRef.current.click();
+                        }
+                      }}
+                      disabled={isLoading}
+                      className="h-8 w-8"
+                    >
+                      <ImagePlus className="h-4 w-4" />
                     </Button>
                   )}
                 </div>
-                <Input
+                <input
                   type="file"
                   lang="es"
+                  className="hidden"
                   accept=".png,.jpg,.jpeg,.pdf"
                   {...register("attachment_name")}
                   disabled={isLoading}
@@ -447,7 +492,12 @@ export function CreateDonationDrawer() {
                   </p>
                 )}
                 {imagePreview && (
-                  <ImagePreview src={imagePreview} alt="Preview de la imagen" />
+                  <div className="mt-2">
+                    <ImagePreview
+                      src={imagePreview}
+                      alt="Preview de la imagen"
+                    />
+                  </div>
                 )}
               </div>
             </Fragment>

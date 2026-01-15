@@ -20,11 +20,12 @@ import {
   type DonationEditFormSchema,
 } from "@/lib/validations";
 import { updateDonation } from "@/actions/donations/update";
+import { uploadFile } from "@/actions/storage/upload";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useDonationsContext } from "@/contexts/donations-context";
 import { ImagePreview } from "./image-preview";
-import { Trash2 } from "lucide-react";
+import { Eraser, ImagePlus, Pencil } from "lucide-react";
 
 type DonationEditFormData = DonationEditFormSchema;
 
@@ -137,10 +138,28 @@ export function EditDonationDrawer() {
 
       if (data.attachment_name && data.attachment_name.length > 0) {
         const file = data.attachment_name[0];
-        // Por ahora, usar un mock URL (imagen pública de ejemplo)
-        receiptUrl =
-          "https://images.unsplash.com/photo-1556740758-90de374c12ad?w=800&h=600&fit=crop";
-        transferReceiptText = file.name;
+
+        // Determinar el nombre del archivo según el tipo de donación
+        let fileName: string | undefined;
+        if (!isMoney && data.name) {
+          // Para donaciones de bienes, usar el nombre del formulario
+          fileName = data.name;
+        }
+        // Para donaciones monetarias, no se provee fileName, se usará file.name por defecto
+
+        // Subir el archivo a Supabase Storage
+        const uploadResult = await uploadFile(file, fileName);
+
+        if (!uploadResult.success) {
+          toast.error("Error al subir el archivo", {
+            description: uploadResult.error || "No se pudo subir el archivo",
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        receiptUrl = uploadResult.url;
+        transferReceiptText = uploadResult.fileName || file.name;
       }
 
       const updateData: {
@@ -227,27 +246,69 @@ export function EditDonationDrawer() {
           {isMoney ? (
             <Fragment>
               <div className="grid gap-2 col-span-2">
+                <Label htmlFor="amount">Monto</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  {...register("amount")}
+                  placeholder="0.00"
+                  disabled={isLoading}
+                />
+                {errors.amount && (
+                  <p className="text-sm text-red-500">
+                    {errors.amount.message}
+                  </p>
+                )}
+              </div>
+              <div className="grid gap-2 col-span-2">
                 <div className="flex items-center gap-2">
-                  <Label htmlFor="attachment_name" className="flex-1">
-                    Comprobante de transferencia
-                  </Label>
-                  {imagePreview && (
+                  <Label className="flex-1">Comprobante de transferencia</Label>
+                  {transferReceipt && transferReceipt.length > 0 ? (
                     <Button
                       type="button"
-                      variant="ghost"
-                      size="icon"
+                      variant="outline"
                       onClick={handleClearImage}
                       disabled={isLoading}
                       className="h-8 w-8"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Eraser className="h-4 w-4" />
+                    </Button>
+                  ) : currentImageUrl ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        if (fileInputRef.current) {
+                          fileInputRef.current.click();
+                        }
+                      }}
+                      disabled={isLoading}
+                      className="h-8 w-8"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        if (fileInputRef.current) {
+                          fileInputRef.current.click();
+                        }
+                      }}
+                      disabled={isLoading}
+                      className="h-8 w-8"
+                    >
+                      <ImagePlus className="h-4 w-4" />
                     </Button>
                   )}
                 </div>
-                <Input
+                <input
                   id="attachment_name"
                   type="file"
                   lang="es"
+                  className="hidden"
                   accept=".png,.jpg,.jpeg,.pdf"
                   {...register("attachment_name")}
                   disabled={isLoading}
@@ -268,23 +329,6 @@ export function EditDonationDrawer() {
                       alt="Preview del comprobante"
                     />
                   </div>
-                )}
-              </div>
-
-              <div className="grid gap-2 col-span-2">
-                <Label htmlFor="amount">Monto</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  step="0.01"
-                  {...register("amount")}
-                  placeholder="0.00"
-                  disabled={isLoading}
-                />
-                {errors.amount && (
-                  <p className="text-sm text-red-500">
-                    {errors.amount.message}
-                  </p>
                 )}
               </div>
             </Fragment>
@@ -324,26 +368,52 @@ export function EditDonationDrawer() {
 
               <div className="grid gap-2 col-span-2">
                 <div className="flex items-center gap-2">
-                  <Label htmlFor="attachment_name" className="flex-1">
-                    Vista previa
-                  </Label>
-                  {imagePreview && (
+                  <Label className="flex-1">Imagen adjunta</Label>
+                  {transferReceipt && transferReceipt.length > 0 ? (
                     <Button
                       type="button"
-                      variant="ghost"
-                      size="icon"
+                      variant="outline"
                       onClick={handleClearImage}
                       disabled={isLoading}
                       className="h-8 w-8"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Eraser className="h-4 w-4" />
+                    </Button>
+                  ) : currentImageUrl ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        if (fileInputRef.current) {
+                          fileInputRef.current.click();
+                        }
+                      }}
+                      disabled={isLoading}
+                      className="h-8 w-8"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        if (fileInputRef.current) {
+                          fileInputRef.current.click();
+                        }
+                      }}
+                      disabled={isLoading}
+                      className="h-8 w-8"
+                    >
+                      <ImagePlus className="h-4 w-4" />
                     </Button>
                   )}
                 </div>
-                <Input
+                <input
                   id="attachment_name"
                   type="file"
                   lang="es"
+                  className="hidden"
                   accept=".png,.jpg,.jpeg,.pdf"
                   {...register("attachment_name")}
                   disabled={isLoading}

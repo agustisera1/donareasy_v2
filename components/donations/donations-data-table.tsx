@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import React, { Fragment } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -126,15 +126,19 @@ export function DonationsDataTable() {
             </Button>
           );
         },
+        size: 240,
         cell: ({ row }) => {
           const donation = row.original;
-          if (donation.amount !== null) {
-            return <div>${donation.amount.toLocaleString()}</div>;
-          }
-          if (donation.description !== null) {
-            return <div>{donation.description}</div>;
-          }
-          return <div className="text-muted-foreground">-</div>;
+          return (
+            <Fragment>
+              {donation.amount === null && donation.description === null && (
+                <div className="text-muted-foreground">-</div>
+              )}
+              {donation.description !== null && donation.description}
+              {donation.amount !== null &&
+                `$${donation.amount.toLocaleString()}`}
+            </Fragment>
+          );
         },
       },
       {
@@ -367,7 +371,14 @@ export function DonationsDataTable() {
                     data-state={row.getIsSelected() && "selected"}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell
+                        key={cell.id}
+                        {...(cell.column.columnDef.size
+                          ? {
+                              className: `max-w-[${cell.column.columnDef.size}px] truncate`,
+                            }
+                          : {})}
+                      >
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
