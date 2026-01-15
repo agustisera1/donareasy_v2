@@ -30,12 +30,12 @@ export function ViewCampaignDrawer() {
         <DrawerHeader aria-describedby={undefined} className="border-b">
           <DrawerTitle>Detalles de la campaña</DrawerTitle>
           <DrawerDescription>
-            Información completa de la campaña
+            Información registrada de la campaña
           </DrawerDescription>
         </DrawerHeader>
 
         <div className="grid grid-cols-2 gap-4 p-4">
-          <span className="text-sm font-medium">Tipo</span>
+          <span className="text-sm font-medium">Nombre</span>
           <span className="text-sm">{selectedCampaign.type}</span>
 
           <span className="text-sm font-medium">Fecha de inicio</span>
@@ -47,12 +47,7 @@ export function ViewCampaignDrawer() {
           <span className="text-sm">
             {selectedCampaign.termination_date
               ? formatDate(selectedCampaign.termination_date)
-              : "Sin fecha"}
-          </span>
-
-          <span className="text-sm font-medium">Cantidad</span>
-          <span className="text-sm">
-            {selectedCampaign.quantity || "No especificada"}
+              : "Campaña activa"}
           </span>
 
           {selectedCampaign.description && (

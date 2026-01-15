@@ -109,7 +109,12 @@ export function EditCampaignDrawer() {
   }
 
   return (
-    <Drawer direction="right" open={editDrawerOpen} onOpenChange={handleClose}>
+    <Drawer
+      direction="right"
+      open={editDrawerOpen}
+      onOpenChange={handleClose}
+      dismissible={false}
+    >
       <DrawerContent>
         <DrawerHeader aria-describedby={undefined} className="border-b">
           <DrawerTitle>Editar campaña</DrawerTitle>
@@ -118,7 +123,7 @@ export function EditCampaignDrawer() {
 
         <form className="grid grid-cols-2 gap-4 p-4">
           <div className="grid gap-2 col-span-2">
-            <Label htmlFor="type">Tipo de campaña</Label>
+            <Label htmlFor="type">Nombre</Label>
             <Input
               id="type"
               {...register("type")}
@@ -131,43 +136,31 @@ export function EditCampaignDrawer() {
 
           <div className="grid gap-2 col-span-2">
             <Label htmlFor="description">Descripción</Label>
-            <Textarea
-              id="description"
-              {...register("description")}
-              placeholder="Describe la campaña, qué se necesita, cómo pueden ayudar..."
-              rows={5}
-            />
+            <span className="text-xs text-gray-500">
+              Danos el detalle de la campaña, qué se necesita, con qué se
+              pretende colaborar. Sé tan específico como puedas, para que los
+              usuarios puedan entender mejor (cantidades, tamaños, etc.).
+            </span>
+            <Textarea id="description" {...register("description")} rows={5} />
             {errors.description && (
-              <p className="text-sm text-red-500">
+              <p className="text-xs text-red-500">
                 {errors.description.message}
               </p>
             )}
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="quantity">Cantidad (opcional)</Label>
-            <Input
-              id="quantity"
-              {...register("quantity")}
-              placeholder="Ej: 100 unidades, 50 kg..."
-            />
-            {errors.quantity && (
-              <p className="text-sm text-red-500">{errors.quantity.message}</p>
-            )}
-          </div>
-
-          <div className="grid gap-2">
+          <div className="grid gap-2 col-span-2">
             <Label htmlFor="termination_date">
               Fecha de finalización (opcional)
             </Label>
             <Input
-              id="termination_date"
-              lang="es-AR"
+              className="cursor-pointer"
               type="date"
+              lang="es-ES"
               {...register("termination_date")}
             />
             {errors.termination_date && (
-              <p className="text-sm text-red-500">
+              <p className="text-xs text-red-500">
                 {errors.termination_date.message}
               </p>
             )}

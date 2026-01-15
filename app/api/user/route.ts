@@ -22,6 +22,7 @@ export type DonorData = {
   role: "donor";
   email: string;
   created_at: string;
+  id: string;
   name: string;
   lastname: string;
   dni: number;
