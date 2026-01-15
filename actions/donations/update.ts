@@ -6,7 +6,7 @@ interface UpdateDonationData {
   type?: string | null;
   amount?: number | null;
   transfer_receipt?: string | null;
-  receipt_url?: string;
+  attachment_url?: string;
 }
 
 export async function updateDonation(
@@ -72,8 +72,8 @@ export async function updateDonation(
     if (formData.amount !== undefined) updateData.amount = formData.amount;
     if (formData.transfer_receipt !== undefined)
       updateData.transfer_receipt = formData.transfer_receipt;
-    if (formData.receipt_url !== undefined)
-      updateData.receipt_url = formData.receipt_url;
+    if (formData.attachment_url !== undefined)
+      updateData.attachment_url = formData.attachment_url;
 
     const { error: updateError } = await supabase
       .from("donations")

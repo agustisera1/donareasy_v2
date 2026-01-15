@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 interface CreateDonationData {
   institution_id: string;
   donnor_id: string;
-  receipt_url: string;
+  attachment_url: string;
   status: "pending";
   type?: string | null;
   amount?: number | null;
@@ -74,7 +74,7 @@ export async function createDonation(formData: CreateDonationData) {
       .insert({
         institution_id: formData.institution_id,
         donnor_id: formData.donnor_id,
-        receipt_url: formData.receipt_url,
+        attachment_url: formData.attachment_url,
         status: formData.status,
         type: formData.type || null,
         amount: formData.amount || null,

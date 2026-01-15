@@ -11,9 +11,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { useDonationsContext } from "@/contexts/donations-context";
 import { formatDate } from "@/lib/utils";
-import Image from "next/image";
 import { StatusBadge } from "./status-badge";
 import { Fragment } from "react";
+import { ImagePreview } from "./image-preview";
 
 export function ViewDonationDrawer() {
   const { viewDrawerOpen, closeViewDrawer, selectedDonation } =
@@ -58,21 +58,16 @@ export function ViewDonationDrawer() {
                 </Fragment>
               )}
 
-              {selectedDonation.receipt_url && (
+              {selectedDonation.attachment_url && (
                 <Fragment>
                   <span className="text-sm font-medium col-span-2">
-                    Adjunto
+                    Imagen adjunta
                   </span>
                   <div className="col-span-2">
-                    <div className="relative w-full h-64 rounded-md overflow-hidden border">
-                      <Image
-                        src={selectedDonation.receipt_url}
-                        alt="Comprobante de transferencia"
-                        fill
-                        className="object-contain"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      />
-                    </div>
+                    <ImagePreview
+                      src={selectedDonation.attachment_url}
+                      alt="Comprobante de transferencia"
+                    />
                   </div>
                 </Fragment>
               )}
@@ -84,21 +79,16 @@ export function ViewDonationDrawer() {
                 {selectedDonation.type || "No especificado"}
               </span>
 
-              {selectedDonation.receipt_url && (
+              {selectedDonation.attachment_url && (
                 <Fragment>
                   <span className="text-sm font-medium col-span-2">
-                    Adjunto
+                    Imagen adjunta
                   </span>
                   <div className="col-span-2">
-                    <div className="relative w-full h-64 rounded-md overflow-hidden border">
-                      <Image
-                        src={selectedDonation.receipt_url}
-                        alt="Imagen de la donación"
-                        fill
-                        className="object-contain"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      />
-                    </div>
+                    <ImagePreview
+                      src={selectedDonation.attachment_url}
+                      alt="Imagen de la donación"
+                    />
                   </div>
                 </Fragment>
               )}

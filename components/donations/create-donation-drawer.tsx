@@ -2,7 +2,8 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { Trash2 } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -30,6 +31,7 @@ import { Institution } from "@/lib/types";
 import { Textarea } from "../ui/textarea";
 import { useSearchParams } from "next/navigation";
 import { Fragment } from "react";
+import { ImagePreview } from "./image-preview";
 
 type DonationFormData = DonationFormSchema;
 
@@ -44,6 +46,8 @@ export function CreateDonationDrawer() {
   const [isLoading, setIsLoading] = useState(false);
   const [institutions, setInstitutions] = useState<Institution[]>([]);
   const [loadingInstitutions, setLoadingInstitutions] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const searchParams = useSearchParams();
   const campaignId = searchParams.get("campaign_id");
@@ -61,7 +65,7 @@ export function CreateDonationDrawer() {
     mode: "onChange",
     defaultValues: {
       institution_id: "",
-      donation_type: "money",
+      donation_type: "goods",
       amount: "",
       transfer_receipt: null,
       type: "",
@@ -69,6 +73,7 @@ export function CreateDonationDrawer() {
   });
 
   const donationType = watch("donation_type") as "money" | "goods";
+  const transferReceipt = watch("transfer_receipt");
 
   // Cargar instituciones al abrir el drawer
   useEffect(() => {
@@ -76,6 +81,34 @@ export function CreateDonationDrawer() {
       loadInstitutions();
     }
   }, [createDrawerOpen]);
+
+  // Manejar preview cuando se selecciona un nuevo archivo
+  useEffect(() => {
+    let objectUrl: string | null = null;
+
+    // Si hay un archivo nuevo seleccionado, mostrar su preview
+    if (transferReceipt && transferReceipt.length > 0) {
+      const file = transferReceipt[0];
+      if (file.type.startsWith("image/")) {
+        // Crear preview del archivo nuevo
+        objectUrl = URL.createObjectURL(file);
+        setImagePreview(objectUrl);
+      } else {
+        // Para PDFs, no mostrar preview
+        setImagePreview(null);
+      }
+    } else {
+      // Si no hay archivo seleccionado, no mostrar preview
+      setImagePreview(null);
+    }
+
+    // Limpiar el objeto URL cuando el componente se desmonte o cambie el archivo
+    return () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [transferReceipt]);
 
   useEffect(() => {
     if (campaignId && institutionId) {
@@ -116,7 +149,17 @@ export function CreateDonationDrawer() {
   // Resetear el formulario cuando se cierra el drawer
   const handleClose = () => {
     reset();
+    setImagePreview(null);
     closeCreateDrawer();
+  };
+
+  // Resetear el input de imagen
+  const handleClearImage = () => {
+    setValue("transfer_receipt", null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const onSubmit = async (data: DonationFormData) => {
@@ -146,7 +189,7 @@ export function CreateDonationDrawer() {
       const donationData: {
         institution_id: string;
         donnor_id: string;
-        receipt_url: string;
+        attachment_url: string;
         status: "pending";
         type?: string | null;
         amount?: number | null;
@@ -154,7 +197,7 @@ export function CreateDonationDrawer() {
       } = {
         institution_id: data.institution_id,
         donnor_id: donor.id,
-        receipt_url: receiptUrl,
+        attachment_url: receiptUrl,
         status: "pending",
       };
 
@@ -207,8 +250,11 @@ export function CreateDonationDrawer() {
       open={createDrawerOpen}
       onOpenChange={handleClose}
     >
-      <DrawerContent>
-        <DrawerHeader aria-describedby={undefined} className="border-b">
+      <DrawerContent className="overflow-y-auto overflow-x-hidden">
+        <DrawerHeader
+          aria-describedby={undefined}
+          className="border-b sticky top-0 bg-background"
+        >
           <DrawerTitle>Crear nueva donación</DrawerTitle>
           <DrawerDescription>
             Completa los datos para crear una nueva donación
@@ -268,7 +314,7 @@ export function CreateDonationDrawer() {
           {donationType === "money" ? (
             <Fragment>
               <div className="grid gap-2 col-span-2">
-                <Label htmlFor="amount">Monto *</Label>
+                <Label htmlFor="amount">Monto</Label>
                 <Input
                   id="amount"
                   type="number"
@@ -285,9 +331,23 @@ export function CreateDonationDrawer() {
               </div>
 
               <div className="grid gap-2 col-span-2">
-                <Label htmlFor="transfer_receipt">
-                  Comprobante de transferencia
-                </Label>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="transfer_receipt" className="flex-1">
+                    Comprobante de transferencia
+                  </Label>
+                  {imagePreview && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleClearImage}
+                      disabled={isLoading}
+                      className="h-8 w-8"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
                 <Input
                   id="transfer_receipt"
                   type="file"
@@ -295,20 +355,44 @@ export function CreateDonationDrawer() {
                   accept=".png,.jpg,.jpeg,.pdf"
                   {...register("transfer_receipt")}
                   disabled={isLoading}
+                  ref={(e) => {
+                    register("transfer_receipt").ref(e);
+                    fileInputRef.current = e;
+                  }}
                 />
                 {errors.transfer_receipt && (
                   <p className="text-sm text-red-500">
                     {errors.transfer_receipt.message as string}
                   </p>
                 )}
+                {imagePreview && (
+                  <ImagePreview
+                    src={imagePreview}
+                    alt="Preview del comprobante"
+                  />
+                )}
               </div>
-
-              {/* <ImagePreview src={watch("transfer_receipt")} /> */}
             </Fragment>
           ) : (
             <Fragment>
               <div className="grid gap-2 col-span-2">
-                <Label htmlFor="transfer_receipt_goods">Imagen *</Label>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="transfer_receipt_goods" className="flex-1">
+                    {imagePreview ? "Imagen adjunta" : "Adjuntar imagen"}
+                  </Label>
+                  {imagePreview && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleClearImage}
+                      disabled={isLoading}
+                      className="h-8 w-8"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
                 <Input
                   id="transfer_receipt_goods"
                   type="file"
@@ -316,20 +400,32 @@ export function CreateDonationDrawer() {
                   accept=".png,.jpg,.jpeg,.pdf"
                   {...register("transfer_receipt")}
                   disabled={isLoading}
+                  ref={(e) => {
+                    register("transfer_receipt").ref(e);
+                    fileInputRef.current = e;
+                  }}
                 />
                 {errors.transfer_receipt && (
                   <p className="text-sm text-red-500">
                     {errors.transfer_receipt.message as string}
                   </p>
                 )}
+                {imagePreview && (
+                  <ImagePreview src={imagePreview} alt="Preview de la imagen" />
+                )}
               </div>
 
               <div className="grid gap-2 col-span-2">
-                <Label htmlFor="type">Descripción *</Label>
+                <Label htmlFor="type">Descripción</Label>
+                <span className="text-xs text-gray-500">
+                  Danos detalle de la donación, qué se ofrece, cómo se pretende
+                  colaborar, qué recaudos hay que tener en cuenta (frágiles,
+                  conservación, etc.). Sé tan específico como puedas, para que
+                  los usuarios puedan entender mejor
+                </span>
                 <Textarea
                   id="type"
                   {...register("type")}
-                  placeholder="Ej: Alimentos, Ropa, Medicamentos..."
                   disabled={isLoading}
                 />
                 {errors.type && (
@@ -340,7 +436,7 @@ export function CreateDonationDrawer() {
           )}
         </form>
 
-        <DrawerFooter className="border-t">
+        <DrawerFooter className="border-t sticky bottom-0 bg-background">
           <Button
             type="button"
             variant="outline"

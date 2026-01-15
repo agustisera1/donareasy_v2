@@ -249,7 +249,9 @@ function Sidebar({
       data-variant={variant}
       data-side={side}
       data-slot="sidebar"
-      aria-hidden={state === "collapsed" && collapsible === "offcanvas" ? true : undefined}
+      aria-hidden={
+        state === "collapsed" && collapsible === "offcanvas" ? true : undefined
+      }
     >
       {/* This is what handles the sidebar gap on desktop */}
       <div
