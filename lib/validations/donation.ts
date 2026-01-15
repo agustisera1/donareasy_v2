@@ -48,6 +48,9 @@ export const transferReceiptSchema = z
     }
   );
 
+// Schema para el nombre de la donación
+export const donationNameSchema = z.string().optional().or(z.literal(""));
+
 // Schema para la descripción de bienes (obligatorio para donaciones de bienes)
 export const donationGoodsDescriptionSchema = z
   .string()
@@ -62,7 +65,8 @@ export const donationSchema = z
     donation_type: donationTypeSchema,
     amount: z.string().optional().or(z.literal("")),
     attachment_name: z.any().nullable().optional(),
-    type: z.string().optional().or(z.literal("")),
+    name: z.string().optional().or(z.literal("")),
+    description: z.string().optional().or(z.literal("")),
   })
   .refine(
     (data) => {
@@ -117,13 +121,13 @@ export const donationSchema = z
     (data) => {
       // Si es donación de bienes, la descripción es obligatoria
       if (data.donation_type === "goods") {
-        return data.type && data.type.trim() !== "";
+        return data.description && data.description.trim() !== "";
       }
       return true;
     },
     {
       message: "La descripción es obligatoria para donaciones de bienes",
-      path: ["type"],
+      path: ["description"],
     }
   );
 
@@ -136,7 +140,8 @@ export const donationEditSchema = z
   .object({
     amount: z.string().optional().or(z.literal("")),
     attachment_name: z.any().nullable().optional(),
-    type: z.string().optional().or(z.literal("")),
+    name: z.string().optional().or(z.literal("")),
+    description: z.string().optional().or(z.literal("")),
   })
   .refine(
     (data) => {

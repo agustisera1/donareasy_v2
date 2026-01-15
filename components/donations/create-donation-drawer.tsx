@@ -68,7 +68,8 @@ export function CreateDonationDrawer() {
       donation_type: "goods",
       amount: "",
       attachment_name: null,
-      type: "",
+      name: "",
+      description: "",
     },
   });
 
@@ -191,7 +192,8 @@ export function CreateDonationDrawer() {
         donnor_id: string;
         attachment_url: string;
         status: "pending";
-        type?: string | null;
+        name?: string | null;
+        description?: string | null;
         amount?: number | null;
         attachment_name?: string | null;
       } = {
@@ -209,9 +211,11 @@ export function CreateDonationDrawer() {
           }
         }
         donationData.attachment_name = transferReceiptText || null;
-        donationData.type = null;
+        donationData.name = null;
+        donationData.description = null;
       } else {
-        donationData.type = data.type || null;
+        donationData.name = data.name || null;
+        donationData.description = data.description || null;
         donationData.attachment_name = transferReceiptText || null;
         donationData.amount = null;
       }
@@ -376,6 +380,39 @@ export function CreateDonationDrawer() {
           ) : (
             <Fragment>
               <div className="grid gap-2 col-span-2">
+                <Label htmlFor="name">Nombre</Label>
+                <Input
+                  id="name"
+                  {...register("name")}
+                  placeholder="Ej: Ropa de invierno"
+                  disabled={isLoading}
+                />
+                {errors.name && (
+                  <p className="text-sm text-red-500">{errors.name.message}</p>
+                )}
+              </div>
+
+              <div className="grid gap-2 col-span-2">
+                <Label htmlFor="description">Descripción</Label>
+                <span className="text-xs text-gray-500">
+                  Danos detalle de la donación, qué se ofrece, cómo se pretende
+                  colaborar, qué recaudos hay que tener en cuenta (frágiles,
+                  conservación, etc.). Sé tan específico como puedas, para que
+                  los usuarios puedan entender mejor
+                </span>
+                <Textarea
+                  id="description"
+                  {...register("description")}
+                  disabled={isLoading}
+                />
+                {errors.description && (
+                  <p className="text-sm text-red-500">
+                    {errors.description.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid gap-2 col-span-2">
                 <div className="flex items-center gap-2">
                   <Label htmlFor="attachment_name" className="flex-1">
                     {imagePreview ? "Imagen adjunta" : "Adjuntar imagen"}
@@ -411,24 +448,6 @@ export function CreateDonationDrawer() {
                 )}
                 {imagePreview && (
                   <ImagePreview src={imagePreview} alt="Preview de la imagen" />
-                )}
-              </div>
-
-              <div className="grid gap-2 col-span-2">
-                <Label htmlFor="type">Descripción</Label>
-                <span className="text-xs text-gray-500">
-                  Danos detalle de la donación, qué se ofrece, cómo se pretende
-                  colaborar, qué recaudos hay que tener en cuenta (frágiles,
-                  conservación, etc.). Sé tan específico como puedas, para que
-                  los usuarios puedan entender mejor
-                </span>
-                <Textarea
-                  id="type"
-                  {...register("type")}
-                  disabled={isLoading}
-                />
-                {errors.type && (
-                  <p className="text-sm text-red-500">{errors.type.message}</p>
                 )}
               </div>
             </Fragment>

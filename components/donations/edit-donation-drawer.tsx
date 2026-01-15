@@ -47,7 +47,8 @@ export function EditDonationDrawer() {
     resolver: zodResolver(donationEditSchema),
     mode: "onChange",
     defaultValues: {
-      type: "",
+      name: "",
+      description: "",
       amount: "",
       attachment_name: null,
     },
@@ -60,7 +61,8 @@ export function EditDonationDrawer() {
     if (!editDrawerOpen || !selectedDonation) return;
 
     reset({
-      type: selectedDonation.type || "",
+      name: selectedDonation.name || "",
+      description: selectedDonation.description || "",
       amount: selectedDonation.amount?.toString() || "",
       attachment_name: null,
     });
@@ -142,13 +144,24 @@ export function EditDonationDrawer() {
       }
 
       const updateData: {
-        type?: string | null;
+        name?: string | null;
+        description?: string | null;
         amount?: number | null;
         attachment_name?: string | null;
         attachment_url?: string;
       } = {};
 
-      if (data.type) updateData.type = data.type;
+      // Si es donación monetaria, name y description deben ser null
+      if (isMoney) {
+        updateData.name = null;
+        updateData.description = null;
+      } else {
+        // Si es donación de bienes, actualizar name y description
+        if (data.name !== undefined) updateData.name = data.name || null;
+        if (data.description !== undefined)
+          updateData.description = data.description || null;
+      }
+
       if (data.amount) {
         const amountNum = parseFloat(data.amount);
         if (!isNaN(amountNum)) {
@@ -257,6 +270,7 @@ export function EditDonationDrawer() {
                   </div>
                 )}
               </div>
+
               <div className="grid gap-2 col-span-2">
                 <Label htmlFor="amount">Monto</Label>
                 <Input
@@ -276,6 +290,38 @@ export function EditDonationDrawer() {
             </Fragment>
           ) : (
             <Fragment>
+              <div className="grid gap-2 col-span-2">
+                <Label htmlFor="name">Nombre</Label>
+                <Input
+                  id="name"
+                  {...register("name")}
+                  placeholder="Ej: Ropa de invierno"
+                />
+                {errors.name && (
+                  <p className="text-sm text-red-500">{errors.name.message}</p>
+                )}
+              </div>
+
+              <div className="grid gap-2 col-span-2">
+                <Label htmlFor="description">Descripción</Label>
+                <span className="text-xs text-gray-500">
+                  Danos detalle de la donación, qué se ofrece, cómo se pretende
+                  colaborar, qué recaudos hay que tener en cuenta (frágiles,
+                  conservación, etc.). Sé tan específico como puedas, para que
+                  los usuarios puedan entender mejor
+                </span>
+                <Textarea
+                  id="description"
+                  {...register("description")}
+                  disabled={isLoading}
+                />
+                {errors.description && (
+                  <p className="text-sm text-red-500">
+                    {errors.description.message}
+                  </p>
+                )}
+              </div>
+
               <div className="grid gap-2 col-span-2">
                 <div className="flex items-center gap-2">
                   <Label htmlFor="attachment_name" className="flex-1">
@@ -318,24 +364,6 @@ export function EditDonationDrawer() {
                       alt="Preview de la imagen"
                     />
                   </div>
-                )}
-              </div>
-
-              <div className="grid gap-2 col-span-2">
-                <Label htmlFor="type">Descripción</Label>
-                <span className="text-xs text-gray-500">
-                  Danos detalle de la donación, qué se ofrece, cómo se pretende
-                  colaborar, qué recaudos hay que tener en cuenta (frágiles,
-                  conservación, etc.). Sé tan específico como puedas, para que
-                  los usuarios puedan entender mejor
-                </span>
-                <Textarea
-                  id="type"
-                  {...register("type")}
-                  disabled={isLoading}
-                />
-                {errors.type && (
-                  <p className="text-sm text-red-500">{errors.type.message}</p>
                 )}
               </div>
             </Fragment>

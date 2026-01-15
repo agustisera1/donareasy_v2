@@ -7,7 +7,8 @@ interface CreateDonationData {
   donnor_id: string;
   attachment_url: string;
   status: "pending";
-  type?: string | null;
+  name?: string | null;
+  description?: string | null;
   amount?: number | null;
   attachment_name?: string | null;
 }
@@ -76,7 +77,8 @@ export async function createDonation(formData: CreateDonationData) {
         donnor_id: formData.donnor_id,
         attachment_url: formData.attachment_url,
         status: formData.status,
-        type: formData.type || null,
+        name: formData.name || null,
+        description: formData.description || null,
         amount: formData.amount || null,
         attachment_name: formData.attachment_name || null,
       })

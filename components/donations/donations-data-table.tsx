@@ -85,16 +85,17 @@ export function DonationsDataTable() {
   const columns: ColumnDef<Donation>[] = React.useMemo(
     () => [
       {
-        accessorKey: "type",
+        accessorKey: "name",
         header: ({ column }) => {
           return (
             <Button
+              className="px-2 w-full flex justify-start"
               variant="ghost"
               onClick={() =>
                 column.toggleSorting(column.getIsSorted() === "asc")
               }
             >
-              Tipo
+              Nombre
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
           );
@@ -104,7 +105,7 @@ export function DonationsDataTable() {
           const isMoney = donation.amount !== null;
           return (
             <div className="font-medium">
-              {isMoney ? "Monetaria" : donation.type || "Bienes"}
+              {isMoney ? "Donación monetaria" : donation.name || "Bienes"}
             </div>
           );
         },
@@ -114,12 +115,13 @@ export function DonationsDataTable() {
         header: ({ column }) => {
           return (
             <Button
+              className="px-2 w-full flex justify-start"
               variant="ghost"
               onClick={() =>
                 column.toggleSorting(column.getIsSorted() === "asc")
               }
             >
-              Monto / Descripción
+              Detalle
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
           );
@@ -129,6 +131,9 @@ export function DonationsDataTable() {
           if (donation.amount !== null) {
             return <div>${donation.amount.toLocaleString()}</div>;
           }
+          if (donation.description !== null) {
+            return <div>{donation.description}</div>;
+          }
           return <div className="text-muted-foreground">-</div>;
         },
       },
@@ -137,6 +142,7 @@ export function DonationsDataTable() {
         header: ({ column }) => {
           return (
             <Button
+              className="px-2 w-full flex justify-start"
               variant="ghost"
               onClick={() =>
                 column.toggleSorting(column.getIsSorted() === "asc")
@@ -340,7 +346,7 @@ export function DonationsDataTable() {
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
                     return (
-                      <TableHead key={header.id}>
+                      <TableHead key={header.id} className="pl-0">
                         {header.isPlaceholder
                           ? null
                           : flexRender(

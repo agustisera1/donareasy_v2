@@ -74,10 +74,21 @@ export function ViewDonationDrawer() {
             </Fragment>
           ) : (
             <Fragment>
-              <span className="text-sm font-medium">Descripción</span>
-              <span className="text-sm">
-                {selectedDonation.type || "No especificado"}
-              </span>
+              {selectedDonation.name && (
+                <Fragment>
+                  <span className="text-sm font-medium">Nombre</span>
+                  <span className="text-sm">{selectedDonation.name}</span>
+                </Fragment>
+              )}
+
+              {selectedDonation.description && (
+                <Fragment>
+                  <span className="text-sm font-medium">Descripción</span>
+                  <span className="text-sm">
+                    {selectedDonation.description}
+                  </span>
+                </Fragment>
+              )}
 
               {selectedDonation.attachment_url && (
                 <Fragment>
