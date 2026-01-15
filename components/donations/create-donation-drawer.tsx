@@ -28,15 +28,25 @@ import { useDonationsContext } from "@/contexts/donations-context";
 import { createClient } from "@/lib/supabase/client";
 import { Institution } from "@/lib/types";
 import { Textarea } from "../ui/textarea";
+import { useSearchParams } from "next/navigation";
 
 type DonationFormData = DonationFormSchema;
 
 export function CreateDonationDrawer() {
-  const { createDrawerOpen, closeCreateDrawer, donor, refetch } =
-    useDonationsContext();
+  const {
+    createDrawerOpen,
+    openCreateDrawer,
+    closeCreateDrawer,
+    donor,
+    refetch,
+  } = useDonationsContext();
   const [isLoading, setIsLoading] = useState(false);
   const [institutions, setInstitutions] = useState<Institution[]>([]);
   const [loadingInstitutions, setLoadingInstitutions] = useState(false);
+
+  const searchParams = useSearchParams();
+  const campaignId = searchParams.get("campaign_id");
+  const institutionId = searchParams.get("institution_id");
 
   const {
     register,
@@ -65,6 +75,23 @@ export function CreateDonationDrawer() {
       loadInstitutions();
     }
   }, [createDrawerOpen]);
+
+  useEffect(() => {
+    if (campaignId && institutionId) {
+      openCreateDrawer();
+      const institution = institutions?.find(
+        (institution) => institution.id === institutionId
+      );
+      if (institution) setValue("institution_id", institution.id);
+    }
+  }, [
+    loadingInstitutions,
+    campaignId,
+    institutionId,
+    setValue,
+    institutions,
+    openCreateDrawer,
+  ]);
 
   const loadInstitutions = async () => {
     setLoadingInstitutions(true);
@@ -198,7 +225,10 @@ export function CreateDonationDrawer() {
               disabled={loadingInstitutions || isLoading}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecciona una institución" />
+                <SelectValue
+                  placeholder="Selecciona una institución"
+                  defaultValue={institutionId || undefined}
+                />
               </SelectTrigger>
               <SelectContent>
                 {institutions.map((institution) => (

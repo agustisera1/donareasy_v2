@@ -23,7 +23,7 @@ import {
 import Link from "next/link";
 import { DropdownMenuContent, DropdownMenuItem } from "../ui/dropdown-menu";
 import { DropdownMenu, DropdownMenuTrigger } from "../ui/dropdown-menu";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Fragment, useState } from "react";
 import { ProfileDrawer } from "./profile-drawer";
@@ -71,6 +71,8 @@ export function AppSidebar({
     enabled: mode !== "onboarding",
   });
 
+  const pathname = usePathname();
+  const isActive = (url: string) => pathname === url;
   const logout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -95,7 +97,7 @@ export function AppSidebar({
 
             {items.map((item) => (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton asChild isActive={isActive(item.url)}>
                   <Link href={item.url}>
                     <item.icon />
                     <span>{item.title}</span>

@@ -13,7 +13,7 @@ import {
   type SortingState,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, Edit, Check, Eye } from "lucide-react";
+import { ArrowUpDown, Edit, Check, Eye, HandCoins } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -31,11 +31,10 @@ import { FinishCampaignDialog } from "./finish-campaign-dialog";
 import { useCampaignsContext } from "@/contexts/campaigns-context";
 import { Campaign } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
-import { Skeleton } from "../ui/skeleton";
+import { useRouter } from "next/navigation";
 
 export function CampaignsDataTable() {
   const {
-    loading,
     campaigns: data,
     institution,
     isInstitution,
@@ -44,7 +43,7 @@ export function CampaignsDataTable() {
     openViewDrawer,
     openFinishDialog,
   } = useCampaignsContext();
-
+  const router = useRouter();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -111,7 +110,6 @@ export function CampaignsDataTable() {
             | string
             | null;
 
-          console.log(terminationDate, formatDate(terminationDate!));
           return (
             <div>
               {terminationDate
@@ -146,6 +144,8 @@ export function CampaignsDataTable() {
         header: "",
         cell: ({ row }) => {
           const campaign = row.original;
+          const canDonate = campaign.finished === false && !isInstitution;
+          const redirectUrl = `/dashboard/donations?campaign_id=${campaign.id}&institution_id=${campaign.institution_id}`;
           const canEdit =
             isInstitution && campaign.institution_id === institution?.id;
 
@@ -160,6 +160,17 @@ export function CampaignsDataTable() {
               >
                 <Eye className="h-4 w-4" />
               </Button>
+              {canDonate && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  title="Donar"
+                  onClick={() => router.push(redirectUrl)}
+                >
+                  <HandCoins className="h-4 w-4" />
+                </Button>
+              )}
               {canEdit && (
                 <>
                   <Button
@@ -195,6 +206,7 @@ export function CampaignsDataTable() {
       openEditDrawer,
       openViewDrawer,
       openFinishDialog,
+      router,
     ]
   );
 
@@ -250,58 +262,53 @@ export function CampaignsDataTable() {
           <Button onClick={openCreateDrawer}>Nueva Campaña</Button>
         )}
       </div>
-
       <div className="rounded-md border">
-        {loading ? (
-          <Skeleton className="h-24 w-full" />
-        ) : (
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    );
-                  })}
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
                 </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-12 text-center"
-                  />
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        )}
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-12 text-center"
+                />
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
       <div className="flex items-center justify-end space-x-2">
         <div className="flex-1 text-sm text-muted-foreground">
