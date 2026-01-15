@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useCampaignsContext } from "@/contexts/campaigns-context";
 import { formatDate } from "@/lib/utils";
+import { Fragment } from "react";
 
 export function ViewCampaignDrawer() {
   const { viewDrawerOpen, closeViewDrawer, selectedCampaign } =
@@ -51,12 +52,12 @@ export function ViewCampaignDrawer() {
           </span>
 
           {selectedCampaign.description && (
-            <>
+            <Fragment>
               <span className="text-sm font-medium">Descripción</span>
               <span className="text-sm col-span-2">
                 {selectedCampaign.description}
               </span>
-            </>
+            </Fragment>
           )}
         </div>
 

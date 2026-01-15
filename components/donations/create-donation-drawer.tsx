@@ -29,6 +29,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Institution } from "@/lib/types";
 import { Textarea } from "../ui/textarea";
 import { useSearchParams } from "next/navigation";
+import { Fragment } from "react";
 
 type DonationFormData = DonationFormSchema;
 
@@ -265,7 +266,24 @@ export function CreateDonationDrawer() {
           </div>
 
           {donationType === "money" ? (
-            <>
+            <Fragment>
+              <div className="grid gap-2 col-span-2">
+                <Label htmlFor="amount">Monto *</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  {...register("amount")}
+                  placeholder="0.00"
+                  disabled={isLoading}
+                />
+                {errors.amount && (
+                  <p className="text-sm text-red-500">
+                    {errors.amount.message}
+                  </p>
+                )}
+              </div>
+
               <div className="grid gap-2 col-span-2">
                 <Label htmlFor="transfer_receipt">
                   Comprobante de transferencia
@@ -284,25 +302,11 @@ export function CreateDonationDrawer() {
                   </p>
                 )}
               </div>
-              <div className="grid gap-2 col-span-2">
-                <Label htmlFor="amount">Monto *</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  step="0.01"
-                  {...register("amount")}
-                  placeholder="0.00"
-                  disabled={isLoading}
-                />
-                {errors.amount && (
-                  <p className="text-sm text-red-500">
-                    {errors.amount.message}
-                  </p>
-                )}
-              </div>
-            </>
+
+              {/* <ImagePreview src={watch("transfer_receipt")} /> */}
+            </Fragment>
           ) : (
-            <>
+            <Fragment>
               <div className="grid gap-2 col-span-2">
                 <Label htmlFor="transfer_receipt_goods">Imagen *</Label>
                 <Input
@@ -332,7 +336,7 @@ export function CreateDonationDrawer() {
                   <p className="text-sm text-red-500">{errors.type.message}</p>
                 )}
               </div>
-            </>
+            </Fragment>
           )}
         </form>
 

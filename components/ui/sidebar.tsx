@@ -126,10 +126,46 @@ function SidebarProvider({
     [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
   );
 
+  // Ref to ensure the wrapper never has aria-hidden set to true
+  // This prevents accessibility issues when the wrapper contains focusable elements
+  const wrapperRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+
+    // Ensure aria-hidden is never true on the wrapper
+    // The wrapper contains both sidebar and main content, so it should never be hidden
+    const observer = new MutationObserver(() => {
+      if (wrapper.getAttribute("aria-hidden") === "true") {
+        wrapper.removeAttribute("aria-hidden");
+      }
+      if (wrapper.getAttribute("data-aria-hidden") === "true") {
+        wrapper.removeAttribute("data-aria-hidden");
+      }
+    });
+
+    observer.observe(wrapper, {
+      attributes: true,
+      attributeFilter: ["aria-hidden", "data-aria-hidden"],
+    });
+
+    // Initial check
+    if (wrapper.getAttribute("aria-hidden") === "true") {
+      wrapper.removeAttribute("aria-hidden");
+    }
+    if (wrapper.getAttribute("data-aria-hidden") === "true") {
+      wrapper.removeAttribute("data-aria-hidden");
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <SidebarContext.Provider value={contextValue}>
       <TooltipProvider delayDuration={0}>
         <div
+          ref={wrapperRef}
           data-slot="sidebar-wrapper"
           style={
             {
@@ -213,6 +249,7 @@ function Sidebar({
       data-variant={variant}
       data-side={side}
       data-slot="sidebar"
+      aria-hidden={state === "collapsed" && collapsible === "offcanvas" ? true : undefined}
     >
       {/* This is what handles the sidebar gap on desktop */}
       <div

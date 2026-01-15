@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, Fragment } from "react";
 import {
   Drawer,
   DrawerContent,
@@ -198,7 +198,7 @@ export function EditDonationDrawer() {
 
         <form className="grid grid-cols-2 gap-4 p-4">
           {isMoney ? (
-            <>
+            <Fragment>
               <div className="grid gap-2 col-span-2">
                 <Label htmlFor="transfer_receipt">
                   Comprobante de transferencia
@@ -247,9 +247,9 @@ export function EditDonationDrawer() {
                   </p>
                 )}
               </div>
-            </>
+            </Fragment>
           ) : (
-            <>
+            <Fragment>
               <div className="grid gap-2 col-span-2">
                 <Label htmlFor="transfer_receipt_goods">Imagen</Label>
                 <Input
@@ -293,7 +293,7 @@ export function EditDonationDrawer() {
                   <p className="text-sm text-red-500">{errors.type.message}</p>
                 )}
               </div>
-            </>
+            </Fragment>
           )}
         </form>
 
