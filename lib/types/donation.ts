@@ -17,4 +17,5 @@ export type Donation = {
   attachment_url: string; // text NOT NULL
   status: "accepted" | "rejected" | "pending" | "delivered"; // text DEFAULT 'pending'::text
   institution_id: string; // uuid NOT NULL
+  donor: string; // WARNING: This is a string concatenation of the donor's name and lastname when retrieving from the database after joining with the DONOR TABLE
 };

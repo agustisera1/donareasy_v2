@@ -19,9 +19,7 @@ export function ViewDonationDrawer() {
   const { viewDrawerOpen, closeViewDrawer, selectedDonation } =
     useDonationsContext();
 
-  if (!selectedDonation) {
-    return null;
-  }
+  if (!selectedDonation) return null;
 
   const isMoney = selectedDonation.amount !== null;
 
@@ -31,8 +29,11 @@ export function ViewDonationDrawer() {
       open={viewDrawerOpen}
       onOpenChange={closeViewDrawer}
     >
-      <DrawerContent>
-        <DrawerHeader aria-describedby={undefined} className="border-b">
+      <DrawerContent className="overflow-y-auto overflow-x-hidden">
+        <DrawerHeader
+          aria-describedby={undefined}
+          className="border-b sticky top-0 bg-background"
+        >
           <DrawerTitle>Detalles de la donación</DrawerTitle>
           <DrawerDescription>
             Información registrada de la donación
@@ -111,6 +112,9 @@ export function ViewDonationDrawer() {
             <StatusBadge status={selectedDonation.status} />
           </span>
 
+          <span className="text-sm font-medium">Donante</span>
+          <span className="text-sm">{selectedDonation.donor}</span>
+
           <span className="text-sm font-medium">Fecha de creación</span>
           <span className="text-sm">
             {formatDate(selectedDonation.date_created)}
@@ -153,7 +157,7 @@ export function ViewDonationDrawer() {
           )}
         </div>
 
-        <DrawerFooter className="border-t">
+        <DrawerFooter className="border-t sticky bottom-0 bg-background">
           <Button className="w-1/2 mx-auto" onClick={closeViewDrawer}>
             Cerrar
           </Button>

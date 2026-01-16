@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   try {
     let query = supabase
       .from("donations")
-      .select("*")
+      .select("*, donors(name,lastname)")
       .order("date_created", { ascending: false });
 
     // Si se proporciona donor_id, filtrar por ese donante
@@ -25,7 +25,11 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       status: 200,
-      data: donations || [],
+      data:
+        donations.map(({ donors: { name, lastname }, ...donation }) => ({
+          donor: `${name} ${lastname}`,
+          ...donation,
+        })) || [],
     });
   } catch (error) {
     console.error("Error fetching donations:", error);
