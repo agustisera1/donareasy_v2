@@ -42,6 +42,7 @@ export function DonationsDataTable() {
     donor,
     isDonor,
     isInstitution,
+    loading,
     openCreateDrawer,
     openViewDrawer,
     openEditDrawer,
@@ -359,7 +360,16 @@ export function DonationsDataTable() {
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {loading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-12 text-center"
+                >
+                  Cargando
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
