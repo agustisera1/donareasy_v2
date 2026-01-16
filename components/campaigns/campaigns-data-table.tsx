@@ -42,6 +42,7 @@ export function CampaignsDataTable() {
     openEditDrawer,
     openViewDrawer,
     openFinishDialog,
+    loading,
   } = useCampaignsContext();
   const router = useRouter();
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -66,6 +67,7 @@ export function CampaignsDataTable() {
         header: ({ column }) => {
           return (
             <Button
+              className="px-2 w-full flex justify-start"
               variant="ghost"
               onClick={() =>
                 column.toggleSorting(column.getIsSorted() === "asc")
@@ -85,6 +87,7 @@ export function CampaignsDataTable() {
         header: ({ column }) => {
           return (
             <Button
+              className="px-2 w-full flex justify-start"
               variant="ghost"
               onClick={() =>
                 column.toggleSorting(column.getIsSorted() === "asc")
@@ -228,7 +231,7 @@ export function CampaignsDataTable() {
     <div className="w-full space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          {isInstitution && (
+          {isInstitution && !loading && (
             <ToggleGroup
               type="single"
               value={filterMode}
@@ -255,7 +258,7 @@ export function CampaignsDataTable() {
             </ToggleGroup>
           )}
         </div>
-        {isInstitution && (
+        {isInstitution && !loading && (
           <Button onClick={openCreateDrawer}>Nueva Campaña</Button>
         )}
       </div>
@@ -266,7 +269,7 @@ export function CampaignsDataTable() {
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} className="pl-0">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -287,7 +290,14 @@ export function CampaignsDataTable() {
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell
+                      key={cell.id}
+                      {...(cell.column.columnDef.size
+                        ? {
+                            className: `max-w-[${cell.column.columnDef.size}px] truncate`,
+                          }
+                        : {})}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
