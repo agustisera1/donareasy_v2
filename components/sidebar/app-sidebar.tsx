@@ -1,7 +1,6 @@
 "use client";
 import {
   Building,
-  ChartLine,
   ChevronUp,
   HandCoins,
   ListChecks,
@@ -29,6 +28,7 @@ import { Fragment, useState } from "react";
 import { ProfileDrawer } from "./profile-drawer";
 import { EditDrawer } from "./edit-drawer";
 import { useUser } from "@/hooks/use-user";
+import { useQueryClient } from "@tanstack/react-query";
 
 const items = [
   {
@@ -46,11 +46,6 @@ const items = [
     url: `/dashboard/institutions`,
     icon: Building,
   },
-  {
-    title: "Metricas",
-    url: `/dashboard/metrics`,
-    icon: ChartLine,
-  },
 ];
 
 export function AppSidebar({
@@ -59,6 +54,7 @@ export function AppSidebar({
   mode?: "dashboard" | "onboarding";
 }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
@@ -76,6 +72,9 @@ export function AppSidebar({
   const logout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
+    // Limpiar el cache de TanStack Query, especialmente el del usuario
+    queryClient.removeQueries({ queryKey: ["user"] });
+    queryClient.clear(); // Limpiar todo el cache para evitar datos de sesión anterior
     router.push("/auth/login");
   };
 
