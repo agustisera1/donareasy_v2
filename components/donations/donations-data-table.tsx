@@ -68,7 +68,7 @@ export function DonationsDataTable() {
 
     // Filtrar por propietario
     if (filterMode === "mine" && donor?.id) {
-      filtered = filtered.filter((donation) => donation.donnor_id === donor.id);
+      filtered = filtered.filter((donation) => donation.donor_id === donor.id);
     }
 
     // Filtrar por tipo de donación
@@ -178,7 +178,7 @@ export function DonationsDataTable() {
         header: "",
         cell: ({ row }) => {
           const donation = row.original;
-          const canEdit = isDonor && donation.donnor_id === donor?.id;
+          const canEdit = isDonor && donation.donor_id === donor?.id;
           const canAccept = isInstitution && donation.status === "pending";
           const canReject = isInstitution && donation.status === "pending";
           const canDeliver = isInstitution && donation.status === "accepted";

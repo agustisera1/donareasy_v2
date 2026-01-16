@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 
 interface CreateDonationData {
   institution_id: string;
-  donnor_id: string;
+  donor_id: string;
   attachment_url: string;
   status: "pending";
   name?: string | null;
@@ -34,7 +34,7 @@ export async function createDonation(formData: CreateDonationData) {
     const { data: donor, error: donorError } = await supabase
       .from("donors")
       .select("id, user_id")
-      .eq("id", formData.donnor_id)
+      .eq("id", formData.donor_id)
       .eq("user_id", authUser.id)
       .maybeSingle();
 
@@ -74,7 +74,7 @@ export async function createDonation(formData: CreateDonationData) {
       .from("donations")
       .insert({
         institution_id: formData.institution_id,
-        donnor_id: formData.donnor_id,
+        donor_id: formData.donor_id,
         attachment_url: formData.attachment_url,
         status: formData.status,
         name: formData.name || null,

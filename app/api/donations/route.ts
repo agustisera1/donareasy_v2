@@ -14,7 +14,7 @@ export async function GET(request: Request) {
 
     // Si se proporciona donor_id, filtrar por ese donante
     if (donorId) {
-      query = query.eq("donnor_id", donorId);
+      query = query.eq("donor_id", donorId);
     }
 
     const { data: donations, error: donationsError } = await query;

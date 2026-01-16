@@ -33,7 +33,7 @@ export async function updateDonation(
     // 2. Verificar que la donación existe y pertenece al usuario autenticado
     const { data: donation, error: donationError } = await supabase
       .from("donations")
-      .select("id, donnor_id")
+      .select("id, donor_id")
       .eq("id", donationId)
       .maybeSingle();
 
@@ -52,7 +52,7 @@ export async function updateDonation(
     const { data: donor, error: donorError } = await supabase
       .from("donors")
       .select("id, user_id")
-      .eq("id", donation.donnor_id)
+      .eq("id", donation.donor_id)
       .eq("user_id", authUser.id)
       .maybeSingle();
 
@@ -70,7 +70,8 @@ export async function updateDonation(
     // 4. Actualizar la donación
     const updateData: Partial<UpdateDonationData> = {};
     if (formData.name !== undefined) updateData.name = formData.name;
-    if (formData.description !== undefined) updateData.description = formData.description;
+    if (formData.description !== undefined)
+      updateData.description = formData.description;
     if (formData.amount !== undefined) updateData.amount = formData.amount;
     if (formData.attachment_name !== undefined)
       updateData.attachment_name = formData.attachment_name;

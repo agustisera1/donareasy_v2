@@ -208,7 +208,7 @@ export function CreateDonationDrawer() {
 
       const donationData: {
         institution_id: string;
-        donnor_id: string;
+        donor_id: string;
         attachment_url: string;
         status: "pending";
         name?: string | null;
@@ -217,7 +217,7 @@ export function CreateDonationDrawer() {
         attachment_name?: string | null;
       } = {
         institution_id: data.institution_id,
-        donnor_id: donor.id,
+        donor_id: donor.id,
         attachment_url: attachmentUrl,
         status: "pending",
       };

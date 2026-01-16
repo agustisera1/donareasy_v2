@@ -13,7 +13,7 @@ export type Donation = {
   description: string | null; // text (nullable)
   amount: number | null; // numeric (nullable)
   attachment_name: string | null; // text (nullable)
-  donnor_id: string; // uuid NOT NULL - Note: typo in DB schema (should be donor_id)
+  donor_id: string; // uuid NOT NULL - Note: typo in DB schema (should be donor_id)
   attachment_url: string; // text NOT NULL
   status: "accepted" | "rejected" | "pending" | "delivered"; // text DEFAULT 'pending'::text
   institution_id: string; // uuid NOT NULL
