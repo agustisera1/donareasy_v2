@@ -32,6 +32,7 @@ import { RejectDonationDialog } from "./reject-donation-dialog";
 import { DeliverDonationDialog } from "./deliver-donation-dialog";
 import { CreateDonationDrawer } from "./create-donation-drawer";
 import { StatusBadge } from "./status-badge";
+import { CategoryBadge } from "./category-badge";
 import { useDonationsContext } from "@/contexts/donations-context";
 import { Donation } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
@@ -40,6 +41,7 @@ export function DonationsDataTable() {
   const {
     donations: data,
     donor,
+    institution,
     isDonor,
     isInstitution,
     loading,
@@ -68,7 +70,7 @@ export function DonationsDataTable() {
 
     // Filtrar por propietario
     if (filterMode === "mine" && donor?.id) {
-      filtered = filtered.filter((donation) => donation.donnor_id === donor.id);
+      filtered = filtered.filter((donation) => donation.donor_id === donor.id);
     }
 
     // Filtrar por tipo de donación
@@ -141,6 +143,56 @@ export function DonationsDataTable() {
         },
       },
       {
+        accessorKey: "status",
+        header: ({ column }) => {
+          return (
+            <Button
+              className="px-2 w-full flex justify-start"
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              Estado
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          );
+        },
+        cell: ({ row }) => {
+          const status = row.getValue("status") as
+            | "accepted"
+            | "rejected"
+            | "pending"
+            | "delivered";
+          return <StatusBadge status={status} />;
+        },
+      },
+      {
+        accessorKey: "category",
+        header: ({ column }) => {
+          return (
+            <Button
+              className="px-2 w-full flex justify-start"
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              Categoría
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          );
+        },
+        cell: ({ row }) => {
+          const category = row.getValue("category") as
+            | "supplies"
+            | "clothing"
+            | "food"
+            | "other";
+          return <CategoryBadge category={category} />;
+        },
+      },
+      {
         accessorKey: "date_created",
         header: ({ column }) => {
           return (
@@ -161,27 +213,20 @@ export function DonationsDataTable() {
         },
       },
       {
-        accessorKey: "status",
-        header: "Estado",
-        cell: ({ row }) => {
-          const status = row.getValue("status") as
-            | "accepted"
-            | "rejected"
-            | "pending"
-            | "delivered";
-          return <StatusBadge status={status} />;
-        },
-      },
-      {
         id: "actions",
         enableHiding: false,
         header: "",
         cell: ({ row }) => {
           const donation = row.original;
-          const canEdit = isDonor && donation.donnor_id === donor?.id;
-          const canAccept = isInstitution && donation.status === "pending";
-          const canReject = isInstitution && donation.status === "pending";
-          const canDeliver = isInstitution && donation.status === "accepted";
+          const canEdit = isDonor && donation.donor_id === donor?.id;
+          const isOwnInstitutionDonation =
+            isInstitution && donation.institution_id === institution?.id;
+          const canAccept =
+            isOwnInstitutionDonation && donation.status === "pending";
+          const canReject =
+            isOwnInstitutionDonation && donation.status === "pending";
+          const canDeliver =
+            isOwnInstitutionDonation && donation.status === "accepted";
 
           return (
             <div className="flex items-center gap-2">

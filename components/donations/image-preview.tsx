@@ -8,6 +8,7 @@ interface ImagePreviewProps {
   className?: string;
   imageClassName?: string;
   sizes?: string;
+  blur?: boolean;
 }
 
 export function ImagePreview({
@@ -17,6 +18,7 @@ export function ImagePreview({
   className,
   imageClassName,
   sizes = "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw",
+  blur = false,
 }: ImagePreviewProps) {
   return (
     <div
@@ -31,6 +33,7 @@ export function ImagePreview({
         alt={alt}
         fill
         className={cn("object-contain", imageClassName)}
+        style={blur ? { filter: "blur(6px)" } : undefined}
         sizes={sizes}
       />
     </div>

@@ -16,6 +16,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  deliveryMethodTranslations,
+  categoryTranslations,
+} from "@/lib/constants";
+import { Info } from "lucide-react";
+import {
   donationEditSchema,
   type DonationEditFormSchema,
 } from "@/lib/validations";
@@ -52,6 +69,8 @@ export function EditDonationDrawer() {
       description: "",
       amount: "",
       attachment_name: null,
+      delivery_method: "pickup",
+      category: "supplies",
     },
   });
 
@@ -66,6 +85,8 @@ export function EditDonationDrawer() {
       description: selectedDonation.description || "",
       amount: selectedDonation.amount?.toString() || "",
       attachment_name: null,
+      delivery_method: selectedDonation.delivery_method || "pickup",
+      category: selectedDonation.category || "supplies",
     });
 
     // Guardar la URL de la imagen actual de la DB
@@ -168,6 +189,8 @@ export function EditDonationDrawer() {
         amount?: number | null;
         attachment_name?: string | null;
         attachment_url?: string;
+        delivery_method?: "pickup" | "shipment" | "agreement";
+        category?: "supplies" | "clothing" | "food" | "other";
       } = {};
 
       // Si es donación monetaria, name y description deben ser null
@@ -196,6 +219,11 @@ export function EditDonationDrawer() {
         updateData.attachment_name = transferReceiptText;
       }
       // Si no se subió archivo, no actualizar attachment_url ni attachment_name
+
+      // Actualizar delivery_method y category
+      if (data.delivery_method !== undefined)
+        updateData.delivery_method = data.delivery_method;
+      if (data.category !== undefined) updateData.category = data.category;
 
       const result = await updateDonation(selectedDonation.id, updateData);
 
@@ -343,6 +371,165 @@ export function EditDonationDrawer() {
                 />
                 {errors.name && (
                   <p className="text-sm text-red-500">{errors.name.message}</p>
+                )}
+              </div>
+
+              <div className="grid gap-2 col-span-2">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="delivery_method">Forma de entrega</Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-sm">
+                      <div className="space-y-3">
+                        <div>
+                          <p className="font-semibold text-sm">
+                            {deliveryMethodTranslations.pickup.label}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {deliveryMethodTranslations.pickup.description}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm">
+                            {deliveryMethodTranslations.shipment.label}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {deliveryMethodTranslations.shipment.description}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm">
+                            {deliveryMethodTranslations.agreement.label}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {deliveryMethodTranslations.agreement.description}
+                          </p>
+                        </div>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <Select
+                  value={watch("delivery_method")}
+                  onValueChange={(
+                    value: "pickup" | "shipment" | "agreement"
+                  ) => {
+                    setValue("delivery_method", value, {
+                      shouldValidate: true,
+                    });
+                  }}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecciona la forma de entrega" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pickup">
+                      {deliveryMethodTranslations.pickup.label}
+                    </SelectItem>
+                    <SelectItem value="shipment">
+                      {deliveryMethodTranslations.shipment.label}
+                    </SelectItem>
+                    <SelectItem value="agreement">
+                      {deliveryMethodTranslations.agreement.label}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.delivery_method && (
+                  <p className="text-sm text-red-500">
+                    {errors.delivery_method.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid gap-2 col-span-2">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="category">Categoría</Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-sm">
+                      <div className="space-y-3">
+                        <div>
+                          <p className="font-semibold text-sm">
+                            {categoryTranslations.supplies.label}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {categoryTranslations.supplies.description}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm">
+                            {categoryTranslations.clothing.label}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {categoryTranslations.clothing.description}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm">
+                            {categoryTranslations.food.label}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {categoryTranslations.food.description}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm">
+                            {categoryTranslations.other.label}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {categoryTranslations.other.description}
+                          </p>
+                        </div>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <Select
+                  value={watch("category")}
+                  onValueChange={(
+                    value: "supplies" | "clothing" | "food" | "other"
+                  ) => {
+                    setValue("category", value, { shouldValidate: true });
+                  }}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecciona la categoría" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="supplies">
+                      {categoryTranslations.supplies.label}
+                    </SelectItem>
+                    <SelectItem value="clothing">
+                      {categoryTranslations.clothing.label}
+                    </SelectItem>
+                    <SelectItem value="food">
+                      {categoryTranslations.food.label}
+                    </SelectItem>
+                    <SelectItem value="other">
+                      {categoryTranslations.other.label}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.category && (
+                  <p className="text-sm text-red-500">
+                    {errors.category.message}
+                  </p>
                 )}
               </div>
 

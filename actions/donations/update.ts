@@ -8,6 +8,8 @@ interface UpdateDonationData {
   amount?: number | null;
   attachment_name?: string | null;
   attachment_url?: string;
+  delivery_method?: "pickup" | "shipment" | "agreement";
+  category?: "supplies" | "clothing" | "food" | "other";
 }
 
 export async function updateDonation(
@@ -33,7 +35,7 @@ export async function updateDonation(
     // 2. Verificar que la donación existe y pertenece al usuario autenticado
     const { data: donation, error: donationError } = await supabase
       .from("donations")
-      .select("id, donnor_id")
+      .select("id, donor_id")
       .eq("id", donationId)
       .maybeSingle();
 
@@ -52,7 +54,7 @@ export async function updateDonation(
     const { data: donor, error: donorError } = await supabase
       .from("donors")
       .select("id, user_id")
-      .eq("id", donation.donnor_id)
+      .eq("id", donation.donor_id)
       .eq("user_id", authUser.id)
       .maybeSingle();
 
@@ -70,12 +72,17 @@ export async function updateDonation(
     // 4. Actualizar la donación
     const updateData: Partial<UpdateDonationData> = {};
     if (formData.name !== undefined) updateData.name = formData.name;
-    if (formData.description !== undefined) updateData.description = formData.description;
+    if (formData.description !== undefined)
+      updateData.description = formData.description;
     if (formData.amount !== undefined) updateData.amount = formData.amount;
     if (formData.attachment_name !== undefined)
       updateData.attachment_name = formData.attachment_name;
     if (formData.attachment_url !== undefined)
       updateData.attachment_url = formData.attachment_url;
+    if (formData.delivery_method !== undefined)
+      updateData.delivery_method = formData.delivery_method;
+    if (formData.category !== undefined)
+      updateData.category = formData.category;
 
     const { error: updateError } = await supabase
       .from("donations")

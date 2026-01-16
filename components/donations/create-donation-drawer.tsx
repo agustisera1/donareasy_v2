@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useEffect, useRef } from "react";
-import { Eraser, ImagePlus } from "lucide-react";
+import { Eraser, ImagePlus, Info } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -33,6 +33,15 @@ import { Textarea } from "../ui/textarea";
 import { useSearchParams } from "next/navigation";
 import { Fragment } from "react";
 import { ImagePreview } from "./image-preview";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  deliveryMethodTranslations,
+  categoryTranslations,
+} from "@/lib/constants";
 
 type DonationFormData = DonationFormSchema;
 
@@ -67,6 +76,8 @@ export function CreateDonationDrawer() {
     defaultValues: {
       institution_id: "",
       donation_type: "goods",
+      delivery_method: "pickup",
+      category: "supplies",
       amount: "",
       attachment_name: null,
       name: "",
@@ -208,18 +219,22 @@ export function CreateDonationDrawer() {
 
       const donationData: {
         institution_id: string;
-        donnor_id: string;
+        donor_id: string;
         attachment_url: string;
         status: "pending";
+        delivery_method: "pickup" | "shipment" | "agreement";
+        category: "supplies" | "clothing" | "food" | "other";
         name?: string | null;
         description?: string | null;
         amount?: number | null;
         attachment_name?: string | null;
       } = {
         institution_id: data.institution_id,
-        donnor_id: donor.id,
+        donor_id: donor.id,
         attachment_url: attachmentUrl,
         status: "pending",
+        delivery_method: data.delivery_method,
+        category: data.category,
       };
 
       if (data.donation_type === "money") {
@@ -332,6 +347,159 @@ export function CreateDonationDrawer() {
                 <SelectItem value="goods">Bienes</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="grid gap-2 col-span-2">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="delivery_method">Forma de entrega</Label>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-sm">
+                  <div className="space-y-3">
+                    <div>
+                      <p className="font-semibold text-sm">
+                        {deliveryMethodTranslations.pickup.label}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {deliveryMethodTranslations.pickup.description}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">
+                        {deliveryMethodTranslations.shipment.label}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {deliveryMethodTranslations.shipment.description}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">
+                        {deliveryMethodTranslations.agreement.label}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {deliveryMethodTranslations.agreement.description}
+                      </p>
+                    </div>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <Select
+              value={watch("delivery_method")}
+              onValueChange={(value: "pickup" | "shipment" | "agreement") => {
+                setValue("delivery_method", value, { shouldValidate: true });
+              }}
+              disabled={isLoading}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecciona la forma de entrega" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pickup">
+                  {deliveryMethodTranslations.pickup.label}
+                </SelectItem>
+                <SelectItem value="shipment">
+                  {deliveryMethodTranslations.shipment.label}
+                </SelectItem>
+                <SelectItem value="agreement">
+                  {deliveryMethodTranslations.agreement.label}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.delivery_method && (
+              <p className="text-sm text-red-500">
+                {errors.delivery_method.message}
+              </p>
+            )}
+          </div>
+
+          <div className="grid gap-2 col-span-2">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="category">Categoría</Label>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-sm">
+                  <div className="space-y-3">
+                    <div>
+                      <p className="font-semibold text-sm">
+                        {categoryTranslations.supplies.label}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {categoryTranslations.supplies.description}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">
+                        {categoryTranslations.clothing.label}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {categoryTranslations.clothing.description}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">
+                        {categoryTranslations.food.label}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {categoryTranslations.food.description}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">
+                        {categoryTranslations.other.label}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {categoryTranslations.other.description}
+                      </p>
+                    </div>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <Select
+              value={watch("category")}
+              onValueChange={(
+                value: "supplies" | "clothing" | "food" | "other"
+              ) => {
+                setValue("category", value, { shouldValidate: true });
+              }}
+              disabled={isLoading}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecciona la categoría" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="supplies">
+                  {categoryTranslations.supplies.label}
+                </SelectItem>
+                <SelectItem value="clothing">
+                  {categoryTranslations.clothing.label}
+                </SelectItem>
+                <SelectItem value="food">
+                  {categoryTranslations.food.label}
+                </SelectItem>
+                <SelectItem value="other">
+                  {categoryTranslations.other.label}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.category && (
+              <p className="text-sm text-red-500">{errors.category.message}</p>
+            )}
           </div>
 
           {donationType === "money" ? (

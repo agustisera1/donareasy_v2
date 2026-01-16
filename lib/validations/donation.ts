@@ -8,6 +8,12 @@ export const institutionIdSchema = z
 // Schema para el tipo de donación
 export const donationTypeSchema = z.enum(["money", "goods"]);
 
+// Schema para la forma de entrega
+export const deliveryMethodSchema = z.enum(["pickup", "shipment", "agreement"]);
+
+// Schema para la categoría
+export const categorySchema = z.enum(["supplies", "clothing", "food", "other"]);
+
 // Schema para el monto (obligatorio para donaciones monetarias)
 export const donationAmountSchema = z
   .string()
@@ -63,6 +69,8 @@ export const donationSchema = z
   .object({
     institution_id: institutionIdSchema,
     donation_type: donationTypeSchema,
+    delivery_method: deliveryMethodSchema,
+    category: categorySchema,
     amount: z.string().optional().or(z.literal("")),
     attachment_name: z.any().nullable().optional(),
     name: z.string().optional().or(z.literal("")),
@@ -142,6 +150,8 @@ export const donationEditSchema = z
     attachment_name: z.any().nullable().optional(),
     name: z.string().optional().or(z.literal("")),
     description: z.string().optional().or(z.literal("")),
+    delivery_method: deliveryMethodSchema,
+    category: categorySchema,
   })
   .refine(
     (data) => {

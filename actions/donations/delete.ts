@@ -22,7 +22,7 @@ export async function deleteDonation(donationId: number) {
     // 2. Verificar que la donación existe y pertenece al usuario autenticado
     const { data: donation, error: donationError } = await supabase
       .from("donations")
-      .select("id, donnor_id")
+      .select("id, donor_id")
       .eq("id", donationId)
       .maybeSingle();
 
@@ -41,7 +41,7 @@ export async function deleteDonation(donationId: number) {
     const { data: donor, error: donorError } = await supabase
       .from("donors")
       .select("id, user_id")
-      .eq("id", donation.donnor_id)
+      .eq("id", donation.donor_id)
       .eq("user_id", authUser.id)
       .maybeSingle();
 
