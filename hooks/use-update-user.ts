@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateDonor, updateInstitution } from "@/actions/user/update";
 import { toast } from "sonner";
 import {
@@ -19,32 +19,23 @@ interface UseUpdateUserReturn {
 
 /**
  * Hook para manejar la actualización de datos del usuario
+ * Implementado con TanStack Query para invalidación automática de caché
  * Los toasts se manejan automáticamente dentro del hook
  */
 export function useUpdateUser(): UseUpdateUserReturn {
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
 
-  const updateUser = async (
-    data: DonorEditFormSchema | InstitutionEditFormSchema,
-    user: DonorData | InstitutionData | null
-  ): Promise<boolean> => {
-    if (!user) {
-      toast.error("Error", {
-        description: "No hay datos de usuario disponibles.",
-      });
-      return false;
-    }
-
-    setIsLoading(true);
-
-    try {
+  const mutation = useMutation({
+    mutationFn: async ({
+      data,
+      user,
+    }: {
+      data: DonorEditFormSchema | InstitutionEditFormSchema;
+      user: DonorData | InstitutionData;
+    }) => {
       const userId = user.user_id;
       if (!userId) {
-        toast.error("Error de usuario", {
-          description: "No se pudo obtener el ID del usuario.",
-        });
-        setIsLoading(false);
-        return false;
+        throw new Error("No se pudo obtener el ID del usuario.");
       }
 
       let result;
@@ -57,39 +48,51 @@ export function useUpdateUser(): UseUpdateUserReturn {
           userId
         );
       } else {
-        toast.error("Error", {
-          description: "Tipo de usuario no reconocido.",
-        });
-        setIsLoading(false);
-        return false;
+        throw new Error("Tipo de usuario no reconocido.");
       }
 
-      if (result.success) {
-        toast.success("Datos actualizados!", {
-          description: "Los cambios se han guardado correctamente.",
-        });
-        return true;
-      } else {
-        toast.error("Error al actualizar datos", {
-          description: result.error,
-        });
-        return false;
+      if (!result.success) {
+        throw new Error(result.error || "Error al actualizar datos");
       }
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Ocurrió un error inesperado";
-      toast.error("Error inesperado", {
-        description: errorMessage,
+
+      return result;
+    },
+    onSuccess: () => {
+      // Invalidar la query de usuario para refrescar los datos
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+      toast.success("Datos actualizados!", {
+        description: "Los cambios se han guardado correctamente.",
+      });
+    },
+    onError: (error: Error) => {
+      toast.error("Error al actualizar datos", {
+        description: error.message,
+      });
+    },
+  });
+
+  const updateUser = async (
+    data: DonorEditFormSchema | InstitutionEditFormSchema,
+    user: DonorData | InstitutionData | null
+  ): Promise<boolean> => {
+    if (!user) {
+      toast.error("Error", {
+        description: "No hay datos de usuario disponibles.",
       });
       return false;
-    } finally {
-      setIsLoading(false);
+    }
+
+    try {
+      await mutation.mutateAsync({ data, user });
+      return true;
+    } catch {
+      // El error ya se maneja en onError del mutation
+      return false;
     }
   };
 
   return {
     updateUser,
-    isLoading,
+    isLoading: mutation.isPending,
   };
 }

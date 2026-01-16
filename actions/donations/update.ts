@@ -3,10 +3,11 @@
 import { createClient } from "@/lib/supabase/server";
 
 interface UpdateDonationData {
-  type?: string | null;
+  name?: string | null;
+  description?: string | null;
   amount?: number | null;
-  transfer_receipt?: string | null;
-  receipt_url?: string;
+  attachment_name?: string | null;
+  attachment_url?: string;
 }
 
 export async function updateDonation(
@@ -68,12 +69,13 @@ export async function updateDonation(
 
     // 4. Actualizar la donación
     const updateData: Partial<UpdateDonationData> = {};
-    if (formData.type !== undefined) updateData.type = formData.type;
+    if (formData.name !== undefined) updateData.name = formData.name;
+    if (formData.description !== undefined) updateData.description = formData.description;
     if (formData.amount !== undefined) updateData.amount = formData.amount;
-    if (formData.transfer_receipt !== undefined)
-      updateData.transfer_receipt = formData.transfer_receipt;
-    if (formData.receipt_url !== undefined)
-      updateData.receipt_url = formData.receipt_url;
+    if (formData.attachment_name !== undefined)
+      updateData.attachment_name = formData.attachment_name;
+    if (formData.attachment_url !== undefined)
+      updateData.attachment_url = formData.attachment_url;
 
     const { error: updateError } = await supabase
       .from("donations")

@@ -5,11 +5,12 @@ import { createClient } from "@/lib/supabase/server";
 interface CreateDonationData {
   institution_id: string;
   donnor_id: string;
-  receipt_url: string;
+  attachment_url: string;
   status: "pending";
-  type?: string | null;
+  name?: string | null;
+  description?: string | null;
   amount?: number | null;
-  transfer_receipt?: string | null;
+  attachment_name?: string | null;
 }
 
 export async function createDonation(formData: CreateDonationData) {
@@ -74,11 +75,12 @@ export async function createDonation(formData: CreateDonationData) {
       .insert({
         institution_id: formData.institution_id,
         donnor_id: formData.donnor_id,
-        receipt_url: formData.receipt_url,
+        attachment_url: formData.attachment_url,
         status: formData.status,
-        type: formData.type || null,
+        name: formData.name || null,
+        description: formData.description || null,
         amount: formData.amount || null,
-        transfer_receipt: formData.transfer_receipt || null,
+        attachment_name: formData.attachment_name || null,
       })
       .select("id")
       .single();

@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import React, { Fragment } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -35,11 +35,9 @@ import { StatusBadge } from "./status-badge";
 import { useDonationsContext } from "@/contexts/donations-context";
 import { Donation } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
-import { Skeleton } from "../ui/skeleton";
 
 export function DonationsDataTable() {
   const {
-    loading,
     donations: data,
     donor,
     isDonor,
@@ -85,16 +83,17 @@ export function DonationsDataTable() {
   const columns: ColumnDef<Donation>[] = React.useMemo(
     () => [
       {
-        accessorKey: "type",
+        accessorKey: "name",
         header: ({ column }) => {
           return (
             <Button
+              className="px-2 w-full flex justify-start"
               variant="ghost"
               onClick={() =>
                 column.toggleSorting(column.getIsSorted() === "asc")
               }
             >
-              Tipo
+              Nombre
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
           );
@@ -104,7 +103,7 @@ export function DonationsDataTable() {
           const isMoney = donation.amount !== null;
           return (
             <div className="font-medium">
-              {isMoney ? "Monetaria" : donation.type || "Bienes"}
+              {isMoney ? "Donación monetaria" : donation.name || "Bienes"}
             </div>
           );
         },
@@ -114,22 +113,30 @@ export function DonationsDataTable() {
         header: ({ column }) => {
           return (
             <Button
+              className="px-2 w-full flex justify-start"
               variant="ghost"
               onClick={() =>
                 column.toggleSorting(column.getIsSorted() === "asc")
               }
             >
-              Monto / Descripción
+              Detalle
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
           );
         },
+        size: 240,
         cell: ({ row }) => {
           const donation = row.original;
-          if (donation.amount !== null) {
-            return <div>${donation.amount.toLocaleString()}</div>;
-          }
-          return <div className="text-muted-foreground">-</div>;
+          return (
+            <Fragment>
+              {donation.amount === null && donation.description === null && (
+                <div className="text-muted-foreground">-</div>
+              )}
+              {donation.description !== null && donation.description}
+              {donation.amount !== null &&
+                `$${donation.amount.toLocaleString()}`}
+            </Fragment>
+          );
         },
       },
       {
@@ -137,6 +144,7 @@ export function DonationsDataTable() {
         header: ({ column }) => {
           return (
             <Button
+              className="px-2 w-full flex justify-start"
               variant="ghost"
               onClick={() =>
                 column.toggleSorting(column.getIsSorted() === "asc")
@@ -331,56 +339,59 @@ export function DonationsDataTable() {
       </div>
 
       <div className="rounded-md border">
-        {loading ? (
-          <Skeleton className="h-24 w-full" />
-        ) : (
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    );
-                  })}
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead key={header.id} className="pl-0">
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      {...(cell.column.columnDef.size
+                        ? {
+                            className: `max-w-[${cell.column.columnDef.size}px] truncate`,
+                          }
+                        : {})}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
                 </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-12 text-center"
-                  />
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        )}
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-12 text-center"
+                />
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
       <div className="flex items-center justify-end space-x-2">
         <div className="flex-1 text-sm text-muted-foreground">

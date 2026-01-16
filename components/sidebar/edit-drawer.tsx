@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import { useEffect, Fragment } from "react";
 import {
   Drawer,
   DrawerContent,
@@ -120,7 +120,7 @@ export function EditDrawer({
         </DrawerHeader>
 
         {isDonor ? (
-          <>
+          <Fragment>
             <form className="grid grid-cols-2 gap-4 p-4">
               <div className="grid gap-2">
                 <Label htmlFor="name">Nombre</Label>
@@ -243,9 +243,9 @@ export function EditDrawer({
                 {isLoading ? "Actualizando..." : "Guardar Cambios"}
               </Button>
             </DrawerFooter>
-          </>
+          </Fragment>
         ) : isInstitution ? (
-          <>
+          <Fragment>
             <form className="grid grid-cols-2 gap-4 p-4">
               <div className="grid gap-2">
                 <Label htmlFor="director">Director</Label>
@@ -364,7 +364,7 @@ export function EditDrawer({
                 {isLoading ? "Guardando..." : "Guardar Cambios"}
               </Button>
             </DrawerFooter>
-          </>
+          </Fragment>
         ) : null}
       </DrawerContent>
     </Drawer>

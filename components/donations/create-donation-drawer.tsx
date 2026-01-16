@@ -2,7 +2,8 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { Eraser, ImagePlus } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -23,12 +24,15 @@ import {
 } from "@/components/ui/select";
 import { donationSchema, type DonationFormSchema } from "@/lib/validations";
 import { createDonation } from "@/actions/donations/create";
+import { uploadFile } from "@/actions/storage/upload";
 import { toast } from "sonner";
 import { useDonationsContext } from "@/contexts/donations-context";
 import { createClient } from "@/lib/supabase/client";
 import { Institution } from "@/lib/types";
 import { Textarea } from "../ui/textarea";
 import { useSearchParams } from "next/navigation";
+import { Fragment } from "react";
+import { ImagePreview } from "./image-preview";
 
 type DonationFormData = DonationFormSchema;
 
@@ -43,6 +47,8 @@ export function CreateDonationDrawer() {
   const [isLoading, setIsLoading] = useState(false);
   const [institutions, setInstitutions] = useState<Institution[]>([]);
   const [loadingInstitutions, setLoadingInstitutions] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const searchParams = useSearchParams();
   const campaignId = searchParams.get("campaign_id");
@@ -60,14 +66,16 @@ export function CreateDonationDrawer() {
     mode: "onChange",
     defaultValues: {
       institution_id: "",
-      donation_type: "money",
+      donation_type: "goods",
       amount: "",
-      transfer_receipt: null,
-      type: "",
+      attachment_name: null,
+      name: "",
+      description: "",
     },
   });
 
   const donationType = watch("donation_type") as "money" | "goods";
+  const attachment = watch("attachment_name");
 
   // Cargar instituciones al abrir el drawer
   useEffect(() => {
@@ -75,6 +83,34 @@ export function CreateDonationDrawer() {
       loadInstitutions();
     }
   }, [createDrawerOpen]);
+
+  // Manejar preview cuando se selecciona un nuevo archivo
+  useEffect(() => {
+    let objectUrl: string | null = null;
+
+    // Si hay un archivo nuevo seleccionado, mostrar su preview
+    if (attachment && attachment.length > 0) {
+      const file = attachment[0];
+      if (file.type.startsWith("image/")) {
+        // Crear preview del archivo nuevo
+        objectUrl = URL.createObjectURL(file);
+        setImagePreview(objectUrl);
+      } else {
+        // Para PDFs, no mostrar preview
+        setImagePreview(null);
+      }
+    } else {
+      // Si no hay archivo seleccionado, no mostrar preview
+      setImagePreview(null);
+    }
+
+    // Limpiar el objeto URL cuando el componente se desmonte o cambie el archivo
+    return () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [attachment]);
 
   useEffect(() => {
     if (campaignId && institutionId) {
@@ -115,7 +151,17 @@ export function CreateDonationDrawer() {
   // Resetear el formulario cuando se cierra el drawer
   const handleClose = () => {
     reset();
+    setImagePreview(null);
     closeCreateDrawer();
+  };
+
+  // Resetear el input de imagen
+  const clearImage = () => {
+    setValue("attachment_name", null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const onSubmit = async (data: DonationFormData) => {
@@ -130,30 +176,49 @@ export function CreateDonationDrawer() {
 
     try {
       // Procesar archivo (obligatorio para ambos tipos de donación)
-      let receiptUrl = "";
-      let transferReceiptText = "";
+      let attachmentUrl = "";
+      let attachmentFileName = "";
 
       // El archivo ya está validado por Zod
-      if (data.transfer_receipt && data.transfer_receipt.length > 0) {
-        const file = data.transfer_receipt[0];
-        // Por ahora, usar un mock URL (imagen pública de ejemplo)
-        receiptUrl =
-          "https://images.unsplash.com/photo-1556740758-90de374c12ad?w=800&h=600&fit=crop";
-        transferReceiptText = file.name;
+      if (data.attachment_name && data.attachment_name.length > 0) {
+        const file = data.attachment_name[0];
+
+        // Determinar el nombre del archivo según el tipo de donación
+        let fileName: string | undefined;
+        if (data.donation_type === "goods" && data.name) {
+          // Para donaciones de bienes, usar el nombre del formulario
+          fileName = data.name;
+        }
+        // Para donaciones monetarias, no se provee fileName, se usará file.name por defecto
+
+        // Subir el archivo a Supabase Storage
+        const uploadResult = await uploadFile(file, fileName);
+
+        if (!uploadResult.success) {
+          toast.error("Error al subir el archivo", {
+            description: uploadResult.error || "No se pudo subir el archivo",
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        attachmentUrl = uploadResult.url || "";
+        attachmentFileName = uploadResult.fileName || file.name;
       }
 
       const donationData: {
         institution_id: string;
         donnor_id: string;
-        receipt_url: string;
+        attachment_url: string;
         status: "pending";
-        type?: string | null;
+        name?: string | null;
+        description?: string | null;
         amount?: number | null;
-        transfer_receipt?: string | null;
+        attachment_name?: string | null;
       } = {
         institution_id: data.institution_id,
         donnor_id: donor.id,
-        receipt_url: receiptUrl,
+        attachment_url: attachmentUrl,
         status: "pending",
       };
 
@@ -164,11 +229,13 @@ export function CreateDonationDrawer() {
             donationData.amount = amountNum;
           }
         }
-        donationData.transfer_receipt = transferReceiptText || null;
-        donationData.type = null;
+        donationData.attachment_name = attachmentFileName || null;
+        donationData.name = null;
+        donationData.description = null;
       } else {
-        donationData.type = data.type || null;
-        donationData.transfer_receipt = transferReceiptText || null;
+        donationData.name = data.name || null;
+        donationData.description = data.description || null;
+        donationData.attachment_name = attachmentFileName || null;
         donationData.amount = null;
       }
 
@@ -206,8 +273,11 @@ export function CreateDonationDrawer() {
       open={createDrawerOpen}
       onOpenChange={handleClose}
     >
-      <DrawerContent>
-        <DrawerHeader aria-describedby={undefined} className="border-b">
+      <DrawerContent className="overflow-y-auto overflow-x-hidden">
+        <DrawerHeader
+          aria-describedby={undefined}
+          className="border-b sticky top-0 bg-background"
+        >
           <DrawerTitle>Crear nueva donación</DrawerTitle>
           <DrawerDescription>
             Completa los datos para crear una nueva donación
@@ -265,27 +335,9 @@ export function CreateDonationDrawer() {
           </div>
 
           {donationType === "money" ? (
-            <>
+            <Fragment>
               <div className="grid gap-2 col-span-2">
-                <Label htmlFor="transfer_receipt">
-                  Comprobante de transferencia
-                </Label>
-                <Input
-                  id="transfer_receipt"
-                  type="file"
-                  lang="es"
-                  accept=".png,.jpg,.jpeg,.pdf"
-                  {...register("transfer_receipt")}
-                  disabled={isLoading}
-                />
-                {errors.transfer_receipt && (
-                  <p className="text-sm text-red-500">
-                    {errors.transfer_receipt.message as string}
-                  </p>
-                )}
-              </div>
-              <div className="grid gap-2 col-span-2">
-                <Label htmlFor="amount">Monto *</Label>
+                <Label htmlFor="amount">Monto</Label>
                 <Input
                   id="amount"
                   type="number"
@@ -300,43 +352,159 @@ export function CreateDonationDrawer() {
                   </p>
                 )}
               </div>
-            </>
-          ) : (
-            <>
+
               <div className="grid gap-2 col-span-2">
-                <Label htmlFor="transfer_receipt_goods">Imagen *</Label>
-                <Input
-                  id="transfer_receipt_goods"
+                <div className="flex items-center gap-2">
+                  <Label className="flex-1">Comprobante de transferencia</Label>
+                  {attachment && attachment.length > 0 ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={clearImage}
+                      disabled={isLoading}
+                      className="h-8 w-8"
+                    >
+                      <Eraser className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        if (fileInputRef.current) {
+                          fileInputRef.current.click();
+                        }
+                      }}
+                      disabled={isLoading}
+                      className="h-8 w-8"
+                    >
+                      <ImagePlus className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <input
+                  id="attachment_name"
                   type="file"
                   lang="es"
+                  className="hidden"
                   accept=".png,.jpg,.jpeg,.pdf"
-                  {...register("transfer_receipt")}
+                  {...register("attachment_name")}
+                  disabled={isLoading}
+                  ref={(e) => {
+                    register("attachment_name").ref(e);
+                    fileInputRef.current = e;
+                  }}
+                />
+                {errors.attachment_name && (
+                  <p className="text-sm text-red-500">
+                    {errors.attachment_name.message as string}
+                  </p>
+                )}
+                {imagePreview && (
+                  <div className="mt-2">
+                    <ImagePreview
+                      src={imagePreview}
+                      alt="Preview del comprobante"
+                    />
+                  </div>
+                )}
+              </div>
+            </Fragment>
+          ) : (
+            <Fragment>
+              <div className="grid gap-2 col-span-2">
+                <Label htmlFor="name">Nombre</Label>
+                <Input
+                  id="name"
+                  {...register("name")}
+                  placeholder="Ej: Ropa de invierno"
                   disabled={isLoading}
                 />
-                {errors.transfer_receipt && (
+                {errors.name && (
+                  <p className="text-sm text-red-500">{errors.name.message}</p>
+                )}
+              </div>
+
+              <div className="grid gap-2 col-span-2">
+                <Label htmlFor="description">Descripción</Label>
+                <span className="text-xs text-gray-500">
+                  Danos detalle de la donación, qué se ofrece, cómo se pretende
+                  colaborar, qué recaudos hay que tener en cuenta (frágiles,
+                  conservación, etc.). Sé tan específico como puedas, para que
+                  los usuarios puedan entender mejor
+                </span>
+                <Textarea
+                  id="description"
+                  {...register("description")}
+                  disabled={isLoading}
+                />
+                {errors.description && (
                   <p className="text-sm text-red-500">
-                    {errors.transfer_receipt.message as string}
+                    {errors.description.message}
                   </p>
                 )}
               </div>
 
               <div className="grid gap-2 col-span-2">
-                <Label htmlFor="type">Descripción *</Label>
-                <Textarea
-                  id="type"
-                  {...register("type")}
-                  placeholder="Ej: Alimentos, Ropa, Medicamentos..."
+                <div className="flex items-center gap-2">
+                  <Label className="flex-1">Imagen adjunta</Label>
+                  {attachment && attachment.length > 0 ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={clearImage}
+                      disabled={isLoading}
+                      className="h-8 w-8"
+                    >
+                      <Eraser className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        if (fileInputRef.current) {
+                          fileInputRef.current.click();
+                        }
+                      }}
+                      disabled={isLoading}
+                      className="h-8 w-8"
+                    >
+                      <ImagePlus className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  lang="es"
+                  className="hidden"
+                  accept=".png,.jpg,.jpeg,.pdf"
+                  {...register("attachment_name")}
                   disabled={isLoading}
+                  ref={(e) => {
+                    register("attachment_name").ref(e);
+                    fileInputRef.current = e;
+                  }}
                 />
-                {errors.type && (
-                  <p className="text-sm text-red-500">{errors.type.message}</p>
+                {errors.attachment_name && (
+                  <p className="text-sm text-red-500">
+                    {errors.attachment_name.message as string}
+                  </p>
+                )}
+                {imagePreview && (
+                  <div className="mt-2">
+                    <ImagePreview
+                      src={imagePreview}
+                      alt="Preview de la imagen"
+                    />
+                  </div>
                 )}
               </div>
-            </>
+            </Fragment>
           )}
         </form>
 
-        <DrawerFooter className="border-t">
+        <DrawerFooter className="border-t sticky bottom-0 bg-background">
           <Button
             type="button"
             variant="outline"

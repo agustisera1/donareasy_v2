@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { useState, useMemo, Fragment } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -42,18 +42,16 @@ export function CampaignsDataTable() {
     openEditDrawer,
     openViewDrawer,
     openFinishDialog,
+    loading,
   } = useCampaignsContext();
   const router = useRouter();
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
-  const [filterMode, setFilterMode] = React.useState<"all" | "mine">("all");
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [filterMode, setFilterMode] = useState<"all" | "mine">("all");
 
   // Filtrar datos según el modo de filtro
-  const filteredData = React.useMemo(() => {
+  const filteredData = useMemo(() => {
     if (filterMode === "mine" && institution?.id) {
       return data.filter(
         (campaign) => campaign.institution_id === institution.id
@@ -62,13 +60,14 @@ export function CampaignsDataTable() {
     return data;
   }, [data, filterMode, institution]);
 
-  const columns: ColumnDef<Campaign>[] = React.useMemo(
+  const columns: ColumnDef<Campaign>[] = useMemo(
     () => [
       {
         accessorKey: "type",
         header: ({ column }) => {
           return (
             <Button
+              className="px-2 w-full flex justify-start"
               variant="ghost"
               onClick={() =>
                 column.toggleSorting(column.getIsSorted() === "asc")
@@ -88,6 +87,7 @@ export function CampaignsDataTable() {
         header: ({ column }) => {
           return (
             <Button
+              className="px-2 w-full flex justify-start"
               variant="ghost"
               onClick={() =>
                 column.toggleSorting(column.getIsSorted() === "asc")
@@ -172,7 +172,7 @@ export function CampaignsDataTable() {
                 </Button>
               )}
               {canEdit && (
-                <>
+                <Fragment>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -193,7 +193,7 @@ export function CampaignsDataTable() {
                   >
                     <Check className="h-4 w-4" />
                   </Button>
-                </>
+                </Fragment>
               )}
             </div>
           );
@@ -231,7 +231,7 @@ export function CampaignsDataTable() {
     <div className="w-full space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          {isInstitution && (
+          {isInstitution && !loading && (
             <ToggleGroup
               type="single"
               value={filterMode}
@@ -258,7 +258,7 @@ export function CampaignsDataTable() {
             </ToggleGroup>
           )}
         </div>
-        {isInstitution && (
+        {isInstitution && !loading && (
           <Button onClick={openCreateDrawer}>Nueva Campaña</Button>
         )}
       </div>
@@ -269,7 +269,7 @@ export function CampaignsDataTable() {
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} className="pl-0">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -290,7 +290,14 @@ export function CampaignsDataTable() {
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell
+                      key={cell.id}
+                      {...(cell.column.columnDef.size
+                        ? {
+                            className: `max-w-[${cell.column.columnDef.size}px] truncate`,
+                          }
+                        : {})}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { DonorData, InstitutionData } from "@/app/api/user/route";
+import { Fragment } from "react";
 
 interface ProfileDrawerProps {
   open: boolean;
@@ -35,7 +36,7 @@ export function ProfileDrawer({
 
         <div className="grid grid-cols-2 gap-4 p-4">
           {isDonor ? (
-            <>
+            <Fragment>
               <span className="text-sm font-medium">Nombre</span>
               <span className="text-sm">{user?.name}</span>
 
@@ -59,9 +60,9 @@ export function ProfileDrawer({
 
               <span className="text-sm font-medium">Dirección</span>
               <span className="text-sm">{user?.address}</span>
-            </>
+            </Fragment>
           ) : isInstitution ? (
-            <>
+            <Fragment>
               <span className="text-sm font-medium">Nombre</span>
               <span className="text-sm">{user?.name}</span>
 
@@ -94,14 +95,14 @@ export function ProfileDrawer({
               <span className="text-sm">{user.bank || "No especificado"}</span>
 
               {user.lore && (
-                <>
+                <Fragment>
                   <span className="text-sm font-medium">
                     Acerca de la institución
                   </span>
                   <span className="text-sm col-span-2">{user.lore}</span>
-                </>
+                </Fragment>
               )}
-            </>
+            </Fragment>
           ) : null}
         </div>
 

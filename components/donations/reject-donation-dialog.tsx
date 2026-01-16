@@ -15,12 +15,8 @@ import {
 import { toast } from "sonner";
 
 export function RejectDonationDialog() {
-  const {
-    rejectDialogOpen,
-    closeRejectDialog,
-    selectedDonation,
-    refetch,
-  } = useDonationsContext();
+  const { rejectDialogOpen, closeRejectDialog, selectedDonation, refetch } =
+    useDonationsContext();
 
   const handleConfirm = async () => {
     if (!selectedDonation) return;
@@ -28,7 +24,7 @@ export function RejectDonationDialog() {
     const result = await rejectDonation(selectedDonation.id);
 
     if (result.success) {
-      toast.success("Donación rechazada exitosamente");
+      toast.success("Donación rechazada");
       await refetch();
       closeRejectDialog();
     } else {
@@ -42,8 +38,8 @@ export function RejectDonationDialog() {
         <AlertDialogHeader>
           <AlertDialogTitle>¿Rechazar donación?</AlertDialogTitle>
           <AlertDialogDescription>
-            Esta acción marcará la donación como rechazada. ¿Estás seguro de
-            que deseas continuar?
+            Esta acción marcará la donación como rechazada. ¿Estás seguro de que
+            deseas continuar?
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -56,4 +52,3 @@ export function RejectDonationDialog() {
     </AlertDialog>
   );
 }
-

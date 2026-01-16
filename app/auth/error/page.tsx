@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Suspense } from "react";
+import { Suspense, Fragment } from "react";
 
 async function ErrorContent({
   searchParams,
@@ -9,7 +9,7 @@ async function ErrorContent({
   const params = await searchParams;
 
   return (
-    <>
+    <Fragment>
       {params?.error ? (
         <p className="text-sm text-muted-foreground">
           Code error: {params.error}
@@ -19,7 +19,7 @@ async function ErrorContent({
           An unspecified error occurred.
         </p>
       )}
-    </>
+    </Fragment>
   );
 }
 

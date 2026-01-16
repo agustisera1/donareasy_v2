@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Campaign } from "@/lib/types";
 
 interface UseCampaignsOptions {
@@ -17,22 +17,25 @@ interface UseCampaignsReturn {
 
 /**
  * Hook para manejar el estado de las campañas y proporcionar función de refetch
+ * Implementado con TanStack Query para caché automático, deduplicación y revalidación
+ * 
  * @param options - Opciones del hook
  * @param options.enabled - Si se debe hacer fetch automáticamente (default: true)
  * @param options.userId - ID de la institución para filtrar campañas (opcional). Si no se provee, devuelve todas las campañas
+ * 
+ * @returns {UseCampaignsReturn} Objeto con campaigns, loading, error y refetch
  */
 export function useCampaigns(
   options: UseCampaignsOptions = { enabled: true }
 ): UseCampaignsReturn {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  const fetchCampaigns = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
+  const {
+    data: campaigns = [],
+    isLoading,
+    error,
+    refetch: queryRefetch,
+  } = useQuery({
+    queryKey: ["campaigns", options.userId],
+    queryFn: async () => {
       // Construir la URL con el query parameter si se proporciona userId
       const url = options.userId
         ? `/api/campaigns?institution_id=${encodeURIComponent(options.userId)}`
@@ -45,26 +48,22 @@ export function useCampaigns(
       }
 
       const { data } = await response.json();
-      setCampaigns(data || []);
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error("Unknown error");
-      setError(error);
-      console.error("Error fetching campaigns:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [options.userId]);
+      return (data || []) as Campaign[];
+    },
+    enabled: options.enabled,
+    staleTime: 2 * 60 * 1000, // 2 minutos - datos frescos
+    gcTime: 5 * 60 * 1000, // 5 minutos - tiempo en caché
+  });
 
-  useEffect(() => {
-    if (options.enabled) {
-      fetchCampaigns();
-    }
-  }, [fetchCampaigns, options.enabled]);
+  // Wrapper para refetch que mantiene la misma firma que antes
+  const refetch = async () => {
+    await queryRefetch();
+  };
 
   return {
     campaigns,
-    loading,
-    error,
-    refetch: fetchCampaigns,
+    loading: isLoading,
+    error: error instanceof Error ? error : error ? new Error(String(error)) : null,
+    refetch,
   };
 }
