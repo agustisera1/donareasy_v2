@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { DonorData, InstitutionData } from "@/app/api/user/route";
 
 interface UseUserOptions {
@@ -16,45 +16,48 @@ interface UseUserReturn {
 
 /**
  * Hook para manejar el estado del usuario y proporcionar función de refetch
+ * Implementado con TanStack Query para caché automático, deduplicación y revalidación
+ *
+ * @param options - Opciones del hook
+ * @param options.enabled - Si se debe hacer fetch automáticamente (default: true)
+ *
+ * @returns {UseUserReturn} Objeto con user, loading, error y refetch
  */
-export function useUser(options: UseUserOptions = { enabled: true }): UseUserReturn {
-  const [user, setUser] = useState<DonorData | InstitutionData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  const fetchUser = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
+export function useUser(
+  options: UseUserOptions = { enabled: true }
+): UseUserReturn {
+  const {
+    data: user = null,
+    isLoading,
+    error,
+    refetch: queryRefetch,
+  } = useQuery({
+    queryKey: ["user"],
+    queryFn: async () => {
       const response = await fetch("/api/user");
-      
+
       if (!response.ok) {
         throw new Error(`Error fetching user: ${response.statusText}`);
       }
 
       const { data } = await response.json();
-      setUser(data);
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error("Unknown error");
-      setError(error);
-      console.error("Error fetching user:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      return data as DonorData | InstitutionData;
+    },
+    enabled: options.enabled,
+    staleTime: 5 * 60 * 1000, // 5 minutos - datos del usuario cambian menos frecuentemente
+    gcTime: 10 * 60 * 1000, // 10 minutos - tiempo en caché
+  });
 
-  useEffect(() => {
-    if (options.enabled) {
-      fetchUser();
-    }
-  }, [fetchUser, options.enabled]);
+  // Wrapper para refetch que mantiene la misma firma que antes
+  const refetch = async () => {
+    await queryRefetch();
+  };
 
   return {
     user,
-    loading,
-    error,
-    refetch: fetchUser,
+    loading: isLoading,
+    error:
+      error instanceof Error ? error : error ? new Error(String(error)) : null,
+    refetch,
   };
 }
-
