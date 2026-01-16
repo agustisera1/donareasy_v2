@@ -1,7 +1,6 @@
 "use client";
 import {
   Building,
-  ChartLine,
   ChevronUp,
   HandCoins,
   ListChecks,
@@ -46,11 +45,6 @@ const items = [
     title: "Instituciones",
     url: `/dashboard/institutions`,
     icon: Building,
-  },
-  {
-    title: "Metricas",
-    url: `/dashboard/metrics`,
-    icon: ChartLine,
   },
 ];
 

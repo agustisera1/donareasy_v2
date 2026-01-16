@@ -13,7 +13,7 @@ import {
   type SortingState,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, Eye, ChartArea } from "lucide-react";
+import { ArrowUpDown, Eye, ChartLine } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -140,7 +140,7 @@ export function InstitutionsDataTable() {
                 onClick={() => openMetricsDrawer(institution)}
                 title="Métricas"
               >
-                <ChartArea className="h-4 w-4" />
+                <ChartLine className="h-4 w-4" />
               </Button>
             </div>
           );
