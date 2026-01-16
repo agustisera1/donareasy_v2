@@ -1,6 +1,8 @@
+import type { DeliveryMethod, DonationCategory } from "@/lib/types";
+
 // Traducciones y descripciones para las formas de entrega
 export const deliveryMethodTranslations: Record<
-  "pickup" | "shipment" | "agreement",
+  DeliveryMethod,
   { label: string; description: string }
 > = {
   pickup: {
@@ -22,7 +24,7 @@ export const deliveryMethodTranslations: Record<
 
 // Traducciones y descripciones para las categorías
 export const categoryTranslations: Record<
-  "supplies" | "clothing" | "food" | "other",
+  DonationCategory,
   { label: string; description: string }
 > = {
   supplies: {
