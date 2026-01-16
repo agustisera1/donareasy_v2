@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { useDonationsContext } from "@/contexts/donations-context";
 import { formatDate } from "@/lib/utils";
 import { StatusBadge } from "./status-badge";
+import { CategoryBadge } from "./category-badge";
+import { DeliveryMethodBadge } from "./delivery-method-badge";
 import { Fragment } from "react";
 import { ImagePreview } from "./image-preview";
 
@@ -68,6 +70,7 @@ export function ViewDonationDrawer() {
                     <ImagePreview
                       src={selectedDonation.attachment_url}
                       alt="Comprobante de transferencia"
+                      blur={false}
                     />
                   </div>
                 </Fragment>
@@ -110,6 +113,18 @@ export function ViewDonationDrawer() {
           <span className="text-sm font-medium">Estado</span>
           <span className="text-sm">
             <StatusBadge status={selectedDonation.status} />
+          </span>
+
+          <span className="text-sm font-medium">Categoría</span>
+          <span className="text-sm">
+            <CategoryBadge category={selectedDonation.category} />
+          </span>
+
+          <span className="text-sm font-medium">Forma de entrega</span>
+          <span className="text-sm">
+            <DeliveryMethodBadge
+              deliveryMethod={selectedDonation.delivery_method}
+            />
           </span>
 
           <span className="text-sm font-medium">Donante</span>

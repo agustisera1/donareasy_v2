@@ -8,6 +8,8 @@ interface UpdateDonationData {
   amount?: number | null;
   attachment_name?: string | null;
   attachment_url?: string;
+  delivery_method?: "pickup" | "shipment" | "agreement";
+  category?: "supplies" | "clothing" | "food" | "other";
 }
 
 export async function updateDonation(
@@ -77,6 +79,10 @@ export async function updateDonation(
       updateData.attachment_name = formData.attachment_name;
     if (formData.attachment_url !== undefined)
       updateData.attachment_url = formData.attachment_url;
+    if (formData.delivery_method !== undefined)
+      updateData.delivery_method = formData.delivery_method;
+    if (formData.category !== undefined)
+      updateData.category = formData.category;
 
     const { error: updateError } = await supabase
       .from("donations")

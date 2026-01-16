@@ -7,6 +7,8 @@ interface CreateDonationData {
   donor_id: string;
   attachment_url: string;
   status: "pending";
+  delivery_method: "pickup" | "shipment" | "agreement";
+  category: "supplies" | "clothing" | "food" | "other";
   name?: string | null;
   description?: string | null;
   amount?: number | null;
@@ -77,6 +79,8 @@ export async function createDonation(formData: CreateDonationData) {
         donor_id: formData.donor_id,
         attachment_url: formData.attachment_url,
         status: formData.status,
+        delivery_method: formData.delivery_method,
+        category: formData.category,
         name: formData.name || null,
         description: formData.description || null,
         amount: formData.amount || null,

@@ -16,6 +16,8 @@ export type Donation = {
   donor_id: string; // uuid NOT NULL - Note: typo in DB schema (should be donor_id)
   attachment_url: string; // text NOT NULL
   status: "accepted" | "rejected" | "pending" | "delivered"; // text DEFAULT 'pending'::text
+  delivery_method: "pickup" | "shipment" | "agreement"; // text NOT NULL
+  category: "supplies" | "clothing" | "food" | "other"; // text NOT NULL
   institution_id: string; // uuid NOT NULL
   donor: string; // WARNING: This is a string concatenation of the donor's name and lastname when retrieving from the database after joining with the DONOR TABLE
 };
