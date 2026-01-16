@@ -13,7 +13,7 @@ import {
   type SortingState,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, Eye } from "lucide-react";
+import { ArrowUpDown, Eye, ChartArea } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ViewInstitutionDrawer } from "./view-institution-drawer";
+import { InstitutionMetricsDrawer } from "./institution-metrics-drawer";
 import { useInstitutionsContext } from "@/contexts/institutions-context";
 import { Institution } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
@@ -33,6 +34,7 @@ export function InstitutionsDataTable() {
   const {
     institutions: data,
     openViewDrawer,
+    openMetricsDrawer,
     loading,
   } = useInstitutionsContext();
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -77,9 +79,7 @@ export function InstitutionsDataTable() {
             </Button>
           );
         },
-        cell: ({ row }) => (
-          <div>{row.getValue("director")}</div>
-        ),
+        cell: ({ row }) => <div>{row.getValue("director")}</div>,
       },
       {
         accessorKey: "city",
@@ -133,12 +133,21 @@ export function InstitutionsDataTable() {
               >
                 <Eye className="h-4 w-4" />
               </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => openMetricsDrawer(institution)}
+                title="Métricas"
+              >
+                <ChartArea className="h-4 w-4" />
+              </Button>
             </div>
           );
         },
       },
     ],
-    [openViewDrawer]
+    [openViewDrawer, openMetricsDrawer]
   );
 
   const table = useReactTable({
@@ -251,6 +260,7 @@ export function InstitutionsDataTable() {
       </div>
 
       <ViewInstitutionDrawer />
+      <InstitutionMetricsDrawer />
     </div>
   );
 }
