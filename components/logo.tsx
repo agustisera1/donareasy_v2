@@ -28,7 +28,6 @@ export function Logo({ className, width = 28, height = 28 }: LogoProps) {
   const logoSrc =
     actualTheme === "dark" ? "/logo_blanco.png" : "/logo_negro.png";
 
-  console.log(logoSrc);
   // Show a placeholder or default logo while mounting to avoid hydration mismatch
   if (!mounted) {
     return (
