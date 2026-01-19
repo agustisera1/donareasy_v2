@@ -60,9 +60,9 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Bienvenido a Donareasy</CardTitle>
+          <CardTitle className="text-2xl">Iniciar sesión</CardTitle>
           <CardDescription>
-            Ingresa tu email para iniciar sesión
+            Ingresa tus credenciales para autenticarte
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -99,17 +99,8 @@ export function LoginForm({
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
+                {isLoading ? "Autenticando..." : "Autenticarse"}
               </Button>
-            </div>
-            <div className="mt-4 text-center text-sm">
-              No tienes una cuenta?{" "}
-              <Link
-                href="/auth/sign-up"
-                className="underline underline-offset-4"
-              >
-                Registrarse
-              </Link>
             </div>
           </form>
         </CardContent>

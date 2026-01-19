@@ -48,7 +48,7 @@ export function ForgotPasswordForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       {success ? (
         <Card>
-          <CardHeader>
+          <CardHeader className="text-center">
             <CardTitle className="text-2xl">Revisa tu email</CardTitle>
             <CardDescription>Instrucciones para cambiar tu contraseña enviadas</CardDescription>
           </CardHeader>
@@ -60,7 +60,7 @@ export function ForgotPasswordForm({
         </Card>
       ) : (
         <Card>
-          <CardHeader>
+          <CardHeader className="text-center">
             <CardTitle className="text-2xl">Cambiar contraseña</CardTitle>
             <CardDescription>
               Ingresa tu email y te enviaremos un link para cambiar tu contraseña
@@ -86,7 +86,7 @@ export function ForgotPasswordForm({
                 </Button>
               </div>
               <div className="mt-4 text-center text-sm">
-                Ya tienes una cuenta?{" "}
+                Ya tenés una cuenta?{" "}
                 <Link
                   href="/auth/login"
                   className="underline underline-offset-4"

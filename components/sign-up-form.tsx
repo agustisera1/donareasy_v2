@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -59,7 +58,7 @@ export function SignUpForm({
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
-        <CardHeader>
+        <CardHeader className="text-center">
           <CardTitle className="text-2xl">Registrarse</CardTitle>
           <CardDescription>Crea una nueva cuenta</CardDescription>
         </CardHeader>
@@ -105,12 +104,6 @@ export function SignUpForm({
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Creando cuenta..." : "Registrarse"}
               </Button>
-            </div>
-            <div className="mt-4 text-center text-sm">
-              Ya tienes una cuenta?{" "}
-              <Link href="/auth/login" className="underline underline-offset-4">
-                Iniciar Sesión
-              </Link>
             </div>
           </form>
         </CardContent>
