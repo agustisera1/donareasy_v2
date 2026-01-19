@@ -11,8 +11,20 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Next.js and Supabase Starter Kit",
-  description: "The fastest way to build apps with Next.js and Supabase",
+  title: {
+    default: "Donareasy - Doná fácil",
+    template: "%s | Donareasy",
+  },
+  description: "Plataforma fácil y segura para colaborar con quienes lo necesitan, en el momento oportuno. Conectá con instituciones y donantes para colaborar en proyectos sociales.",
+  keywords: ["donaciones", "ayuda social", "campañas", "instituciones", "donantes", "solidaridad"],
+  authors: [{ name: "Agustín Tisera" }],
+  creator: "Agustín Tisera",
+  publisher: "Agustín Tisera",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
 };
 
 const geistSans = Geist({
