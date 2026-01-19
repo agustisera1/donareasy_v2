@@ -10,7 +10,7 @@ const ICON_SIZE = 16;
 
 export function Footer() {
   return (
-    <footer className="w-full flex items-center justify-start border-t mx-auto text-center text-xs gap-8 py-4 px-6">
+    <footer className="w-full flex items-center justify-start border-t mx-auto text-center text-xs gap-8 py-4 px-6 sticky bottom-0 bg-background">
       <div className="flex items-center gap-2">
         <ThemeSwitcher />
         <DocumentationButton />

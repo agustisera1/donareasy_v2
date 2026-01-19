@@ -127,7 +127,6 @@ export function DonationsDataTable() {
             </Button>
           );
         },
-        size: 240,
         cell: ({ row }) => {
           const donation = row.original;
           return (
@@ -298,6 +297,7 @@ export function DonationsDataTable() {
       openAcceptDialog,
       openRejectDialog,
       openDeliverDialog,
+      institution?.id,
     ]
   );
 
@@ -395,9 +395,9 @@ export function DonationsDataTable() {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   );
                 })}
@@ -423,11 +423,6 @@ export function DonationsDataTable() {
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      {...(cell.column.columnDef.size
-                        ? {
-                            className: `max-w-[${cell.column.columnDef.size}px] truncate`,
-                          }
-                        : {})}
                     >
                       {flexRender(
                         cell.column.columnDef.cell,

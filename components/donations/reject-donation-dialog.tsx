@@ -24,19 +24,19 @@ export function RejectDonationDialog() {
     useDonationsContext();
   const [rejectionReason, setRejectionReason] = useState("");
   const [error, setError] = useState(false);
+  const [isPending, setIsPending] = useState(false);
+
   const reset = () => {
     setRejectionReason("");
     setError(false);
+    setIsPending(false);
   }
 
 
   const handleRejectionReasonChange = (value: string) => {
     setRejectionReason(value);
-    if (value.trim().length > 0 && value.trim().length < REASON_MIN_LENGTH) {
-      setError(true);
-    } else {
-      setError(false);
-    }
+    if (value.trim().length > 0 && value.trim().length < REASON_MIN_LENGTH) setError(true);
+    else setError(false);
   };
 
 
@@ -49,21 +49,31 @@ export function RejectDonationDialog() {
       return;
     }
 
-    const result = await rejectDonation(selectedDonation.id, trimmedReason);
+    setIsPending(true);
 
-    if (result.success) {
-      toast.success("Donación rechazada");
-      reset();
-      await refetch();
-      closeRejectDialog();
-    } else {
-      toast.error(result.error || "Error al rechazar la donación");
+    try {
+      const result = await rejectDonation(selectedDonation.id, trimmedReason);
+
+      if (result.success) {
+        toast.success("Donación rechazada");
+        reset();
+        await refetch();
+        closeRejectDialog();
+      } else {
+        toast.error(result.error || "Error al rechazar la donación");
+        setIsPending(false);
+      }
+    } catch {
+      toast.error("Error al rechazar la donación");
+      setIsPending(false);
     }
   };
 
   const handleOpenChange = (open: boolean) => {
-    if (!open) reset();
-    closeRejectDialog();
+    if (!open && !isPending) {
+      reset();
+      closeRejectDialog();
+    }
   };
 
   const isValid = rejectionReason.trim().length >= REASON_MIN_LENGTH;
@@ -87,14 +97,15 @@ export function RejectDonationDialog() {
             value={rejectionReason}
             onChange={(e) => handleRejectionReasonChange(e.target.value)}
             className="min-h-24"
+            disabled={isPending}
           />
           <p className={cn("text-sm", error ? "text-red-500" : "text-muted-foreground")}>
             El motivo debe tener al menos {REASON_MIN_LENGTH} caracteres
           </p>
         </div>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={handleConfirm} disabled={!isValid}>
+          <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
+          <AlertDialogAction onClick={handleConfirm} disabled={!isValid || isPending}>
             Rechazar
           </AlertDialogAction>
         </AlertDialogFooter>
