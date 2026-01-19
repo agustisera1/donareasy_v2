@@ -29,6 +29,7 @@ import { ProfileDrawer } from "./profile-drawer";
 import { EditDrawer } from "./edit-drawer";
 import { useUser } from "@/hooks/use-user";
 import { useQueryClient } from "@tanstack/react-query";
+import { Logo } from "@/components/logo";
 
 const items = [
   {
@@ -85,8 +86,9 @@ export function AppSidebar({
     <Sidebar>
       <SidebarContent className="bg-background w-[12rem]">
         <SidebarHeader className="p-4 pb-0">
-          <Link className="text-xl font-bold" href={"/"}>
-            Donareasy
+          <Link className="flex items-center gap-2" href={"/"}>
+            <Logo width={40} height={40} />
+            <span className="text-xl font-bold">Donareasy</span>
           </Link>
         </SidebarHeader>
 
