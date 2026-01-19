@@ -4,6 +4,7 @@
 
 export * from "./campaign";
 export * from "./donation";
+export * from "./donation-types";
 export * from "./donor";
 export * from "./good";
 export * from "./institution";
