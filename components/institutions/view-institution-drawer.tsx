@@ -61,7 +61,7 @@ export function ViewInstitutionDrawer() {
 
           {selectedInstitution.bank && (
             <Fragment>
-              <span className="text-sm font-medium">Banco</span>
+              <span className="text-sm font-medium">Alias | CBU</span>
               <span className="text-sm">{selectedInstitution.bank}</span>
             </Fragment>
           )}

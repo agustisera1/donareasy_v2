@@ -42,8 +42,7 @@ export function AcceptDonationDialog() {
         <AlertDialogHeader>
           <AlertDialogTitle>¿Aceptar donación?</AlertDialogTitle>
           <AlertDialogDescription>
-            Esta acción marcará la donación como aceptada. ¿Estás seguro de
-            que deseas continuar?
+            Esta acción marcará la donación como aceptada y lista para su entrega. ¿Deseas continuar?
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

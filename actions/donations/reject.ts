@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 
-export async function rejectDonation(donationId: number) {
+export async function rejectDonation(donationId: number, cancellationReason?: string) {
   const supabase = await createClient();
 
   try {
@@ -110,6 +110,7 @@ export async function rejectDonation(donationId: number) {
       .update({
         status: "rejected",
         date_cancelled: cancelledDate,
+        cancellation_reason: cancellationReason || null,
       })
       .eq("id", donationId);
 
