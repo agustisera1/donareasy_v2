@@ -87,6 +87,9 @@ export function DonationsDataTable() {
     () => [
       {
         accessorKey: "name",
+        size: 100,
+        minSize: 100,
+        maxSize: 100,
         header: ({ column }) => {
           return (
             <Button
@@ -113,6 +116,9 @@ export function DonationsDataTable() {
       },
       {
         accessorKey: "amount",
+        size: 150,
+        minSize: 150,
+        maxSize: 200,
         header: ({ column }) => {
           return (
             <Button
@@ -143,6 +149,9 @@ export function DonationsDataTable() {
       },
       {
         accessorKey: "status",
+        size: 60,
+        minSize: 60,
+        maxSize: 60,
         header: ({ column }) => {
           return (
             <Button
@@ -168,6 +177,9 @@ export function DonationsDataTable() {
       },
       {
         accessorKey: "category",
+        size: 125,
+        minSize: 125,
+        maxSize: 125,
         header: ({ column }) => {
           return (
             <Button
@@ -193,6 +205,9 @@ export function DonationsDataTable() {
       },
       {
         accessorKey: "date_created",
+        size: 90,
+        minSize: 90,
+        maxSize: 90,
         header: ({ column }) => {
           return (
             <Button
@@ -213,6 +228,9 @@ export function DonationsDataTable() {
       },
       {
         id: "actions",
+        size: 80,
+        minSize: 80,
+        maxSize: 80,
         enableHiding: false,
         header: "",
         cell: ({ row }) => {
@@ -304,6 +322,11 @@ export function DonationsDataTable() {
   const table = useReactTable({
     data: filteredData,
     columns,
+    defaultColumn: {
+      size: 100,
+      minSize: 100,
+      maxSize: 100,
+    },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -319,7 +342,7 @@ export function DonationsDataTable() {
   });
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-4 min-h-[calc(100dvh-10rem)]">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           {isDonor && (
@@ -385,13 +408,22 @@ export function DonationsDataTable() {
       </div>
 
       <div className="rounded-md border">
-        <Table>
+        <Table className="table-fixed">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id} className="pl-0">
+                    <TableHead
+                      key={header.id}
+                      className="pl-0"
+                      style={{
+                        width: `${header.getSize()}px`,
+                        maxWidth: `${header.column.columnDef.maxSize ?? 100}px`,
+                        minWidth: `${header.column.columnDef.minSize ?? 100}px`,
+                        overflow: 'hidden'
+                      }}
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -423,6 +455,14 @@ export function DonationsDataTable() {
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
+                      style={{
+                        width: `${cell.column.getSize()}px`,
+                        maxWidth: `${cell.column.columnDef.maxSize ?? 100}px`,
+                        minWidth: `${cell.column.columnDef.minSize ?? 100}px`,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
                     >
                       {flexRender(
                         cell.column.columnDef.cell,

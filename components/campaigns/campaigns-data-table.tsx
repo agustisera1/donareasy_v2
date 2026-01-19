@@ -64,6 +64,9 @@ export function CampaignsDataTable() {
     () => [
       {
         accessorKey: "type",
+        size: 200,
+        minSize: 200,
+        maxSize: 200,
         header: ({ column }) => {
           return (
             <Button
@@ -84,6 +87,9 @@ export function CampaignsDataTable() {
       },
       {
         accessorKey: "start_date",
+        size: 90,
+        minSize: 90,
+        maxSize: 90,
         header: ({ column }) => {
           return (
             <Button
@@ -104,6 +110,9 @@ export function CampaignsDataTable() {
       },
       {
         accessorKey: "termination_date",
+        size: 90,
+        minSize: 90,
+        maxSize: 90,
         header: "Fecha de finalización",
         cell: ({ row }) => {
           const terminationDate = row.getValue("termination_date") as
@@ -122,16 +131,18 @@ export function CampaignsDataTable() {
       {
         accessorKey: "finished",
         header: "Estado",
+        size: 50,
+        minSize: 50,
+        maxSize: 50,
         cell: ({ row }) => {
           const finished = row.getValue("finished") as boolean | null;
           const isFinished = finished === true;
           return (
             <div
-              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                isFinished
-                  ? "bg-muted text-muted-foreground"
-                  : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-              }`}
+              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${isFinished
+                ? "bg-muted text-muted-foreground"
+                : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                }`}
             >
               {isFinished ? "Finalizada" : "Activa"}
             </div>
@@ -140,6 +151,9 @@ export function CampaignsDataTable() {
       },
       {
         id: "actions",
+        size: 50,
+        minSize: 50,
+        maxSize: 50,
         enableHiding: false,
         header: "",
         cell: ({ row }) => {
@@ -213,6 +227,11 @@ export function CampaignsDataTable() {
   const table = useReactTable({
     data: filteredData,
     columns,
+    defaultColumn: {
+      size: 100,
+      minSize: 100,
+      maxSize: 100,
+    },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -228,7 +247,7 @@ export function CampaignsDataTable() {
   });
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-4 min-h-[calc(100dvh-10rem)]">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           {isInstitution && !loading && (
@@ -263,19 +282,30 @@ export function CampaignsDataTable() {
         )}
       </div>
       <div className="rounded-md border">
-        <Table>
+        <Table className="table-fixed">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id} className="pl-0">
+                    <TableHead
+                      key={header.id}
+                      className="pl-0"
+                      style={{
+                        width: `${header.getSize()}px`,
+                        maxWidth: `${header.column.columnDef.maxSize ?? 100}px`,
+                        minWidth: `${header.column.columnDef.minSize ?? 100}px`,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   );
                 })}
@@ -301,11 +331,14 @@ export function CampaignsDataTable() {
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      {...(cell.column.columnDef.size
-                        ? {
-                            className: `max-w-[${cell.column.columnDef.size}px] truncate`,
-                          }
-                        : {})}
+                      style={{
+                        width: `${cell.column.getSize()}px`,
+                        maxWidth: `${cell.column.columnDef.maxSize ?? 100}px`,
+                        minWidth: `${cell.column.columnDef.minSize ?? 100}px`,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
                     >
                       {flexRender(
                         cell.column.columnDef.cell,

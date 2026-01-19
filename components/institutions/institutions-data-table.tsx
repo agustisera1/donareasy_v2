@@ -44,6 +44,9 @@ export function InstitutionsDataTable() {
   const columns: ColumnDef<Institution>[] = useMemo(
     () => [
       {
+        size: 160,
+        minSize: 160,
+        maxSize: 160,
         accessorKey: "name",
         header: ({ column }) => {
           return (
@@ -65,6 +68,9 @@ export function InstitutionsDataTable() {
       },
       {
         accessorKey: "director",
+        size: 100,
+        minSize: 100,
+        maxSize: 100,
         header: ({ column }) => {
           return (
             <Button
@@ -74,7 +80,7 @@ export function InstitutionsDataTable() {
                 column.toggleSorting(column.getIsSorted() === "asc")
               }
             >
-              Director
+              Director a cargo
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
           );
@@ -83,6 +89,9 @@ export function InstitutionsDataTable() {
       },
       {
         accessorKey: "city",
+        size: 80,
+        minSize: 80,
+        maxSize: 80,
         header: "Ciudad",
         cell: ({ row }) => {
           return <div>{row.getValue("city")}</div>;
@@ -90,6 +99,9 @@ export function InstitutionsDataTable() {
       },
       {
         accessorKey: "province",
+        size: 100,
+        minSize: 100,
+        maxSize: 100,
         header: "Provincia",
         cell: ({ row }) => {
           return <div>{row.getValue("province")}</div>;
@@ -97,6 +109,9 @@ export function InstitutionsDataTable() {
       },
       {
         accessorKey: "foundation_date",
+        size: 100,
+        minSize: 100,
+        maxSize: 100,
         header: ({ column }) => {
           return (
             <Button
@@ -116,6 +131,9 @@ export function InstitutionsDataTable() {
         },
       },
       {
+        size: 80,
+        minSize: 80,
+        maxSize: 80,
         id: "actions",
         enableHiding: false,
         header: "",
@@ -153,6 +171,11 @@ export function InstitutionsDataTable() {
   const table = useReactTable({
     data,
     columns,
+    defaultColumn: {
+      size: 100,
+      minSize: 100,
+      maxSize: 100,
+    },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -168,21 +191,32 @@ export function InstitutionsDataTable() {
   });
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-4 min-h-[calc(100dvh-10rem)]">
       <div className="rounded-md border">
-        <Table>
+        <Table className="table-fixed">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id} className="pl-0">
+                    <TableHead
+                      key={header.id}
+                      className="pl-0"
+                      style={{
+                        width: `${header.getSize()}px`,
+                        maxWidth: `${header.column.columnDef.maxSize ?? 100}px`,
+                        minWidth: `${header.column.columnDef.minSize ?? 100}px`,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   );
                 })}
@@ -208,11 +242,12 @@ export function InstitutionsDataTable() {
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      {...(cell.column.columnDef.size
-                        ? {
-                            className: `max-w-[${cell.column.columnDef.size}px] truncate`,
-                          }
-                        : {})}
+                      style={{
+                        width: `${cell.column.getSize()}px`,
+                        maxWidth: `${cell.column.columnDef.maxSize ?? 100}px`,
+                        minWidth: `${cell.column.columnDef.minSize ?? 100}px`,
+                        overflow: 'hidden'
+                      }}
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
@@ -235,6 +270,7 @@ export function InstitutionsDataTable() {
           </TableBody>
         </Table>
       </div>
+
       <div className="flex items-center justify-end space-x-2">
         <div className="flex-1 text-sm text-muted-foreground">
           {table.getFilteredRowModel().rows.length} institución(es)
