@@ -20,13 +20,27 @@ export function ImagePreview({
   sizes = "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw",
   blur = false,
 }: ImagePreviewProps) {
+  const handleClick = () => {
+    window.open(src, "_blank");
+  };
+
   return (
     <div
       className={cn(
-        "relative w-full rounded-md overflow-hidden border",
+        "relative w-full rounded-md overflow-hidden border cursor-zoom-in transition-opacity hover:opacity-90",
         height,
         className
       )}
+      onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleClick();
+        }
+      }}
+      aria-label={`Ver imagen completa: ${alt}`}
     >
       <Image
         src={src}

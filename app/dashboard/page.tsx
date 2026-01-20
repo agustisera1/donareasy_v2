@@ -17,7 +17,6 @@ async function redirectUser() {
     redirect("/auth/login");
   }
 
-  console.log({ onboarded });
   if (!onboarded) {
     redirect("/onboarding");
   } else redirect("/dashboard/campaign");
