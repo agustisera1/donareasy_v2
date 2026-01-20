@@ -69,15 +69,15 @@ export function InstitutionMetricsDrawer() {
             <>
               {/* Métricas de Estado */}
               <Card>
-                <CardHeader>
+                <CardHeader className="px-4">
                   <CardTitle>Estado de Donaciones</CardTitle>
                   <CardDescription>
                     Distribución de donaciones por estado
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
+                    <div className="space-y-1 space-x-1">
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium">Total</span>
                         <span className="text-sm text-muted-foreground">
@@ -88,7 +88,7 @@ export function InstitutionMetricsDrawer() {
                         {metrics.status.total.count}
                       </div>
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-1 space-x-1">
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium">Pendientes</span>
                         <span className="text-sm text-muted-foreground">
@@ -99,7 +99,7 @@ export function InstitutionMetricsDrawer() {
                         {metrics.status.pending.count}
                       </div>
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-1 space-x-1">
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium">Aceptadas</span>
                         <span className="text-sm text-muted-foreground">
@@ -110,7 +110,7 @@ export function InstitutionMetricsDrawer() {
                         {metrics.status.accepted.count}
                       </div>
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-1 space-x-1">
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium">Rechazadas</span>
                         <span className="text-sm text-muted-foreground">
@@ -127,13 +127,13 @@ export function InstitutionMetricsDrawer() {
 
               {/* Métricas de Método de Entrega */}
               <Card>
-                <CardHeader>
+                <CardHeader className="px-4">
                   <CardTitle>Métodos de Entrega</CardTitle>
                   <CardDescription>
                     Distribución por método de entrega
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-4">
                   <div className="space-y-4">
                     {Object.entries(metrics.categories.delivery).map(
                       ([method, count]) => {
@@ -141,7 +141,7 @@ export function InstitutionMetricsDrawer() {
                         const percentage = calculatePercentage(count, total);
                         const translation =
                           deliveryMethodTranslations[
-                            method as keyof typeof deliveryMethodTranslations
+                          method as keyof typeof deliveryMethodTranslations
                           ];
 
                         return (
@@ -175,13 +175,13 @@ export function InstitutionMetricsDrawer() {
 
               {/* Métricas de Categorías */}
               <Card>
-                <CardHeader>
+                <CardHeader className="px-4">
                   <CardTitle>Categorías de Donaciones</CardTitle>
                   <CardDescription>
                     Distribución por categoría de donación
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-4">
                   <div className="space-y-4">
                     {Object.entries(metrics.categories.category).map(
                       ([category, count]) => {
@@ -189,7 +189,7 @@ export function InstitutionMetricsDrawer() {
                         const percentage = calculatePercentage(count, total);
                         const translation =
                           categoryTranslations[
-                            category as keyof typeof categoryTranslations
+                          category as keyof typeof categoryTranslations
                           ];
 
                         return (
@@ -223,14 +223,14 @@ export function InstitutionMetricsDrawer() {
 
               {/* Total Recaudado */}
               <Card>
-                <CardHeader>
+                <CardHeader className="px-4">
                   <CardTitle>Total Recaudado</CardTitle>
                   <CardDescription>
                     Suma de donaciones monetarias aceptadas, entregadas y
                     rechazadas
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-4">
                   <div className="space-y-4">
                     <div className="space-y-1">
                       <div className="text-3xl font-bold">

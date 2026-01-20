@@ -28,7 +28,7 @@ import { ViewInstitutionDrawer } from "./view-institution-drawer";
 import { InstitutionMetricsDrawer } from "./institution-metrics-drawer";
 import { useInstitutionsContext } from "@/contexts/institutions-context";
 import { Institution } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 
 export function InstitutionsDataTable() {
   const {
@@ -49,17 +49,22 @@ export function InstitutionsDataTable() {
         maxSize: 160,
         accessorKey: "name",
         header: ({ column }) => {
+          const isSorted = column.getIsSorted()
           return (
-            <Button
-              className="px-2 w-full flex justify-start"
-              variant="ghost"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-            >
-              Nombre
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
+            <div className="flex items-center justify-between gap-1 px-2">
+              <span>
+                Nombre
+              </span>
+              <Button
+                className="px-2 flex justify-start"
+                variant="ghost"
+                onClick={() =>
+                  column.toggleSorting(column.getIsSorted() === "asc")
+                }
+              >
+                <ArrowUpDown className={cn("h-4 w-4", isSorted ? "text-yellow-500" : "text-muted-foreground")} />
+              </Button>
+            </div>
           );
         },
         cell: ({ row }) => (
@@ -72,17 +77,22 @@ export function InstitutionsDataTable() {
         minSize: 100,
         maxSize: 100,
         header: ({ column }) => {
+          const isSorted = column.getIsSorted()
           return (
-            <Button
-              className="px-2 w-full flex justify-start"
-              variant="ghost"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-            >
-              Director a cargo
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
+            <div className="flex items-center justify-between gap-1 px-2">
+              <span>
+                Director a cargo
+              </span>
+              <Button
+                className="px-2 flex justify-start"
+                variant="ghost"
+                onClick={() =>
+                  column.toggleSorting(column.getIsSorted() === "asc")
+                }
+              >
+                <ArrowUpDown className={cn("h-4 w-4", isSorted ? "text-yellow-500" : "text-muted-foreground")} />
+              </Button>
+            </div>
           );
         },
         cell: ({ row }) => <div>{row.getValue("director")}</div>,
@@ -109,21 +119,26 @@ export function InstitutionsDataTable() {
       },
       {
         accessorKey: "foundation_date",
-        size: 100,
-        minSize: 100,
-        maxSize: 100,
+        size: 110,
+        minSize: 110,
+        maxSize: 110,
         header: ({ column }) => {
+          const isSorted = column.getIsSorted()
           return (
-            <Button
-              className="px-2 w-full flex justify-start"
-              variant="ghost"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-            >
-              Fecha de fundación
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
+            <div className="flex items-center justify-between gap-1 px-2">
+              <span>
+                Fecha de fundación
+              </span>
+              <Button
+                className="px-2 flex justify-start"
+                variant="ghost"
+                onClick={() =>
+                  column.toggleSorting(column.getIsSorted() === "asc")
+                }
+              >
+                <ArrowUpDown className={cn("h-4 w-4", isSorted ? "text-yellow-500" : "text-muted-foreground")} />
+              </Button>
+            </div>
           );
         },
         cell: ({ row }) => {
@@ -201,7 +216,6 @@ export function InstitutionsDataTable() {
                   return (
                     <TableHead
                       key={header.id}
-                      className="pl-0"
                       style={{
                         width: `${header.getSize()}px`,
                         maxWidth: `${header.column.columnDef.maxSize ?? 100}px`,
@@ -246,7 +260,9 @@ export function InstitutionsDataTable() {
                         width: `${cell.column.getSize()}px`,
                         maxWidth: `${cell.column.columnDef.maxSize ?? 100}px`,
                         minWidth: `${cell.column.columnDef.minSize ?? 100}px`,
-                        overflow: 'hidden'
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
                       }}
                     >
                       {flexRender(
