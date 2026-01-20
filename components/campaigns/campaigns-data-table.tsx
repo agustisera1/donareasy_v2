@@ -2,6 +2,7 @@
 
 import { useState, useMemo, Fragment } from "react";
 import {
+  Column,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -13,9 +14,14 @@ import {
   type SortingState,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, Edit, Check, Eye, HandCoins } from "lucide-react";
+import { ArrowUpDown, Edit, Check, Eye, HandCoins, Tag } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Table,
   TableBody,
@@ -30,7 +36,7 @@ import { EditCampaignDrawer } from "./edit-campaign-drawer";
 import { FinishCampaignDialog } from "./finish-campaign-dialog";
 import { useCampaignsContext } from "@/contexts/campaigns-context";
 import { Campaign } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
 export function CampaignsDataTable() {
@@ -60,6 +66,21 @@ export function CampaignsDataTable() {
     return data;
   }, [data, filterMode, institution]);
 
+  const FilterOption = ({ value, label, column }: { value: string, label: string, column: Column<Campaign> }) => {
+    const isSelected = column.getFilterValue() === value
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        className="justify-between h-8 p-2"
+        onClick={() => column.setFilterValue(value)}
+      >
+        {label}
+        {isSelected && <Check className="w-4" />}
+      </Button>
+    )
+  }
+
   const columns: ColumnDef<Campaign>[] = useMemo(
     () => [
       {
@@ -68,17 +89,22 @@ export function CampaignsDataTable() {
         minSize: 200,
         maxSize: 200,
         header: ({ column }) => {
+          const isSorted = column.getIsSorted()
           return (
-            <Button
-              className="px-2 w-full flex justify-start"
-              variant="ghost"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-            >
-              Tipo
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
+            <div className="flex items-center justify-between gap-1 px-2">
+              <span>
+                Tipo
+              </span>
+              <Button
+                className="px-2 flex justify-start"
+                variant="ghost"
+                onClick={() =>
+                  column.toggleSorting(column.getIsSorted() === "asc")
+                }
+              >
+                <ArrowUpDown className={cn("h-4 w-4", isSorted ? "text-yellow-500" : "text-muted-foreground")} />
+              </Button>
+            </div>
           );
         },
         cell: ({ row }) => (
@@ -91,17 +117,22 @@ export function CampaignsDataTable() {
         minSize: 90,
         maxSize: 90,
         header: ({ column }) => {
+          const isSorted = column.getIsSorted()
           return (
-            <Button
-              className="px-2 w-full flex justify-start"
-              variant="ghost"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-            >
-              Fecha de inicio
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
+            <div className="flex items-center justify-between gap-1 px-2">
+              <span>
+                Fecha de inicio
+              </span>
+              <Button
+                className="px-2 flex justify-start"
+                variant="ghost"
+                onClick={() =>
+                  column.toggleSorting(column.getIsSorted() === "asc")
+                }
+              >
+                <ArrowUpDown className={cn("h-4 w-4", isSorted ? "text-yellow-500" : "text-muted-foreground")} />
+              </Button>
+            </div>
           );
         },
         cell: ({ row }) => {
@@ -130,10 +161,61 @@ export function CampaignsDataTable() {
       },
       {
         accessorKey: "finished",
-        header: "Estado",
         size: 50,
         minSize: 50,
         maxSize: 50,
+        filterFn: (row, id, value) => {
+          if (!value || value === "all") return true;
+          const finished = row.getValue(id) as boolean | null;
+          if (value === "active") {
+            return finished !== true;
+          }
+          if (value === "finished") {
+            return finished === true;
+          }
+          return true;
+        },
+        header: ({ column }) => {
+          const isFiltered = column.getIsFiltered()
+          const filterValue = column.getFilterValue()
+          const options = [
+            { value: "all", label: "Todos" },
+            { value: "active", label: "Activa" },
+            { value: "finished", label: "Finalizada" }
+          ]
+          return (
+            <div className="flex items-center justify-between gap-1 px-2">
+              <span>
+                Estado
+              </span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    title="Filtrar por estado"
+                  >
+                    <Tag className={cn("h-4 w-4", isFiltered && filterValue !== "all" ? "text-yellow-500" : "text-muted-foreground")} />
+                  </Button>
+                </PopoverTrigger>
+
+                <PopoverContent className="w-32 p-1">
+                  <div className="flex flex-col">
+                    {options.map((option) => (
+                      <FilterOption
+                        key={option.value}
+                        value={option.value}
+                        label={option.label}
+                        column={column}
+                      />
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+          );
+        },
         cell: ({ row }) => {
           const finished = row.getValue("finished") as boolean | null;
           const isFinished = finished === true;
