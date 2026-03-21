@@ -101,6 +101,14 @@ export function LoginForm({
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Autenticando..." : "Autenticarse"}
               </Button>
+              <p className="text-center text-sm text-muted-foreground lg:hidden">
+                <Link
+                  href="/donate"
+                  className="underline underline-offset-4 hover:text-primary"
+                >
+                  Doná como invitado
+                </Link>
+              </p>
             </div>
           </form>
         </CardContent>

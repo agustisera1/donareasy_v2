@@ -4,3 +4,4 @@ export * from "./donor";
 export * from "./institution";
 export * from "./campaign";
 export * from "./donation";
+export * from "./guest-donation";

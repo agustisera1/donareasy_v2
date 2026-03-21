@@ -130,6 +130,9 @@ export function ViewDonationDrawer() {
           <span className="text-sm font-medium">Donante</span>
           <span className="text-sm">{selectedDonation.donor}</span>
 
+          <span className="text-sm font-medium">Contacto</span>
+          <span className="text-sm">{selectedDonation.donor_phone}</span>
+
           <span className="text-sm font-medium">Fecha de creación</span>
           <span className="text-sm">
             {formatDate(selectedDonation.date_created)}

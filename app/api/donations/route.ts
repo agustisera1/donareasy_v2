@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   try {
     let query = supabase
       .from("donations")
-      .select("*, donors(name,lastname)")
+      .select("*, donors(name,lastname,phone)")
       .order("date_created", { ascending: false });
 
     // Si se proporciona donor_id, filtrar por ese donante
@@ -26,8 +26,9 @@ export async function GET(request: Request) {
     return NextResponse.json({
       status: 200,
       data:
-        donations.map(({ donors: { name, lastname }, ...donation }) => ({
+        donations.map(({ donors: { name, lastname, phone }, ...donation }) => ({
           donor: `${name} ${lastname}`,
+          donor_phone: phone,
           ...donation,
         })) || [],
     });
