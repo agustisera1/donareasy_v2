@@ -360,10 +360,12 @@ export function DonationsDataTable() {
         cell: ({ row }) => {
           const donation = row.original;
           const canEdit = isDonor && donation.donor_id === donor?.id;
+          const isOpenDonation = donation.institution_id === null && donation.status === "pending";
           const isOwnInstitutionDonation =
             isInstitution && donation.institution_id === institution?.id;
           const canAccept =
-            isOwnInstitutionDonation && donation.status === "pending";
+            (isOwnInstitutionDonation || (isInstitution && isOpenDonation)) &&
+            donation.status === "pending";
           const canReject =
             isOwnInstitutionDonation && donation.status === "pending";
           const canDeliver =

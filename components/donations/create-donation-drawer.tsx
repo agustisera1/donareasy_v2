@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -75,6 +76,7 @@ export function CreateDonationDrawer() {
     mode: "onChange",
     defaultValues: {
       institution_id: "",
+      open_donation: false,
       donation_type: "goods",
       delivery_method: "pickup",
       category: "supplies",
@@ -87,6 +89,7 @@ export function CreateDonationDrawer() {
 
   const donationType = watch("donation_type") as "money" | "goods";
   const attachment = watch("attachment_name");
+  const openDonation = watch("open_donation");
 
   // Cargar instituciones al abrir el drawer
   useEffect(() => {
@@ -122,6 +125,21 @@ export function CreateDonationDrawer() {
       }
     };
   }, [attachment]);
+
+  useEffect(() => {
+    if (openDonation) {
+      setValue("institution_id", "", { shouldValidate: false });
+    }
+  }, [openDonation, setValue]);
+
+  useEffect(() => {
+    if (donationType === "money") {
+      setValue("delivery_method", "transfer");
+      setValue("category", "other");
+    } else {
+      setValue("delivery_method", "pickup");
+    }
+  }, [donationType, setValue]);
 
   useEffect(() => {
     if (campaignId && institutionId) {
@@ -218,18 +236,18 @@ export function CreateDonationDrawer() {
       }
 
       const donationData: {
-        institution_id: string;
+        institution_id: string | null;
         donor_id: string;
         attachment_url: string;
         status: "pending";
-        delivery_method: "pickup" | "shipment" | "agreement";
+        delivery_method: "pickup" | "shipment" | "agreement" | "transfer";
         category: "supplies" | "clothing" | "food" | "other";
         name?: string | null;
         description?: string | null;
         amount?: number | null;
         attachment_name?: string | null;
       } = {
-        institution_id: data.institution_id,
+        institution_id: data.open_donation ? null : (data.institution_id || null),
         donor_id: donor.id,
         attachment_url: attachmentUrl,
         status: "pending",
@@ -301,17 +319,32 @@ export function CreateDonationDrawer() {
 
         <form className="grid grid-cols-2 gap-4 p-4">
           <div className="grid gap-2 col-span-2">
-            <Label htmlFor="institution_id">Institución</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="institution_id">Institución</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="open_donation" className="text-sm text-muted-foreground font-normal">
+                  No tengo preferencia
+                </Label>
+                <Switch
+                  id="open_donation"
+                  checked={openDonation}
+                  onCheckedChange={(checked) =>
+                    setValue("open_donation", checked, { shouldValidate: true })
+                  }
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
             <Select
               value={watch("institution_id")}
               onValueChange={(value) => {
                 setValue("institution_id", value, { shouldValidate: true });
               }}
-              disabled={loadingInstitutions || isLoading}
+              disabled={loadingInstitutions || isLoading || openDonation}
             >
               <SelectTrigger className="w-full">
                 <SelectValue
-                  placeholder="Selecciona una institución"
+                  placeholder={openDonation ? "Sin preferencia de institución" : "Selecciona una institución"}
                   defaultValue={institutionId || undefined}
                 />
               </SelectTrigger>
@@ -349,7 +382,7 @@ export function CreateDonationDrawer() {
             </Select>
           </div>
 
-          <div className="grid gap-2 col-span-2">
+          {donationType !== "money" && <div className="grid gap-2 col-span-2">
             <div className="flex items-center gap-2">
               <Label htmlFor="delivery_method">Forma de entrega</Label>
               <Tooltip>
@@ -393,7 +426,7 @@ export function CreateDonationDrawer() {
             </div>
             <Select
               value={watch("delivery_method")}
-              onValueChange={(value: "pickup" | "shipment" | "agreement") => {
+              onValueChange={(value: "pickup" | "shipment" | "agreement" | "transfer") => {
                 setValue("delivery_method", value, { shouldValidate: true });
               }}
               disabled={isLoading}
@@ -418,9 +451,9 @@ export function CreateDonationDrawer() {
                 {errors.delivery_method.message}
               </p>
             )}
-          </div>
+          </div>}
 
-          <div className="grid gap-2 col-span-2">
+          {donationType !== "money" && <div className="grid gap-2 col-span-2">
             <div className="flex items-center gap-2">
               <Label htmlFor="category">Categoría</Label>
               <Tooltip>
@@ -500,7 +533,7 @@ export function CreateDonationDrawer() {
             {errors.category && (
               <p className="text-sm text-red-500">{errors.category.message}</p>
             )}
-          </div>
+          </div>}
 
           {donationType === "money" ? (
             <Fragment>

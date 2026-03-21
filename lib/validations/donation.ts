@@ -9,7 +9,7 @@ export const institutionIdSchema = z
 export const donationTypeSchema = z.enum(["money", "goods"]);
 
 // Schema para la forma de entrega
-export const deliveryMethodSchema = z.enum(["pickup", "shipment", "agreement"]);
+export const deliveryMethodSchema = z.enum(["pickup", "shipment", "agreement", "transfer"]);
 
 // Schema para la categoría
 export const categorySchema = z.enum(["supplies", "clothing", "food", "other"]);
@@ -67,7 +67,8 @@ export const donationGoodsDescriptionSchema = z
 // Usamos un schema base y luego refinamos según el tipo
 export const donationSchema = z
   .object({
-    institution_id: institutionIdSchema,
+    institution_id: z.string().optional().or(z.literal("")),
+    open_donation: z.boolean(),
     donation_type: donationTypeSchema,
     delivery_method: deliveryMethodSchema,
     category: categorySchema,
@@ -136,6 +137,19 @@ export const donationSchema = z
     {
       message: "La descripción es obligatoria para donaciones de bienes",
       path: ["description"],
+    }
+  )
+  .refine(
+    (data) => {
+      // Si no es donación abierta, la institución es obligatoria
+      if (!data.open_donation) {
+        return !!data.institution_id && data.institution_id.trim().length > 0;
+      }
+      return true;
+    },
+    {
+      message: "La institución es obligatoria",
+      path: ["institution_id"],
     }
   );
 

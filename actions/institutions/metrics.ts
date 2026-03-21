@@ -96,6 +96,7 @@ export async function getInstitutionMetrics(institutionId: string): Promise<{
       pickup: 0,
       shipment: 0,
       agreement: 0,
+      transfer: 0,
     };
 
     const categoryCounts: Record<DonationCategory, number> = {
@@ -187,6 +188,7 @@ export async function getInstitutionMetrics(institutionId: string): Promise<{
           pickup: deliveryCounts.pickup,
           shipment: deliveryCounts.shipment,
           agreement: deliveryCounts.agreement,
+          transfer: deliveryCounts.transfer,
         },
         category: {
           supplies: categoryCounts.supplies,

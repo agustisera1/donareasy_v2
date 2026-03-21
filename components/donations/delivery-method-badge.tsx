@@ -2,7 +2,7 @@
 
 import { deliveryMethodTranslations } from "@/lib/constants";
 
-type DeliveryMethod = "pickup" | "shipment" | "agreement";
+type DeliveryMethod = "pickup" | "shipment" | "agreement" | "transfer";
 
 interface DeliveryMethodBadgeProps {
   deliveryMethod: DeliveryMethod;
@@ -18,6 +18,8 @@ export function DeliveryMethodBadge({
       "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200",
     agreement:
       "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200",
+    transfer:
+      "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200",
   };
 
   return (
