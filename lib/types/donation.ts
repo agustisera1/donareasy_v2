@@ -26,4 +26,5 @@ export type Donation = {
   category: DonationCategory; // text NOT NULL
   institution_id: string | null; // uuid, NULL para donaciones abiertas
   donor: string; // WARNING: This is a string concatenation of the donor's name and lastname when retrieving from the database after joining with the DONOR TABLE
+  donor_phone: string; // Phone number from donors table join
 };

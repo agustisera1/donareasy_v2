@@ -43,7 +43,7 @@ export function Hero() {
           )}
 
           {isLoginPage && (
-            <div className="flex items-center gap-2 mt-1">
+            <>  <div className="flex flex-col gap-1 mt-1">
               <p className="text-sm text-muted-foreground leading-tight">
                 No estás registrado?{" "}
                 <Link
@@ -54,6 +54,16 @@ export function Hero() {
                 </Link>
               </p>
             </div>
+              <p className="text-sm text-muted-foreground leading-tight">
+                O bien{" "}
+                <Link
+                  href="/donate"
+                  className="text-primary hover:underline underline-offset-4 font-medium underline"
+                >
+                  Doná como invitado
+                </Link>
+              </p>
+            </>
           )}
         </div>
       </div>
