@@ -11,8 +11,7 @@ function getHeaderContent(pathname: string) {
     case "/dashboard/institutions":
       return ["Instituciones", "Visualiza el listado de instituciones"];
     default:
-      console.error(`Unknown pathname: ${pathname}`);
-      return ["", "Unknown page"];
+      return ["", ""];
   }
 }
 
