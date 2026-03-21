@@ -92,11 +92,19 @@ export async function acceptDonation(donationId: number) {
       };
     }
 
-    // Verificar que la donación pertenece a la institución del usuario
-    if (donation.institution_id !== institution.id) {
+    // Verificar permisos: donaciones abiertas pueden ser aceptadas por cualquier institución;
+    // donaciones dirigidas solo por la institución destino
+    if (donation.institution_id !== null && donation.institution_id !== institution.id) {
       return {
         success: false,
         error: "No tienes permisos para aceptar esta donación",
+      };
+    }
+
+    if (donation.status !== "pending") {
+      return {
+        success: false,
+        error: "Solo se pueden aceptar donaciones pendientes",
       };
     }
 
@@ -104,13 +112,24 @@ export async function acceptDonation(donationId: number) {
     const today = new Date();
     const acceptedDate = today.toISOString();
 
-    // 6. Actualizar la donación marcándola como aceptada
+    // 6. Actualizar la donación marcándola como aceptada.
+    // Para donaciones abiertas, también se asigna la institución que acepta.
+    const updateData: {
+      status: string;
+      date_accepted: string;
+      institution_id?: string;
+    } = {
+      status: "accepted",
+      date_accepted: acceptedDate,
+    };
+
+    if (donation.institution_id === null) {
+      updateData.institution_id = institution.id;
+    }
+
     const { error: updateError } = await supabase
       .from("donations")
-      .update({
-        status: "accepted",
-        date_accepted: acceptedDate,
-      })
+      .update(updateData)
       .eq("id", donationId);
 
     if (updateError) {

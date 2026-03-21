@@ -8,7 +8,7 @@ interface UpdateDonationData {
   amount?: number | null;
   attachment_name?: string | null;
   attachment_url?: string;
-  delivery_method?: "pickup" | "shipment" | "agreement";
+  delivery_method?: "pickup" | "shipment" | "agreement" | "transfer";
   category?: "supplies" | "clothing" | "food" | "other";
 }
 

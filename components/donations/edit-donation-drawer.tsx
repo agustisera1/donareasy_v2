@@ -189,7 +189,7 @@ export function EditDonationDrawer() {
         amount?: number | null;
         attachment_name?: string | null;
         attachment_url?: string;
-        delivery_method?: "pickup" | "shipment" | "agreement";
+        delivery_method?: "pickup" | "shipment" | "agreement" | "transfer";
         category?: "supplies" | "clothing" | "food" | "other";
       } = {};
 
@@ -374,7 +374,7 @@ export function EditDonationDrawer() {
                 )}
               </div>
 
-              <div className="grid gap-2 col-span-2">
+              {!isMoney && <div className="grid gap-2 col-span-2">
                 <div className="flex items-center gap-2">
                   <Label htmlFor="delivery_method">Forma de entrega</Label>
                   <Tooltip>
@@ -419,7 +419,7 @@ export function EditDonationDrawer() {
                 <Select
                   value={watch("delivery_method")}
                   onValueChange={(
-                    value: "pickup" | "shipment" | "agreement"
+                    value: "pickup" | "shipment" | "agreement" | "transfer"
                   ) => {
                     setValue("delivery_method", value, {
                       shouldValidate: true,
@@ -447,9 +447,9 @@ export function EditDonationDrawer() {
                     {errors.delivery_method.message}
                   </p>
                 )}
-              </div>
+              </div>}
 
-              <div className="grid gap-2 col-span-2">
+              {!isMoney && <div className="grid gap-2 col-span-2">
                 <div className="flex items-center gap-2">
                   <Label htmlFor="category">Categoría</Label>
                   <Tooltip>
@@ -531,7 +531,7 @@ export function EditDonationDrawer() {
                     {errors.category.message}
                   </p>
                 )}
-              </div>
+              </div>}
 
               <div className="grid gap-2 col-span-2">
                 <Label htmlFor="description">Descripción</Label>

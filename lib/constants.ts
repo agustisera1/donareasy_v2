@@ -20,6 +20,11 @@ export const deliveryMethodTranslations: Record<
     description:
       "El donante y la institución acuerdan una forma de entrega especial (cargas grandes, otro)",
   },
+  transfer: {
+    label: "Transferencia bancaria",
+    description:
+      "La donación se realiza mediante transferencia bancaria. El comprobante adjunto sirve como constancia.",
+  },
 };
 
 // Traducciones y descripciones para las categorías

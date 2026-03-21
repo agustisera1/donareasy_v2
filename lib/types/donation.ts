@@ -24,6 +24,6 @@ export type Donation = {
   status: DonationStatus; // text DEFAULT 'pending'::text
   delivery_method: DeliveryMethod; // text NOT NULL
   category: DonationCategory; // text NOT NULL
-  institution_id: string; // uuid NOT NULL
+  institution_id: string | null; // uuid, NULL para donaciones abiertas
   donor: string; // WARNING: This is a string concatenation of the donor's name and lastname when retrieving from the database after joining with the DONOR TABLE
 };

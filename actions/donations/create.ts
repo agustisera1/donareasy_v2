@@ -3,11 +3,11 @@
 import { createClient } from "@/lib/supabase/server";
 
 interface CreateDonationData {
-  institution_id: string;
+  institution_id: string | null;
   donor_id: string;
   attachment_url: string;
   status: "pending";
-  delivery_method: "pickup" | "shipment" | "agreement";
+  delivery_method: "pickup" | "shipment" | "agreement" | "transfer";
   category: "supplies" | "clothing" | "food" | "other";
   name?: string | null;
   description?: string | null;
@@ -51,24 +51,26 @@ export async function createDonation(formData: CreateDonationData) {
       };
     }
 
-    // 3. Verificar que la institución existe
-    const { data: institution, error: institutionError } = await supabase
-      .from("institutions")
-      .select("id")
-      .eq("id", formData.institution_id)
-      .maybeSingle();
+    // 3. Verificar que la institución existe (solo para donaciones dirigidas)
+    if (formData.institution_id !== null) {
+      const { data: institution, error: institutionError } = await supabase
+        .from("institutions")
+        .select("id")
+        .eq("id", formData.institution_id)
+        .maybeSingle();
 
-    if (institutionError) {
-      throw new Error(
-        `Error verificando institución: ${institutionError.message}`
-      );
-    }
+      if (institutionError) {
+        throw new Error(
+          `Error verificando institución: ${institutionError.message}`
+        );
+      }
 
-    if (!institution) {
-      return {
-        success: false,
-        error: "Institución no encontrada",
-      };
+      if (!institution) {
+        return {
+          success: false,
+          error: "Institución no encontrada",
+        };
+      }
     }
 
     // 4. Insertar la donación
