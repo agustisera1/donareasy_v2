@@ -61,7 +61,7 @@ export async function createDonation(formData: CreateDonationData) {
 
       if (institutionError) {
         throw new Error(
-          `Error verificando institución: ${institutionError.message}`
+          `Error verificando institución: ${institutionError.message}`,
         );
       }
 
@@ -97,6 +97,34 @@ export async function createDonation(formData: CreateDonationData) {
 
     if (!donation) {
       throw new Error("Error: No se pudo crear la donación");
+    }
+
+    // Crear notificación (no-fatal)
+    try {
+      const donationName = formData.name ?? "Donación";
+      if (formData.institution_id !== null) {
+        const { data: targetInstitution } = await supabase
+          .from("institutions")
+          .select("user_id")
+          .eq("id", formData.institution_id)
+          .maybeSingle();
+
+        if (targetInstitution?.user_id) {
+          await supabase.from("notifications").insert({
+            user_id: targetInstitution.user_id,
+            donation_id: donation.id,
+            message: `Nueva donación disponible: ${donationName}`,
+          });
+        }
+      } else {
+        await supabase.from("notifications").insert({
+          user_id: null,
+          donation_id: donation.id,
+          message: `Nueva donación disponible: ${donationName}`,
+        });
+      }
+    } catch (notifError) {
+      console.error("Error creando notificación:", notifError);
     }
 
     return { success: true, data: donation };

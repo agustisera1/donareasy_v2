@@ -30,7 +30,7 @@ export function ProfileDrawer({
     <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
         <DrawerHeader aria-describedby={undefined} className="border-b">
-          <DrawerTitle>Cuenta</DrawerTitle>
+          <DrawerTitle>Perfil</DrawerTitle>
           <DrawerDescription>Datos del Usuario</DrawerDescription>
         </DrawerHeader>
 

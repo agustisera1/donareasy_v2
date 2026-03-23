@@ -156,7 +156,7 @@ export function AppSidebar({
                   className="cursor-pointer"
                   onClick={popAccountDialog}
                 >
-                  <span>Cuenta</span>
+                  <span>Perfil</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   disabled={mode === "onboarding"}

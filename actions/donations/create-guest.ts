@@ -10,7 +10,7 @@ function createServiceRoleClient() {
     {
       cookies: { getAll: () => [], setAll: () => {} },
       auth: { persistSession: false },
-    }
+    },
   );
 }
 
@@ -26,7 +26,7 @@ export async function createGuestDonation(
     name?: string;
     description?: string;
     attachment_name?: FileList | null;
-  }
+  },
 ) {
   const parsed = guestDonationSchema.safeParse(formData);
   if (!parsed.success) {
@@ -119,13 +119,15 @@ export async function createGuestDonation(
     }
 
     // 4. Insertar la donación
-    const { error: donationError } = await supabase
+    const resolvedInstitutionId = data.open_donation
+      ? null
+      : data.institution_id || null;
+
+    const { data: donation, error: donationError } = await supabase
       .from("donations")
       .insert({
         donor_id: donor.id,
-        institution_id: data.open_donation
-          ? null
-          : data.institution_id || null,
+        institution_id: resolvedInstitutionId,
         attachment_url: attachmentUrl,
         attachment_name: attachmentFileName || null,
         status: "pending",
@@ -138,10 +140,43 @@ export async function createGuestDonation(
           data.donation_type === "money" && data.amount
             ? parseFloat(data.amount)
             : null,
-      });
+      })
+      .select("id")
+      .single();
 
-    if (donationError) {
-      throw new Error(`Error creando donación: ${donationError.message}`);
+    if (donationError || !donation) {
+      throw new Error(`Error creando donación: ${donationError?.message}`);
+    }
+
+    // Crear notificación (no-fatal)
+    try {
+      const donationName =
+        data.donation_type === "goods"
+          ? (data.name ?? "Donación")
+          : "Donación monetaria";
+      if (resolvedInstitutionId !== null) {
+        const { data: targetInstitution } = await supabase
+          .from("institutions")
+          .select("user_id")
+          .eq("id", resolvedInstitutionId)
+          .maybeSingle();
+
+        if (targetInstitution?.user_id) {
+          await supabase.from("notifications").insert({
+            user_id: targetInstitution.user_id,
+            donation_id: donation.id,
+            message: `Nueva donación disponible: ${donationName}`,
+          });
+        }
+      } else {
+        await supabase.from("notifications").insert({
+          user_id: null,
+          donation_id: donation.id,
+          message: `Nueva donación disponible: ${donationName}`,
+        });
+      }
+    } catch (notifError) {
+      console.error("Error creando notificación:", notifError);
     }
 
     // 5. Marcar el token como usado

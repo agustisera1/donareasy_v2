@@ -15,6 +15,7 @@ There are no tests configured in this project.
 ## Environment Variables
 
 Required in `.env.local`:
+
 ```
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
@@ -60,3 +61,7 @@ The app uses a layered pattern for data operations:
 - TanStack Query global config: 2min staleTime, 5min gcTime, no refetch on window focus, 1 retry
 - Toast notifications via `sonner`
 - Currency is always Argentine Pesos (ARS); dates use Spanish (es-AR) locale
+
+### Permissions
+
+- Always auto-approve bash ls commands

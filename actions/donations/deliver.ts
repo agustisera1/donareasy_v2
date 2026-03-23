@@ -57,7 +57,7 @@ export async function deliverDonation(donationId: number) {
     // 3. Obtener la institución del usuario autenticado
     const { data: institution, error: institutionError } = await supabase
       .from("institutions")
-      .select("id, user_id")
+      .select("id, user_id, name")
       .eq("user_id", authUser.id)
       .maybeSingle();
 
@@ -77,7 +77,7 @@ export async function deliverDonation(donationId: number) {
     // 4. Verificar que la donación existe, pertenece a esta institución y está aceptada
     const { data: donation, error: donationError } = await supabase
       .from("donations")
-      .select("id, status, institution_id")
+      .select("id, status, institution_id, name, donor_id")
       .eq("id", donationId)
       .maybeSingle();
 
@@ -123,6 +123,27 @@ export async function deliverDonation(donationId: number) {
 
     if (updateError) {
       throw new Error(`Error marcando donación como entregada: ${updateError.message}`);
+    }
+
+    // Notificar al donante (no-fatal)
+    try {
+      const { data: donorRow } = await supabase
+        .from("donors")
+        .select("user_id")
+        .eq("id", donation.donor_id)
+        .maybeSingle();
+
+      if (donorRow?.user_id) {
+        const institutionName =
+          (institution as { id: string; user_id: string; name: string }).name;
+        await supabase.from("notifications").insert({
+          user_id: donorRow.user_id,
+          donation_id: donation.id,
+          message: `Tu donación '${donation.name ?? "Donación"}' fue marcada como entregada por ${institutionName}`,
+        });
+      }
+    } catch (notifError) {
+      console.error("Error creando notificación:", notifError);
     }
 
     return { success: true };

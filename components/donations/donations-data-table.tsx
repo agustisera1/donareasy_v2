@@ -17,6 +17,7 @@ import {
 import { ArrowUpDown, Edit, X, Eye, Check, Package, Tag } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
@@ -112,6 +113,12 @@ export function DonationsDataTable() {
         size: 100,
         minSize: 100,
         maxSize: 100,
+        filterFn: (row, id, value) => {
+          if (!value) return true;
+          const name = row.getValue(id) as string | null;
+          if (name === null) return false;
+          return name.toLowerCase().includes(String(value).toLowerCase());
+        },
         header: ({ column }) => {
           const isSorted = column.getIsSorted()
           return (
@@ -471,6 +478,14 @@ export function DonationsDataTable() {
     <div className="w-full space-y-4 min-h-[calc(100dvh-10rem)]">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
+          <Input
+            placeholder="Buscar por nombre"
+            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+            onChange={(e) =>
+              table.getColumn("name")?.setFilterValue(e.target.value)
+            }
+            className="h-8 w-48"
+          />
           {isDonor && (
             <ToggleGroup
               type="single"

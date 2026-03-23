@@ -16,6 +16,7 @@ import {
 import { ArrowUpDown, Eye, ChartLine } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -207,6 +208,16 @@ export function InstitutionsDataTable() {
 
   return (
     <div className="w-full space-y-4 min-h-[calc(100dvh-10rem)]">
+      <div className="flex items-center">
+        <Input
+          placeholder="Buscar por nombre"
+          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+          onChange={(e) =>
+            table.getColumn("name")?.setFilterValue(e.target.value)
+          }
+          className="h-8 w-48"
+        />
+      </div>
       <div className="rounded-md border">
         <Table className="table-fixed">
           <TableHeader>

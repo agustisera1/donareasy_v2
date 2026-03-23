@@ -17,6 +17,7 @@ import {
 import { ArrowUpDown, Edit, Check, Eye, HandCoins, Tag } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
@@ -332,6 +333,14 @@ export function CampaignsDataTable() {
     <div className="w-full space-y-4 min-h-[calc(100dvh-10rem)]">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
+          <Input
+            placeholder="Buscar por tipo"
+            value={(table.getColumn("type")?.getFilterValue() as string) ?? ""}
+            onChange={(e) =>
+              table.getColumn("type")?.setFilterValue(e.target.value)
+            }
+            className="h-8 w-48"
+          />
           {isInstitution && !loading && (
             <ToggleGroup
               type="single"
