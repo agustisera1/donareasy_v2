@@ -106,7 +106,7 @@ export function LoginForm({
                   href="/donate"
                   className="underline underline-offset-4 hover:text-primary"
                 >
-                  Doná como invitado
+                  doná como invitado
                 </Link>
               </p>
             </div>

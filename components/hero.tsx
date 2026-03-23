@@ -60,7 +60,7 @@ export function Hero() {
                   href="/donate"
                   className="text-primary hover:underline underline-offset-4 font-medium underline"
                 >
-                  Doná como invitado
+                  doná como invitado
                 </Link>
               </p>
             </>

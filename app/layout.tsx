@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Plus_Jakarta_Sans, Lora } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "./providers";
@@ -27,10 +27,18 @@ export const metadata: Metadata = {
   },
 };
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const jakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-sans",
   display: "swap",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+});
+
+const lora = Lora({
+  variable: "--font-serif",
+  display: "swap",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export default function RootLayout({
@@ -40,7 +48,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es-ES" suppressHydrationWarning>
-      <body className={`${geistSans.className} antialiased`}>
+      <body className={`${jakartaSans.variable} ${lora.variable} font-sans antialiased`}>
         <Providers>
           <ThemeProvider
             attribute="class"
