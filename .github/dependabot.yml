@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    groups:
+      # Minor/patch updates land together in a single PR
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+    ignore:
+      # Majors are planned migrations; review them manually
+      - dependency-name: "tailwindcss"
+        update-types: ["version-update:semver-major"]
