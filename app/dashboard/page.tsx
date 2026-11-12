@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
-async function redirectUser() {
+async function RedirectUser(): Promise<null> {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getClaims();
   const {
@@ -22,7 +22,11 @@ async function redirectUser() {
   } else redirect("/dashboard/campaign");
 }
 
-export default async function ProtectedPage() {
-  await redirectUser();
-  return <Suspense fallback={<div>Redirigiendo...</div>} />;
+// Session/cookie access must happen inside <Suspense> with cacheComponents.
+export default function ProtectedPage() {
+  return (
+    <Suspense fallback={<div>Redirigiendo...</div>}>
+      <RedirectUser />
+    </Suspense>
+  );
 }
