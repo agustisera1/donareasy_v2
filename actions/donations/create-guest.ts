@@ -32,7 +32,7 @@ export async function createGuestDonation(
   if (!parsed.success) {
     return {
       success: false,
-      error: parsed.error.errors[0]?.message ?? "Datos inválidos",
+      error: parsed.error.issues[0]?.message ?? "Datos inválidos",
     };
   }
 
