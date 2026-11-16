@@ -1,11 +1,6 @@
-import { clsx, type ClassValue } from "clsx";
+export { cn } from "cn";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
-import { twMerge } from "tailwind-merge";
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 
 export const hasEnvVars =
   process.env.NEXT_PUBLIC_SUPABASE_URL &&
