@@ -1,6 +1,7 @@
 import { Footer } from "@/components/footer";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
+import { sidebarProviderStyle } from "@/components/sidebar/sidebar-style";
 import Header from "@/components/header";
 
 export default function DashboardLayout({
@@ -9,13 +10,13 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <SidebarProvider open={true}>
+    <SidebarProvider open={true} style={sidebarProviderStyle}>
       <AppSidebar />
-      <main className="ml-[12rem] w-full flex flex-col items-center">
+      <SidebarInset className="items-center">
         <Header />
         {children}
         <Footer />
-      </main>
+      </SidebarInset>
     </SidebarProvider>
   );
 }

@@ -84,28 +84,35 @@ export function AppSidebar({
 
   return (
     <Sidebar>
-      <SidebarContent className="bg-background w-[12rem]">
-        <SidebarHeader className="p-4 pb-0">
-          <Link className="flex items-center gap-2" href={"/"}>
-            <Logo width={40} height={40} />
-            <span className="text-xl font-bold">Donareasy</span>
-          </Link>
-        </SidebarHeader>
+      <SidebarHeader className="px-4 pt-4">
+        <Link className="flex items-center gap-2" href={"/"}>
+          <Logo width={28} height={28} />
+          <span className="font-heading text-base font-semibold tracking-tight">
+            Donareasy
+          </span>
+        </Link>
+      </SidebarHeader>
 
+      <SidebarContent>
         {mode === "onboarding" ? null : (
           <SidebarGroup>
             <SidebarGroupLabel>Navegación</SidebarGroupLabel>
-
-            {items.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                  <Link href={item.url}>
-                    <item.icon />
-                    <span>{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
+            <SidebarMenu>
+              {items.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.url)}
+                    className="text-sidebar-foreground/70 data-[active=true]:text-sidebar-foreground data-[active=true]:[&>svg]:text-sidebar-primary"
+                  >
+                    <Link href={item.url}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
           </SidebarGroup>
         )}
       </SidebarContent>
@@ -128,10 +135,7 @@ export function AppSidebar({
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  disabled={!!loadingUser}
-                  className="max-w-[11rem]"
-                >
+                <SidebarMenuButton disabled={!!loadingUser}>
                   {loadingUser ? (
                     <Loader2 className="animate-spin" />
                   ) : (
@@ -149,7 +153,7 @@ export function AppSidebar({
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 side="top"
-                className="w-[--radix-popper-anchor-width]"
+                className="w-(--radix-popper-anchor-width)"
               >
                 <DropdownMenuItem
                   disabled={mode === "onboarding"}

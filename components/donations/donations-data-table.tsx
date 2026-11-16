@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Fragment } from "react";
+import React from "react";
 import {
   Column,
   flexRender,
@@ -138,44 +138,6 @@ export function DonationsDataTable() {
             <div className="font-medium">
               {isMoney ? "Donación monetaria" : donation.name || "Bienes"}
             </div>
-          );
-        },
-      },
-      {
-        accessorKey: "amount",
-        size: 150,
-        minSize: 150,
-        maxSize: 200,
-        header: ({ column }) => {
-          const isSorted = column.getIsSorted()
-          return (
-            <div className="flex items-center justify-between gap-1 px-2">
-              <span>
-                Detalle
-              </span>
-              <Button
-                className="px-2 flex justify-start"
-                variant="ghost"
-                onClick={() =>
-                  column.toggleSorting(column.getIsSorted() === "asc")
-                }
-              >
-                <ArrowUpDown className={cn("h-4 w-4", isSorted ? "text-yellow-500" : "text-muted-foreground")} />
-              </Button>
-            </div>
-          );
-        },
-        cell: ({ row }) => {
-          const donation = row.original;
-          return (
-            <Fragment>
-              {donation.amount === null && donation.description === null && (
-                <div className="text-muted-foreground">-</div>
-              )}
-              {donation.description !== null && donation.description}
-              {donation.amount !== null &&
-                `$${donation.amount.toLocaleString()}`}
-            </Fragment>
           );
         },
       },

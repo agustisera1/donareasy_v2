@@ -381,7 +381,7 @@ export function EditDonationDrawer() {
                     <TooltipTrigger asChild>
                       <button
                         type="button"
-                        className="inline-flex items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        className="inline-flex items-center justify-center rounded-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                       >
                         <Info className="h-4 w-4 text-muted-foreground" />
                       </button>
@@ -456,7 +456,7 @@ export function EditDonationDrawer() {
                     <TooltipTrigger asChild>
                       <button
                         type="button"
-                        className="inline-flex items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        className="inline-flex items-center justify-center rounded-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                       >
                         <Info className="h-4 w-4 text-muted-foreground" />
                       </button>

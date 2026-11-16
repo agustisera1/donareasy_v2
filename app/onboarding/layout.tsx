@@ -1,8 +1,9 @@
 import { AuthButton } from "@/components/auth-button";
 import { Footer } from "@/components/footer";
 import { Suspense } from "react";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
+import { sidebarProviderStyle } from "@/components/sidebar/sidebar-style";
 
 export default function OnboardingLayout({
   children,
@@ -10,9 +11,9 @@ export default function OnboardingLayout({
   children: React.ReactNode;
 }) {
   return (
-    <SidebarProvider open={true}>
+    <SidebarProvider open={true} style={sidebarProviderStyle}>
       <AppSidebar mode="onboarding" />
-      <main className="ml-[12rem] w-full flex flex-col items-center">
+      <SidebarInset className="items-center">
         <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
           <div className="w-full max-w-5xl flex justify-end items-center p-3 px-5 text-sm">
             <Suspense>
@@ -24,7 +25,7 @@ export default function OnboardingLayout({
         {children}
 
         <Footer />
-      </main>
+      </SidebarInset>
     </SidebarProvider>
   );
 }
