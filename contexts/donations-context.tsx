@@ -10,6 +10,7 @@ interface DonationsContextType {
   // Donations data
   donations: Donation[];
   loading: boolean;
+  error: Error | null;
   refetch: () => Promise<void>;
 
   // User data
@@ -55,7 +56,7 @@ const DonationsContext = createContext<DonationsContextType | undefined>(
 export function DonationsProvider({ children }: { children: React.ReactNode }) {
   // Hooks
   const { user, loading: loadingUser } = useUser();
-  const { donations, loading: loadingDonations, refetch } = useDonations();
+  const { donations, loading: loadingDonations, error, refetch } = useDonations();
 
   // Role checks
   const isDonor = user?.role === "donor";
@@ -139,6 +140,7 @@ export function DonationsProvider({ children }: { children: React.ReactNode }) {
       value={{
         donations,
         loading: loadingDonations || loadingUser,
+        error,
         refetch,
         donor,
         institution,

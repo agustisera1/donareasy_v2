@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
-import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Providers } from "./providers";
@@ -43,20 +42,12 @@ export default function RootLayout({
   return (
     <html
       lang="es-ES"
-      suppressHydrationWarning
-      className={cn("font-sans", outfit.variable)}
+      className={cn("dark font-sans", outfit.variable)}
     >
       <body className="antialiased">
         <Providers>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <TooltipProvider>{children}</TooltipProvider>
-            <Toaster theme="dark" />
-          </ThemeProvider>
+          <TooltipProvider>{children}</TooltipProvider>
+          <Toaster theme="dark" />
         </Providers>
       </body>
     </html>

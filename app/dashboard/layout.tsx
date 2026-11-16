@@ -14,7 +14,9 @@ export default function DashboardLayout({
       <AppSidebar />
       <SidebarInset className="items-center">
         <Header />
-        {children}
+        <div className="flex w-full flex-1 flex-col items-center">
+          {children}
+        </div>
         <Footer />
       </SidebarInset>
     </SidebarProvider>

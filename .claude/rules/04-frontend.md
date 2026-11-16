@@ -42,7 +42,16 @@ semánticos en un solo lugar (p. ej. `status-badge.tsx`), no con clases sueltas 
 
 ### Catálogo de `components/common/`
 
-Vacío hoy. Candidatos a extraer cuando el refactor los toque (patrones que hoy se repiten a mano):
+| Primitivo | Qué resuelve | Server-safe |
+|-----------|--------------|-------------|
+| `DataTable` | Tabla de datos (TanStack + `ui/table`): toolbar, filtros facetados, estados ("Cargando", error, vacío y vacío por filtros con `Empty` de shadcn), conteo y paginación. La feature pasa `errorMessage` desde el `error` de su query. Uso: `components/donations/donations-data-table.tsx` | Client |
+| `DataTableColumnHeader` | Header ordenable alineado con la celda (`-ml-2.5` compensa el padding del `Button`) | Client |
+| `DataTableFacetedFilter` | Filtro multi-select de valores enumerables con conteos (`getFacetedUniqueValues`); lo renderiza `DataTable` desde `facetedFilters` | Client |
+| `DataTablePagination` | `Pagination` de shadcn con links `?page=N` (`Button asChild` + `Link`) | Client |
+| `DataTableRowAction` | Botón de acción solo-ícono con `Tooltip` y `sr-only`; si está deshabilitado, lo envuelve en un `span` (patrón de Radix) | Client |
+| `DataTableTabs` | Pestañas de la toolbar (`Tabs` de shadcn) sincronizadas con un search param; `parseTab` lee el valor | Client |
+
+Candidatos a extraer cuando el refactor los toque (patrones que hoy se repiten a mano):
 
 | Primitivo | Qué resuelve | Server-safe |
 |-----------|--------------|-------------|
@@ -60,6 +69,9 @@ Cada primitivo nuevo se suma a esta tabla con su referencia de uso.
 |-----------|----------|
 | Encabezado + estructura de una página del dashboard | `PageLayout` — nunca rearmar el header con un `<h1>` y clases a mano en cada página |
 | Fila de formulario (label + control + error) | `FormField` — nunca reconstruir el `<div className="grid gap-2">` a mano |
+| Tabla de datos | `DataTable` — la feature solo define `columns`, `toolbar`, `actions` y `facetedFilters`. Sin anchos fijos (`size`, `table-fixed`, estilos inline): el ancho lo reparte el navegador. Página, pestaña, orden y filtros viven en la URL (`?page=`, `?view=`, `?sort=`, `?status=`). La carga muestra el texto "Cargando", sin puntos suspensivos |
+| Columna de acciones de una tabla | `header: "Acciones"` y un `DataTableRowAction` por acción, con un label que diga qué hace ("Ver detalle", "Editar") |
+| Filtro por valores enumerables (estado, categoría) | `facetedFilters` de `DataTable` + `filterFn: "arrIncludesSome"` en la columna; nunca un `filterFn` a mano ni un popover en el header |
 | Mensaje de error de un campo suelto | `FieldError` (o el prop `error` de `FormField`) — nunca `<p className="text-sm text-red-500">` |
 | Área de texto | `Textarea` de `ui/` — nunca un `<textarea>` con clases crudas |
 | Monto en pesos | `formatCurrency` de `lib/utils.ts` (o `Money`) — nunca `toLocaleString` / `Intl` a mano |
@@ -264,7 +276,7 @@ las verificaciones excluyen `components/ui/`.
 
 - **Todo el texto visible está en español (es-AR, voseo):** "Iniciá sesión", "Guardá los cambios".
 - **Los textos de carga usan el carácter `…`, nunca `...`.** Verificación: grep de `...` dentro de
-  strings y JSX de `.tsx` → 0.
+  strings y JSX de `.tsx` → 0. Excepción: tablas y fallbacks de página dicen "Cargando", sin `…`.
 - **Imágenes con `next/image`, nunca `<img>`.** Verificación: grep de `<img` → 0.
 - **Montos y conteos que se comparan llevan `tabular-nums`.**
 - **El error de carga dice "No se pudo cargar <cosa>. Recargá la página."**
