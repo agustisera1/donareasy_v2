@@ -12,7 +12,7 @@ export default function OnboardingLayout({
   return (
     <SidebarProvider open={true}>
       <AppSidebar mode="onboarding" />
-      <main className="ml-[12rem] w-full flex flex-col items-center">
+      <main className="ml-48 w-full flex flex-col items-center">
         <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
           <div className="w-full max-w-5xl flex justify-end items-center p-3 px-5 text-sm">
             <Suspense>

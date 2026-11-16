@@ -215,7 +215,7 @@ export function GuestDonationForm({ token, institutions }: GuestDonationFormProp
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  className="inline-flex items-center justify-center rounded-full focus:outline-none"
+                  className="inline-flex items-center justify-center rounded-full focus:outline-hidden"
                 >
                   <Info className="h-4 w-4 text-muted-foreground" />
                 </button>
@@ -275,7 +275,7 @@ export function GuestDonationForm({ token, institutions }: GuestDonationFormProp
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  className="inline-flex items-center justify-center rounded-full focus:outline-none"
+                  className="inline-flex items-center justify-center rounded-full focus:outline-hidden"
                 >
                   <Info className="h-4 w-4 text-muted-foreground" />
                 </button>

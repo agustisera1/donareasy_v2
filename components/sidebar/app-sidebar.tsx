@@ -84,7 +84,7 @@ export function AppSidebar({
 
   return (
     <Sidebar>
-      <SidebarContent className="bg-background w-[12rem]">
+      <SidebarContent className="bg-background w-48">
         <SidebarHeader className="p-4 pb-0">
           <Link className="flex items-center gap-2" href={"/"}>
             <Logo width={40} height={40} />
@@ -130,7 +130,7 @@ export function AppSidebar({
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
                   disabled={!!loadingUser}
-                  className="max-w-[11rem]"
+                  className="max-w-44"
                 >
                   {loadingUser ? (
                     <Loader2 className="animate-spin" />
@@ -149,7 +149,7 @@ export function AppSidebar({
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 side="top"
-                className="w-[--radix-popper-anchor-width]"
+                className="w-(--radix-popper-anchor-width)"
               >
                 <DropdownMenuItem
                   disabled={mode === "onboarding"}

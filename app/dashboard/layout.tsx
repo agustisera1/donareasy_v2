@@ -11,7 +11,7 @@ export default function DashboardLayout({
   return (
     <SidebarProvider open={true}>
       <AppSidebar />
-      <main className="ml-[12rem] w-full flex flex-col items-center">
+      <main className="ml-48 w-full flex flex-col items-center">
         <Header />
         {children}
         <Footer />
