@@ -10,6 +10,7 @@ import { DataTable } from "@/components/common/data-table";
 import { DataTableColumnHeader } from "@/components/common/data-table-column-header";
 import { DataTableRowAction } from "@/components/common/data-table-row-action";
 import { DataTableTabs, parseTab } from "@/components/common/data-table-tabs";
+import { CampaignStatusBadge } from "./campaign-status-badge";
 import { ViewCampaignDrawer } from "./view-campaign-drawer";
 import { EditCampaignDrawer } from "./edit-campaign-drawer";
 import { FinishCampaignDialog } from "./finish-campaign-dialog";
@@ -84,20 +85,9 @@ export function CampaignsDataTable() {
         enableSorting: false,
         filterFn: "arrIncludesSome",
         header: "Estado",
-        cell: ({ row }) => {
-          const isFinished = row.original.finished === true;
-          return (
-            <div
-              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                isFinished
-                  ? "bg-muted text-muted-foreground"
-                  : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-              }`}
-            >
-              {isFinished ? "Finalizada" : "Activa"}
-            </div>
-          );
-        },
+        cell: ({ row }) => (
+          <CampaignStatusBadge finished={row.original.finished === true} />
+        ),
       },
       {
         id: "actions",

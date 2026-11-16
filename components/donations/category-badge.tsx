@@ -1,27 +1,19 @@
-"use client";
-
+import { Badge } from "@/components/ui/badge";
 import { categoryTranslations } from "@/lib/constants";
 
 type Category = "supplies" | "clothing" | "food" | "other";
 
-interface CategoryBadgeProps {
-  category: Category;
-}
+const categoryTones: Record<Category, string> = {
+  supplies: "bg-category-supplies/15 text-category-supplies dark:bg-category-supplies/20",
+  clothing: "bg-category-clothing/15 text-category-clothing dark:bg-category-clothing/20",
+  food: "bg-category-food/15 text-category-food dark:bg-category-food/20",
+  other: "bg-category-other/15 text-category-other dark:bg-category-other/20",
+};
 
-export function CategoryBadge({ category }: CategoryBadgeProps) {
-  const categoryColors: Record<Category, string> = {
-    supplies:
-      "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-    clothing: "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200",
-    food: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-    other: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
-  };
-
+export function CategoryBadge({ category }: { category: Category }) {
   return (
-    <div
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${categoryColors[category]}`}
-    >
+    <Badge className={categoryTones[category]}>
       {categoryTranslations[category].label}
-    </div>
+    </Badge>
   );
 }

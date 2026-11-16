@@ -38,6 +38,13 @@
   --sidebar-border: oklch(0.93 0.007 106.5);
   --sidebar-ring: oklch(0.737 0.021 106.9);
   --scrollbar-thumb: oklch(0.153 0.006 107.1 / 18%);
+  --success: oklch(0.52 0.13 150);
+  --warning: oklch(0.55 0.12 70);
+  --info: oklch(0.52 0.13 250);
+  --category-supplies: oklch(0.5 0.16 300);
+  --category-clothing: oklch(0.52 0.17 350);
+  --category-food: oklch(0.56 0.14 45);
+  --category-other: oklch(0.5 0.02 107);
 }
 .dark {
   --background: oklch(0.153 0.006 107.1);
@@ -72,6 +79,13 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.58 0.031 107.3);
   --scrollbar-thumb: oklch(1 0 0 / 16%);
+  --success: oklch(0.8 0.13 150);
+  --warning: oklch(0.83 0.12 80);
+  --info: oklch(0.8 0.1 250);
+  --category-supplies: oklch(0.8 0.11 300);
+  --category-clothing: oklch(0.8 0.11 350);
+  --category-food: oklch(0.82 0.11 55);
+  --category-other: oklch(0.82 0.02 107);
 }
 
 @theme inline {
@@ -100,6 +114,13 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-category-supplies: var(--category-supplies);
+  --color-category-clothing: var(--category-clothing);
+  --color-category-food: var(--category-food);
+  --color-category-other: var(--category-other);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);

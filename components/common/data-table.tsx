@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, type ReactNode } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   flexRender,
   functionalUpdate,
@@ -79,6 +81,7 @@ export function DataTable<TData>({
   actions,
   facetedFilters = [],
 }: DataTableProps<TData>) {
+  const pathname = usePathname();
   const { searchParams, replace } = useSearchParamsState();
   const filterIds = facetedFilters.map((filter) => filter.columnId);
   const rawSort = searchParams.get("sort");
@@ -193,6 +196,22 @@ export function DataTable<TData>({
                   ))}
                 </TableRow>
               ))
+            ) : pageIndex > 0 && table.getPrePaginationRowModel().rows.length > 0 ? (
+              <StatusRow colSpan={visibleColumns}>
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <SearchXIcon />
+                    </EmptyMedia>
+                    <EmptyTitle>Esta página no existe</EmptyTitle>
+                  </EmptyHeader>
+                  <EmptyContent>
+                    <Button asChild variant="outline">
+                      <Link href={firstPageHref(pathname, searchParams)}>Ir a la primera página</Link>
+                    </Button>
+                  </EmptyContent>
+                </Empty>
+              </StatusRow>
             ) : columnFilters.length > 0 ? (
               <StatusRow colSpan={visibleColumns}>
                 <Empty>
@@ -246,4 +265,11 @@ function StatusRow({ colSpan, children }: { colSpan: number; children: ReactNode
       </TableCell>
     </TableRow>
   );
+}
+
+function firstPageHref(pathname: string, searchParams: URLSearchParams) {
+  const params = new URLSearchParams(searchParams);
+  params.delete("page");
+  const query = params.toString();
+  return query ? `${pathname}?${query}` : pathname;
 }
