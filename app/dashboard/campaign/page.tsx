@@ -10,7 +10,7 @@ export default function CampaignPage() {
     <CampaignsProvider>
       <div className="w-full max-w-6xl p-6 space-y-6">
         <CreateCampaignDrawer />
-        <Suspense fallback={<div>...</div>}>
+        <Suspense fallback={<p className="text-sm text-muted-foreground">Cargando</p>}>
           <CampaignsDataTable />
         </Suspense>
       </div>
