@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useMemo, type ReactNode } from "react";
 import {
   flexRender,
   functionalUpdate,
@@ -29,6 +28,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { XIcon } from "lucide-react";
 import { DataTablePagination } from "@/components/common/data-table-pagination";
+import {
+  parseColumnFilters,
+  parseSorting,
+  serializeSorting,
+  useSearchParamsState,
+  writeColumnFilters,
+} from "@/components/common/use-search-params-state";
 import {
   DataTableFacetedFilter,
   type FacetedFilterOption,
@@ -63,22 +69,27 @@ export function DataTable<TData>({
   actions,
   facetedFilters = [],
 }: DataTableProps<TData>) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const { searchParams, replace } = useSearchParamsState();
+  const filterIds = facetedFilters.map((filter) => filter.columnId);
+  const rawSort = searchParams.get("sort");
+  const rawFilters = filterIds.map((id) => `${id}=${searchParams.get(id) ?? ""}`).join("&");
+  const sorting = useMemo(() => parseSorting(rawSort), [rawSort]);
+  const columnFilters = useMemo(() => {
+    const params = new URLSearchParams(rawFilters);
+    return parseColumnFilters(params, [...params.keys()]);
+  }, [rawFilters]);
 
   const page = Number(searchParams.get("page"));
   const pageIndex = Number.isInteger(page) && page > 1 ? page - 1 : 0;
 
+  const onSortingChange: OnChangeFn<SortingState> = (updater) => {
+    const next = serializeSorting(functionalUpdate(updater, sorting));
+    replace((params) => (next ? params.set("sort", next) : params.delete("sort")));
+  };
+
   const onColumnFiltersChange: OnChangeFn<ColumnFiltersState> = (updater) => {
-    setColumnFilters((previous) => functionalUpdate(updater, previous));
-    if (searchParams.has("page")) {
-      const params = new URLSearchParams(searchParams);
-      params.delete("page");
-      router.replace(`${pathname}?${params.toString()}`);
-    }
+    const next = functionalUpdate(updater, columnFilters);
+    replace((params) => writeColumnFilters(params, filterIds, next));
   };
 
   const table = useReactTable({
@@ -90,7 +101,8 @@ export function DataTable<TData>({
     getPaginationRowModel: getPaginationRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
-    onSortingChange: setSorting,
+    onSortingChange,
+    autoResetPageIndex: false,
     onColumnFiltersChange,
     state: {
       sorting,

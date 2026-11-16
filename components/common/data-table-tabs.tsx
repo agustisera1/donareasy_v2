@@ -1,8 +1,7 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSearchParamsState } from "@/components/common/use-search-params-state";
 
 interface DataTableTabsProps<TValue extends string> {
   param: string;
@@ -15,18 +14,12 @@ export function DataTableTabs<TValue extends string>({
   options,
   value,
 }: DataTableTabsProps<TValue>) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const { replace } = useSearchParamsState();
 
-  const onValueChange = (next: string) => {
-    const params = new URLSearchParams(searchParams);
-    if (next === options[0].value) params.delete(param);
-    else params.set(param, next);
-    params.delete("page");
-    const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname);
-  };
+  const onValueChange = (next: string) =>
+    replace((params) =>
+      next === options[0].value ? params.delete(param) : params.set(param, next)
+    );
 
   return (
     <Tabs value={value} onValueChange={onValueChange}>
