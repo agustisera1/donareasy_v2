@@ -19,6 +19,7 @@ export function InstitutionsDataTable() {
     openViewDrawer,
     openMetricsDrawer,
     loading,
+    error,
   } = useInstitutionsContext();
 
   const columns: ColumnDef<Institution>[] = useMemo(
@@ -86,6 +87,7 @@ export function InstitutionsDataTable() {
         columns={columns}
         data={data}
         loading={loading}
+        errorMessage={error ? "No se pudieron cargar las instituciones. Recargá la página." : null}
         emptyMessage="No hay instituciones disponibles"
         countLabel={(count) => `${count} institución(es)`}
       />

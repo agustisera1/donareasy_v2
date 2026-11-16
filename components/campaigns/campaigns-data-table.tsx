@@ -37,6 +37,7 @@ export function CampaignsDataTable() {
     openViewDrawer,
     openFinishDialog,
     loading,
+    error,
   } = useCampaignsContext();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -159,6 +160,7 @@ export function CampaignsDataTable() {
         columns={columns}
         data={filteredData}
         loading={loading}
+        errorMessage={error ? "No se pudieron cargar las campañas. Recargá la página." : null}
         emptyMessage="No hay campañas disponibles"
         countLabel={(count) => `${count} campaña(s)`}
         toolbar={

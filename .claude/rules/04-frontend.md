@@ -44,7 +44,7 @@ semánticos en un solo lugar (p. ej. `status-badge.tsx`), no con clases sueltas 
 
 | Primitivo | Qué resuelve | Server-safe |
 |-----------|--------------|-------------|
-| `DataTable` | Tabla de datos (TanStack + `ui/table`): toolbar, filtros facetados, empty/loading, conteo y paginación. Uso: `components/donations/donations-data-table.tsx` | Client |
+| `DataTable` | Tabla de datos (TanStack + `ui/table`): toolbar, filtros facetados, estados ("Cargando", error, vacío y vacío por filtros con `Empty` de shadcn), conteo y paginación. La feature pasa `errorMessage` desde el `error` de su query. Uso: `components/donations/donations-data-table.tsx` | Client |
 | `DataTableColumnHeader` | Header ordenable alineado con la celda (`-ml-2.5` compensa el padding del `Button`) | Client |
 | `DataTableFacetedFilter` | Filtro multi-select de valores enumerables con conteos (`getFacetedUniqueValues`); lo renderiza `DataTable` desde `facetedFilters` | Client |
 | `DataTablePagination` | `Pagination` de shadcn con links `?page=N` (`Button asChild` + `Link`) | Client |

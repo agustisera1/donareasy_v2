@@ -10,6 +10,7 @@ interface CampaignsContextType {
   // Campaigns data
   campaigns: Campaign[];
   loading: boolean;
+  error: Error | null;
   refetch: () => Promise<void>;
 
   // Institution data
@@ -47,7 +48,7 @@ const CampaignsContext = createContext<CampaignsContextType | undefined>(
 export function CampaignsProvider({ children }: { children: React.ReactNode }) {
   // Hooks
   const { user, loading: loadingUser } = useUser();
-  const { campaigns, loading: loadingCampaigns, refetch } = useCampaigns();
+  const { campaigns, loading: loadingCampaigns, error, refetch } = useCampaigns();
 
   // Institution check
   const isInstitution = user?.role === "institution";
@@ -107,6 +108,7 @@ export function CampaignsProvider({ children }: { children: React.ReactNode }) {
       value={{
         campaigns,
         loading: loadingCampaigns || loadingUser,
+        error,
         refetch,
         institution,
         isInstitution,

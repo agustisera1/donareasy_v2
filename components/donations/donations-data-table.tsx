@@ -53,6 +53,7 @@ export function DonationsDataTable() {
     isDonor,
     isInstitution,
     loading,
+    error,
     openCreateDrawer,
     openViewDrawer,
     openEditDrawer,
@@ -196,6 +197,7 @@ export function DonationsDataTable() {
         columns={columns}
         data={filteredData}
         loading={loading}
+        errorMessage={error ? "No se pudieron cargar las donaciones. Recargá la página." : null}
         emptyMessage="No hay donaciones disponibles"
         countLabel={(count) => `${count} donación(es)`}
         toolbar={

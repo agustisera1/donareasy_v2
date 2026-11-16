@@ -26,7 +26,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { XIcon } from "lucide-react";
+import { CircleAlertIcon, InboxIcon, SearchXIcon, XIcon } from "lucide-react";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { DataTablePagination } from "@/components/common/data-table-pagination";
 import {
   parseColumnFilters,
@@ -52,6 +60,7 @@ interface DataTableProps<TData> {
   columns: ColumnDef<TData>[];
   data: TData[];
   loading?: boolean;
+  errorMessage?: string | null;
   emptyMessage: string;
   countLabel: (count: number) => string;
   toolbar?: ReactNode;
@@ -63,6 +72,7 @@ export function DataTable<TData>({
   columns,
   data,
   loading = false,
+  errorMessage,
   emptyMessage,
   countLabel,
   toolbar,
@@ -161,36 +171,56 @@ export function DataTable<TData>({
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={visibleColumns}
-                  className="h-24 text-center"
-                >
-                  Cargando
-                </TableCell>
-              </TableRow>
+              <StatusRow colSpan={visibleColumns}>Cargando</StatusRow>
+            ) : errorMessage ? (
+              <StatusRow colSpan={visibleColumns}>
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <CircleAlertIcon />
+                    </EmptyMedia>
+                    <EmptyTitle>{errorMessage}</EmptyTitle>
+                  </EmptyHeader>
+                </Empty>
+              </StatusRow>
             ) : rows.length ? (
               rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
+            ) : columnFilters.length > 0 ? (
+              <StatusRow colSpan={visibleColumns}>
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <SearchXIcon />
+                    </EmptyMedia>
+                    <EmptyTitle>No hay resultados con estos filtros</EmptyTitle>
+                    <EmptyDescription>Probá con otros valores o limpiá los filtros.</EmptyDescription>
+                  </EmptyHeader>
+                  <EmptyContent>
+                    <Button variant="outline" onClick={() => table.resetColumnFilters()}>
+                      Limpiar filtros
+                    </Button>
+                  </EmptyContent>
+                </Empty>
+              </StatusRow>
             ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={visibleColumns}
-                  className="h-24 text-center"
-                >
-                  {emptyMessage}
-                </TableCell>
-              </TableRow>
+              <StatusRow colSpan={visibleColumns}>
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <InboxIcon />
+                    </EmptyMedia>
+                    <EmptyTitle>{emptyMessage}</EmptyTitle>
+                  </EmptyHeader>
+                </Empty>
+              </StatusRow>
             )}
           </TableBody>
         </Table>
@@ -205,5 +235,15 @@ export function DataTable<TData>({
         />
       </div>
     </div>
+  );
+}
+
+function StatusRow({ colSpan, children }: { colSpan: number; children: ReactNode }) {
+  return (
+    <TableRow className="hover:bg-transparent">
+      <TableCell colSpan={colSpan} className="h-24 text-center text-muted-foreground">
+        {children}
+      </TableCell>
+    </TableRow>
   );
 }

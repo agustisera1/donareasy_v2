@@ -16,6 +16,7 @@ interface InstitutionsContextType {
   // Institutions data
   institutions: Institution[];
   loading: boolean;
+  error: Error | null;
   refetch: () => Promise<void>;
 
   // User data
@@ -47,7 +48,7 @@ export function InstitutionsProvider({
 }) {
   // Hooks
   const { user } = useUser();
-  const { institutions, loading, refetch } = useInstitutions();
+  const { institutions, loading, error, refetch } = useInstitutions();
 
   // Institution check
   const isInstitution = user?.role === "institution";
@@ -93,6 +94,7 @@ export function InstitutionsProvider({
       value={{
         institutions: filteredInstitutions,
         loading,
+        error,
         refetch,
         institution,
         isInstitution,
