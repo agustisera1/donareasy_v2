@@ -3,17 +3,10 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useRef, Fragment } from "react";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { DrawerLayout } from "@/components/common/drawer-layout";
 import { Button } from "@/components/ui/button";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -260,374 +253,13 @@ export function EditDonationDrawer() {
   const isMoney = selectedDonation.amount !== null;
 
   return (
-    <Drawer direction="right" open={editDrawerOpen} onOpenChange={handleClose}>
-      <DrawerContent className="overflow-y-auto overflow-x-hidden">
-        <DrawerHeader
-          aria-describedby={undefined}
-          className="border-b sticky top-0 bg-background"
-        >
-          <DrawerTitle>Editar donación</DrawerTitle>
-          <DrawerDescription>Editar los datos de la donación</DrawerDescription>
-        </DrawerHeader>
-
-        <form className="grid grid-cols-2 gap-4 p-4">
-          {isMoney ? (
-            <Fragment>
-              <div className="grid gap-2 col-span-2">
-                <Label htmlFor="amount">Monto</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  step="0.01"
-                  {...register("amount")}
-                  placeholder="0.00"
-                  disabled={isLoading}
-                />
-                {errors.amount && (
-                  <p className="text-sm text-red-500">
-                    {errors.amount.message}
-                  </p>
-                )}
-              </div>
-              <div className="grid gap-2 col-span-2">
-                <div className="flex items-center gap-2">
-                  <Label className="flex-1">Comprobante de transferencia</Label>
-                  {transferReceipt && transferReceipt.length > 0 ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleClearImage}
-                      disabled={isLoading}
-                      className="h-8 w-8"
-                    >
-                      <Eraser className="h-4 w-4" />
-                    </Button>
-                  ) : currentImageUrl ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        if (fileInputRef.current) {
-                          fileInputRef.current.click();
-                        }
-                      }}
-                      disabled={isLoading}
-                      className="h-8 w-8"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        if (fileInputRef.current) {
-                          fileInputRef.current.click();
-                        }
-                      }}
-                      disabled={isLoading}
-                      className="h-8 w-8"
-                    >
-                      <ImagePlus className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-                <input
-                  id="attachment_name"
-                  type="file"
-                  lang="es"
-                  className="hidden"
-                  accept=".png,.jpg,.jpeg,.pdf"
-                  {...register("attachment_name")}
-                  disabled={isLoading}
-                  ref={(e) => {
-                    register("attachment_name").ref(e);
-                    fileInputRef.current = e;
-                  }}
-                />
-                {errors.attachment_name && (
-                  <p className="text-sm text-red-500">
-                    {errors.attachment_name.message as string}
-                  </p>
-                )}
-                {imagePreview && (
-                  <div className="mt-2">
-                    <ImagePreview
-                      src={imagePreview}
-                      alt="Preview del comprobante"
-                    />
-                  </div>
-                )}
-              </div>
-            </Fragment>
-          ) : (
-            <Fragment>
-              <div className="grid gap-2 col-span-2">
-                <Label htmlFor="name">Nombre</Label>
-                <Input
-                  id="name"
-                  {...register("name")}
-                  placeholder="Ej: Ropa de invierno"
-                />
-                {errors.name && (
-                  <p className="text-sm text-red-500">{errors.name.message}</p>
-                )}
-              </div>
-
-              {!isMoney && <div className="grid gap-2 col-span-2">
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="delivery_method">Forma de entrega</Label>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        className="inline-flex items-center justify-center rounded-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-                      >
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-sm">
-                      <div className="space-y-3">
-                        <div>
-                          <p className="font-semibold text-sm">
-                            {deliveryMethodTranslations.pickup.label}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {deliveryMethodTranslations.pickup.description}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-semibold text-sm">
-                            {deliveryMethodTranslations.shipment.label}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {deliveryMethodTranslations.shipment.description}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-semibold text-sm">
-                            {deliveryMethodTranslations.agreement.label}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {deliveryMethodTranslations.agreement.description}
-                          </p>
-                        </div>
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <Select
-                  value={watch("delivery_method")}
-                  onValueChange={(
-                    value: "pickup" | "shipment" | "agreement" | "transfer"
-                  ) => {
-                    setValue("delivery_method", value, {
-                      shouldValidate: true,
-                    });
-                  }}
-                  disabled={isLoading}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecciona la forma de entrega" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pickup">
-                      {deliveryMethodTranslations.pickup.label}
-                    </SelectItem>
-                    <SelectItem value="shipment">
-                      {deliveryMethodTranslations.shipment.label}
-                    </SelectItem>
-                    <SelectItem value="agreement">
-                      {deliveryMethodTranslations.agreement.label}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.delivery_method && (
-                  <p className="text-sm text-red-500">
-                    {errors.delivery_method.message}
-                  </p>
-                )}
-              </div>}
-
-              {!isMoney && <div className="grid gap-2 col-span-2">
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="category">Categoría</Label>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        className="inline-flex items-center justify-center rounded-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-                      >
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-sm">
-                      <div className="space-y-3">
-                        <div>
-                          <p className="font-semibold text-sm">
-                            {categoryTranslations.supplies.label}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {categoryTranslations.supplies.description}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-semibold text-sm">
-                            {categoryTranslations.clothing.label}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {categoryTranslations.clothing.description}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-semibold text-sm">
-                            {categoryTranslations.food.label}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {categoryTranslations.food.description}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-semibold text-sm">
-                            {categoryTranslations.other.label}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {categoryTranslations.other.description}
-                          </p>
-                        </div>
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <Select
-                  value={watch("category")}
-                  onValueChange={(
-                    value: "supplies" | "clothing" | "food" | "other"
-                  ) => {
-                    setValue("category", value, { shouldValidate: true });
-                  }}
-                  disabled={isLoading}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecciona la categoría" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="supplies">
-                      {categoryTranslations.supplies.label}
-                    </SelectItem>
-                    <SelectItem value="clothing">
-                      {categoryTranslations.clothing.label}
-                    </SelectItem>
-                    <SelectItem value="food">
-                      {categoryTranslations.food.label}
-                    </SelectItem>
-                    <SelectItem value="other">
-                      {categoryTranslations.other.label}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.category && (
-                  <p className="text-sm text-red-500">
-                    {errors.category.message}
-                  </p>
-                )}
-              </div>}
-
-              <div className="grid gap-2 col-span-2">
-                <Label htmlFor="description">Descripción</Label>
-                <span className="text-xs text-gray-500">
-                  Danos detalle de la donación, qué se ofrece, cómo se pretende
-                  colaborar, qué recaudos hay que tener en cuenta (frágiles,
-                  conservación, etc.). Sé tan específico como puedas, para que
-                  los usuarios puedan entender mejor
-                </span>
-                <Textarea
-                  id="description"
-                  {...register("description")}
-                  disabled={isLoading}
-                />
-                {errors.description && (
-                  <p className="text-sm text-red-500">
-                    {errors.description.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid gap-2 col-span-2">
-                <div className="flex items-center gap-2">
-                  <Label className="flex-1">Imagen adjunta</Label>
-                  {transferReceipt && transferReceipt.length > 0 ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleClearImage}
-                      disabled={isLoading}
-                      className="h-8 w-8"
-                    >
-                      <Eraser className="h-4 w-4" />
-                    </Button>
-                  ) : currentImageUrl ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        if (fileInputRef.current) {
-                          fileInputRef.current.click();
-                        }
-                      }}
-                      disabled={isLoading}
-                      className="h-8 w-8"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        if (fileInputRef.current) {
-                          fileInputRef.current.click();
-                        }
-                      }}
-                      disabled={isLoading}
-                      className="h-8 w-8"
-                    >
-                      <ImagePlus className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-                <input
-                  id="attachment_name"
-                  type="file"
-                  lang="es"
-                  className="hidden"
-                  accept=".png,.jpg,.jpeg,.pdf"
-                  {...register("attachment_name")}
-                  disabled={isLoading}
-                  ref={(e) => {
-                    register("attachment_name").ref(e);
-                    fileInputRef.current = e;
-                  }}
-                />
-                {errors.attachment_name && (
-                  <p className="text-sm text-red-500">
-                    {errors.attachment_name.message as string}
-                  </p>
-                )}
-                {imagePreview && (
-                  <div className="mt-2">
-                    <ImagePreview
-                      src={imagePreview}
-                      alt="Preview de la imagen"
-                    />
-                  </div>
-                )}
-              </div>
-            </Fragment>
-          )}
-        </form>
-
-        <DrawerFooter className="border-t sticky bottom-0 bg-background">
+    <DrawerLayout
+      open={editDrawerOpen}
+      onOpenChange={handleClose}
+      title="Editar donación"
+      description="Editar los datos de la donación"
+      footer={
+        <>
           <Button
             type="button"
             variant="outline"
@@ -638,14 +270,357 @@ export function EditDonationDrawer() {
           </Button>
           <Button
             type="button"
-            variant="default"
             onClick={handleSubmit(onSubmit)}
             disabled={isLoading}
           >
-            {isLoading ? "Actualizando..." : "Guardar Cambios"}
+            {isLoading ? "Guardando…" : "Guardar cambios"}
           </Button>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+        </>
+      }
+    >
+      <form className="grid grid-cols-2 gap-4">
+        {isMoney ? (
+          <Fragment>
+            <Field className="col-span-2" data-invalid={!!errors.amount}>
+              <FieldLabel htmlFor="amount">Monto</FieldLabel>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                aria-invalid={!!errors.amount}
+                {...register("amount")}
+                placeholder="0.00"
+                disabled={isLoading}
+              />
+              <FieldError errors={[errors.amount]} />
+            </Field>
+            <Field className="col-span-2" data-invalid={!!errors.attachment_name}>
+              <div className="flex items-center gap-2">
+                <FieldLabel className="flex-1">Comprobante de transferencia</FieldLabel>
+                {transferReceipt && transferReceipt.length > 0 ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleClearImage}
+                    disabled={isLoading}
+                    size="icon-sm"
+                  >
+                    <Eraser />
+                    <span className="sr-only">Quitar archivo</span>
+                  </Button>
+                ) : currentImageUrl ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      if (fileInputRef.current) {
+                        fileInputRef.current.click();
+                      }
+                    }}
+                    disabled={isLoading}
+                    size="icon-sm"
+                  >
+                    <Pencil />
+                    <span className="sr-only">Cambiar archivo</span>
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      if (fileInputRef.current) {
+                        fileInputRef.current.click();
+                      }
+                    }}
+                    disabled={isLoading}
+                    size="icon-sm"
+                  >
+                    <ImagePlus />
+                    <span className="sr-only">Adjuntar archivo</span>
+                  </Button>
+                )}
+              </div>
+              <input
+                id="attachment_name"
+                type="file"
+                lang="es"
+                className="hidden"
+                accept=".png,.jpg,.jpeg,.pdf"
+                {...register("attachment_name")}
+                disabled={isLoading}
+                ref={(e) => {
+                  register("attachment_name").ref(e);
+                  fileInputRef.current = e;
+                }}
+              />
+              <FieldError>{errors.attachment_name?.message as string | undefined}</FieldError>
+              {imagePreview && (
+                <div className="mt-2">
+                  <ImagePreview
+                    src={imagePreview}
+                    alt="Preview del comprobante"
+                  />
+                </div>
+              )}
+            </Field>
+          </Fragment>
+        ) : (
+          <Fragment>
+            <Field className="col-span-2" data-invalid={!!errors.name}>
+              <FieldLabel htmlFor="name">Nombre</FieldLabel>
+              <Input
+                id="name"
+                aria-invalid={!!errors.name}
+                {...register("name")}
+                placeholder="Ej: Ropa de invierno"
+              />
+              <FieldError errors={[errors.name]} />
+            </Field>
+
+            {!isMoney && <Field className="col-span-2" data-invalid={!!errors.delivery_method}>
+              <div className="flex items-center gap-2">
+                <FieldLabel htmlFor="delivery_method">Forma de entrega</FieldLabel>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-xs"
+                    >
+                      <Info className="text-muted-foreground" />
+                      <span className="sr-only">Más información</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-sm">
+                    <div className="space-y-3">
+                      <div>
+                        <p className="font-semibold text-sm">
+                          {deliveryMethodTranslations.pickup.label}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {deliveryMethodTranslations.pickup.description}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">
+                          {deliveryMethodTranslations.shipment.label}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {deliveryMethodTranslations.shipment.description}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">
+                          {deliveryMethodTranslations.agreement.label}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {deliveryMethodTranslations.agreement.description}
+                        </p>
+                      </div>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <Select
+                value={watch("delivery_method")}
+                onValueChange={(
+                  value: "pickup" | "shipment" | "agreement" | "transfer"
+                ) => {
+                  setValue("delivery_method", value, {
+                    shouldValidate: true,
+                  });
+                }}
+                disabled={isLoading}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecciona la forma de entrega" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pickup">
+                    {deliveryMethodTranslations.pickup.label}
+                  </SelectItem>
+                  <SelectItem value="shipment">
+                    {deliveryMethodTranslations.shipment.label}
+                  </SelectItem>
+                  <SelectItem value="agreement">
+                    {deliveryMethodTranslations.agreement.label}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <FieldError errors={[errors.delivery_method]} />
+            </Field>}
+
+            {!isMoney && <Field className="col-span-2" data-invalid={!!errors.category}>
+              <div className="flex items-center gap-2">
+                <FieldLabel htmlFor="category">Categoría</FieldLabel>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-xs"
+                    >
+                      <Info className="text-muted-foreground" />
+                      <span className="sr-only">Más información</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-sm">
+                    <div className="space-y-3">
+                      <div>
+                        <p className="font-semibold text-sm">
+                          {categoryTranslations.supplies.label}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {categoryTranslations.supplies.description}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">
+                          {categoryTranslations.clothing.label}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {categoryTranslations.clothing.description}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">
+                          {categoryTranslations.food.label}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {categoryTranslations.food.description}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">
+                          {categoryTranslations.other.label}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {categoryTranslations.other.description}
+                        </p>
+                      </div>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <Select
+                value={watch("category")}
+                onValueChange={(
+                  value: "supplies" | "clothing" | "food" | "other"
+                ) => {
+                  setValue("category", value, { shouldValidate: true });
+                }}
+                disabled={isLoading}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecciona la categoría" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="supplies">
+                    {categoryTranslations.supplies.label}
+                  </SelectItem>
+                  <SelectItem value="clothing">
+                    {categoryTranslations.clothing.label}
+                  </SelectItem>
+                  <SelectItem value="food">
+                    {categoryTranslations.food.label}
+                  </SelectItem>
+                  <SelectItem value="other">
+                    {categoryTranslations.other.label}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <FieldError errors={[errors.category]} />
+            </Field>}
+
+            <Field className="col-span-2" data-invalid={!!errors.description}>
+              <FieldLabel htmlFor="description">Descripción</FieldLabel>
+              <FieldDescription>
+                Danos detalle de la donación, qué se ofrece, cómo se pretende
+                colaborar, qué recaudos hay que tener en cuenta (frágiles,
+                conservación, etc.). Sé tan específico como puedas, para que
+                los usuarios puedan entender mejor
+              </FieldDescription>
+              <Textarea
+                id="description"
+                aria-invalid={!!errors.description}
+                {...register("description")}
+                disabled={isLoading}
+              />
+              <FieldError errors={[errors.description]} />
+            </Field>
+
+            <Field className="col-span-2" data-invalid={!!errors.attachment_name}>
+              <div className="flex items-center gap-2">
+                <FieldLabel className="flex-1">Imagen adjunta</FieldLabel>
+                {transferReceipt && transferReceipt.length > 0 ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleClearImage}
+                    disabled={isLoading}
+                    size="icon-sm"
+                  >
+                    <Eraser />
+                    <span className="sr-only">Quitar archivo</span>
+                  </Button>
+                ) : currentImageUrl ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      if (fileInputRef.current) {
+                        fileInputRef.current.click();
+                      }
+                    }}
+                    disabled={isLoading}
+                    size="icon-sm"
+                  >
+                    <Pencil />
+                    <span className="sr-only">Cambiar archivo</span>
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      if (fileInputRef.current) {
+                        fileInputRef.current.click();
+                      }
+                    }}
+                    disabled={isLoading}
+                    size="icon-sm"
+                  >
+                    <ImagePlus />
+                    <span className="sr-only">Adjuntar archivo</span>
+                  </Button>
+                )}
+              </div>
+              <input
+                id="attachment_name"
+                type="file"
+                lang="es"
+                className="hidden"
+                accept=".png,.jpg,.jpeg,.pdf"
+                {...register("attachment_name")}
+                disabled={isLoading}
+                ref={(e) => {
+                  register("attachment_name").ref(e);
+                  fileInputRef.current = e;
+                }}
+              />
+              <FieldError>{errors.attachment_name?.message as string | undefined}</FieldError>
+              {imagePreview && (
+                <div className="mt-2">
+                  <ImagePreview
+                    src={imagePreview}
+                    alt="Preview de la imagen"
+                  />
+                </div>
+              )}
+            </Field>
+          </Fragment>
+        )}
+      </form>
+    </DrawerLayout>
   );
 }

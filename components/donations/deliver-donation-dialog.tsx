@@ -15,12 +15,8 @@ import {
 import { toast } from "sonner";
 
 export function DeliverDonationDialog() {
-  const {
-    deliverDialogOpen,
-    closeDeliverDialog,
-    selectedDonation,
-    refetch,
-  } = useDonationsContext();
+  const { deliverDialogOpen, closeDeliverDialog, selectedDonation, refetch } =
+    useDonationsContext();
 
   const handleConfirm = async () => {
     if (!selectedDonation) return;
@@ -42,18 +38,17 @@ export function DeliverDonationDialog() {
         <AlertDialogHeader>
           <AlertDialogTitle>¿Marcar donación como entregada?</AlertDialogTitle>
           <AlertDialogDescription>
-            Esta acción marcará la donación como entregada. ¿Estás seguro de
-            que deseas continuar?
+            Esta acción marcará la donación como entregada. ¿Estás seguro de que
+            deseas continuar?
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
           <AlertDialogAction onClick={handleConfirm}>
-            Marcar como entregada
+            Confirmar
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );
 }
-

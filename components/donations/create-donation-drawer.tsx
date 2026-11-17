@@ -4,17 +4,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useEffect, useRef } from "react";
 import { Eraser, ImagePlus, Info } from "lucide-react";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { DrawerLayout } from "@/components/common/drawer-layout";
 import { Button } from "@/components/ui/button";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -301,411 +294,13 @@ export function CreateDonationDrawer() {
   };
 
   return (
-    <Drawer
-      direction="right"
+    <DrawerLayout
       open={createDrawerOpen}
       onOpenChange={handleClose}
-    >
-      <DrawerContent className="overflow-y-auto overflow-x-hidden">
-        <DrawerHeader
-          aria-describedby={undefined}
-          className="border-b sticky top-0 bg-background"
-        >
-          <DrawerTitle>Crear nueva donación</DrawerTitle>
-          <DrawerDescription>
-            Completa los datos para crear una nueva donación
-          </DrawerDescription>
-        </DrawerHeader>
-
-        <form className="grid grid-cols-2 gap-4 p-4">
-          <div className="grid gap-2 col-span-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="institution_id">Institución</Label>
-              <div className="flex items-center gap-2">
-                <Label htmlFor="open_donation" className="text-sm text-muted-foreground font-normal">
-                  No tengo preferencia
-                </Label>
-                <Switch
-                  id="open_donation"
-                  checked={openDonation}
-                  onCheckedChange={(checked) =>
-                    setValue("open_donation", checked, { shouldValidate: true })
-                  }
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-            <Select
-              value={watch("institution_id")}
-              onValueChange={(value) => {
-                setValue("institution_id", value, { shouldValidate: true });
-              }}
-              disabled={loadingInstitutions || isLoading || openDonation}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue
-                  placeholder={openDonation ? "Sin preferencia de institución" : "Selecciona una institución"}
-                  defaultValue={institutionId || undefined}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {institutions.map((institution) => (
-                  <SelectItem key={institution.id} value={institution.id}>
-                    {institution.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.institution_id && (
-              <p className="text-sm text-red-500">
-                {errors.institution_id.message}
-              </p>
-            )}
-          </div>
-
-          <div className="grid gap-2 col-span-2">
-            <Label htmlFor="donation_type">Tipo de donación</Label>
-            <Select
-              value={watch("donation_type")}
-              onValueChange={(value: "money" | "goods") => {
-                setValue("donation_type", value, { shouldValidate: true });
-              }}
-              disabled={isLoading}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecciona el tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="money">Monetaria</SelectItem>
-                <SelectItem value="goods">Bienes</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {donationType !== "money" && <div className="grid gap-2 col-span-2">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="delivery_method">Forma de entrega</Label>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    className="inline-flex items-center justify-center rounded-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <Info className="h-4 w-4 text-muted-foreground" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-sm">
-                  <div className="space-y-3">
-                    <div>
-                      <p className="font-semibold text-sm">
-                        {deliveryMethodTranslations.pickup.label}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {deliveryMethodTranslations.pickup.description}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm">
-                        {deliveryMethodTranslations.shipment.label}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {deliveryMethodTranslations.shipment.description}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm">
-                        {deliveryMethodTranslations.agreement.label}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {deliveryMethodTranslations.agreement.description}
-                      </p>
-                    </div>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-            <Select
-              value={watch("delivery_method")}
-              onValueChange={(value: "pickup" | "shipment" | "agreement" | "transfer") => {
-                setValue("delivery_method", value, { shouldValidate: true });
-              }}
-              disabled={isLoading}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecciona la forma de entrega" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pickup">
-                  {deliveryMethodTranslations.pickup.label}
-                </SelectItem>
-                <SelectItem value="shipment">
-                  {deliveryMethodTranslations.shipment.label}
-                </SelectItem>
-                <SelectItem value="agreement">
-                  {deliveryMethodTranslations.agreement.label}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            {errors.delivery_method && (
-              <p className="text-sm text-red-500">
-                {errors.delivery_method.message}
-              </p>
-            )}
-          </div>}
-
-          {donationType !== "money" && <div className="grid gap-2 col-span-2">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="category">Categoría</Label>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    className="inline-flex items-center justify-center rounded-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <Info className="h-4 w-4 text-muted-foreground" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-sm">
-                  <div className="space-y-3">
-                    <div>
-                      <p className="font-semibold text-sm">
-                        {categoryTranslations.supplies.label}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {categoryTranslations.supplies.description}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm">
-                        {categoryTranslations.clothing.label}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {categoryTranslations.clothing.description}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm">
-                        {categoryTranslations.food.label}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {categoryTranslations.food.description}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm">
-                        {categoryTranslations.other.label}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {categoryTranslations.other.description}
-                      </p>
-                    </div>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-            <Select
-              value={watch("category")}
-              onValueChange={(
-                value: "supplies" | "clothing" | "food" | "other"
-              ) => {
-                setValue("category", value, { shouldValidate: true });
-              }}
-              disabled={isLoading}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecciona la categoría" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="supplies">
-                  {categoryTranslations.supplies.label}
-                </SelectItem>
-                <SelectItem value="clothing">
-                  {categoryTranslations.clothing.label}
-                </SelectItem>
-                <SelectItem value="food">
-                  {categoryTranslations.food.label}
-                </SelectItem>
-                <SelectItem value="other">
-                  {categoryTranslations.other.label}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            {errors.category && (
-              <p className="text-sm text-red-500">{errors.category.message}</p>
-            )}
-          </div>}
-
-          {donationType === "money" ? (
-            <Fragment>
-              <div className="grid gap-2 col-span-2">
-                <Label htmlFor="amount">Monto</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  step="0.01"
-                  {...register("amount")}
-                  placeholder="0.00"
-                  disabled={isLoading}
-                />
-                {errors.amount && (
-                  <p className="text-sm text-red-500">
-                    {errors.amount.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid gap-2 col-span-2">
-                <div className="flex items-center gap-2">
-                  <Label className="flex-1">Comprobante de transferencia</Label>
-                  {attachment && attachment.length > 0 ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={clearImage}
-                      disabled={isLoading}
-                      className="h-8 w-8"
-                    >
-                      <Eraser className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        if (fileInputRef.current) {
-                          fileInputRef.current.click();
-                        }
-                      }}
-                      disabled={isLoading}
-                      className="h-8 w-8"
-                    >
-                      <ImagePlus className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-                <input
-                  id="attachment_name"
-                  type="file"
-                  lang="es"
-                  className="hidden"
-                  accept=".png,.jpg,.jpeg,.pdf"
-                  {...register("attachment_name")}
-                  disabled={isLoading}
-                  ref={(e) => {
-                    register("attachment_name").ref(e);
-                    fileInputRef.current = e;
-                  }}
-                />
-                {errors.attachment_name && (
-                  <p className="text-sm text-red-500">
-                    {errors.attachment_name.message as string}
-                  </p>
-                )}
-                {imagePreview && (
-                  <div className="mt-2">
-                    <ImagePreview
-                      src={imagePreview}
-                      alt="Preview del comprobante"
-                    />
-                  </div>
-                )}
-              </div>
-            </Fragment>
-          ) : (
-            <Fragment>
-              <div className="grid gap-2 col-span-2">
-                <Label htmlFor="name">Nombre</Label>
-                <Input
-                  id="name"
-                  {...register("name")}
-                  placeholder="Ej: Ropa de invierno"
-                  disabled={isLoading}
-                />
-                {errors.name && (
-                  <p className="text-sm text-red-500">{errors.name.message}</p>
-                )}
-              </div>
-
-              <div className="grid gap-2 col-span-2">
-                <Label htmlFor="description">Descripción</Label>
-                <span className="text-xs text-gray-500">
-                  Danos detalle de la donación, qué se ofrece, cómo se pretende
-                  colaborar, qué recaudos hay que tener en cuenta (frágiles,
-                  conservación, etc.). Sé tan específico como puedas, para que
-                  los usuarios puedan entender mejor
-                </span>
-                <Textarea
-                  id="description"
-                  {...register("description")}
-                  disabled={isLoading}
-                />
-                {errors.description && (
-                  <p className="text-sm text-red-500">
-                    {errors.description.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid gap-2 col-span-2">
-                <div className="flex items-center gap-2">
-                  <Label className="flex-1">Imagen adjunta</Label>
-                  {attachment && attachment.length > 0 ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={clearImage}
-                      disabled={isLoading}
-                      className="h-8 w-8"
-                    >
-                      <Eraser className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        if (fileInputRef.current) {
-                          fileInputRef.current.click();
-                        }
-                      }}
-                      disabled={isLoading}
-                      className="h-8 w-8"
-                    >
-                      <ImagePlus className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-                <input
-                  type="file"
-                  lang="es"
-                  className="hidden"
-                  accept=".png,.jpg,.jpeg,.pdf"
-                  {...register("attachment_name")}
-                  disabled={isLoading}
-                  ref={(e) => {
-                    register("attachment_name").ref(e);
-                    fileInputRef.current = e;
-                  }}
-                />
-                {errors.attachment_name && (
-                  <p className="text-sm text-red-500">
-                    {errors.attachment_name.message as string}
-                  </p>
-                )}
-                {imagePreview && (
-                  <div className="mt-2">
-                    <ImagePreview
-                      src={imagePreview}
-                      alt="Preview de la imagen"
-                    />
-                  </div>
-                )}
-              </div>
-            </Fragment>
-          )}
-        </form>
-
-        <DrawerFooter className="border-t sticky bottom-0 bg-background">
+      title="Crear nueva donación"
+      description="Completa los datos para crear una nueva donación"
+      footer={
+        <>
           <Button
             type="button"
             variant="outline"
@@ -716,14 +311,384 @@ export function CreateDonationDrawer() {
           </Button>
           <Button
             type="button"
-            variant="default"
             onClick={handleSubmit(onSubmit)}
             disabled={isLoading}
           >
-            {isLoading ? "Creando..." : "Crear Donación"}
+            {isLoading ? "Creando…" : "Crear donación"}
           </Button>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+        </>
+      }
+    >
+      <form className="grid grid-cols-2 gap-4">
+        <Field className="col-span-2" data-invalid={!!errors.institution_id}>
+          <div className="flex items-center justify-between">
+            <FieldLabel htmlFor="institution_id">Institución</FieldLabel>
+            <div className="flex items-center gap-2">
+              <FieldLabel htmlFor="open_donation" className="text-sm text-muted-foreground font-normal">
+                No tengo preferencia
+              </FieldLabel>
+              <Switch
+                id="open_donation"
+                checked={openDonation}
+                onCheckedChange={(checked) =>
+                  setValue("open_donation", checked, { shouldValidate: true })
+                }
+                disabled={isLoading}
+              />
+            </div>
+          </div>
+          <Select
+            value={watch("institution_id")}
+            onValueChange={(value) => {
+              setValue("institution_id", value, { shouldValidate: true });
+            }}
+            disabled={loadingInstitutions || isLoading || openDonation}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue
+                placeholder={openDonation ? "Sin preferencia de institución" : "Selecciona una institución"}
+                defaultValue={institutionId || undefined}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {institutions.map((institution) => (
+                <SelectItem key={institution.id} value={institution.id}>
+                  {institution.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FieldError errors={[errors.institution_id]} />
+        </Field>
+
+        <Field className="col-span-2">
+          <FieldLabel htmlFor="donation_type">Tipo de donación</FieldLabel>
+          <Select
+            value={watch("donation_type")}
+            onValueChange={(value: "money" | "goods") => {
+              setValue("donation_type", value, { shouldValidate: true });
+            }}
+            disabled={isLoading}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecciona el tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="money">Monetaria</SelectItem>
+              <SelectItem value="goods">Bienes</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+
+        {donationType !== "money" && <Field className="col-span-2" data-invalid={!!errors.delivery_method}>
+          <div className="flex items-center gap-2">
+            <FieldLabel htmlFor="delivery_method">Forma de entrega</FieldLabel>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                >
+                  <Info className="text-muted-foreground" />
+                  <span className="sr-only">Más información</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-sm">
+                <div className="space-y-3">
+                  <div>
+                    <p className="font-semibold text-sm">
+                      {deliveryMethodTranslations.pickup.label}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {deliveryMethodTranslations.pickup.description}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm">
+                      {deliveryMethodTranslations.shipment.label}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {deliveryMethodTranslations.shipment.description}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm">
+                      {deliveryMethodTranslations.agreement.label}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {deliveryMethodTranslations.agreement.description}
+                    </p>
+                  </div>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          <Select
+            value={watch("delivery_method")}
+            onValueChange={(value: "pickup" | "shipment" | "agreement" | "transfer") => {
+              setValue("delivery_method", value, { shouldValidate: true });
+            }}
+            disabled={isLoading}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecciona la forma de entrega" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pickup">
+                {deliveryMethodTranslations.pickup.label}
+              </SelectItem>
+              <SelectItem value="shipment">
+                {deliveryMethodTranslations.shipment.label}
+              </SelectItem>
+              <SelectItem value="agreement">
+                {deliveryMethodTranslations.agreement.label}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <FieldError errors={[errors.delivery_method]} />
+        </Field>}
+
+        {donationType !== "money" && <Field className="col-span-2" data-invalid={!!errors.category}>
+          <div className="flex items-center gap-2">
+            <FieldLabel htmlFor="category">Categoría</FieldLabel>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                >
+                  <Info className="text-muted-foreground" />
+                  <span className="sr-only">Más información</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-sm">
+                <div className="space-y-3">
+                  <div>
+                    <p className="font-semibold text-sm">
+                      {categoryTranslations.supplies.label}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {categoryTranslations.supplies.description}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm">
+                      {categoryTranslations.clothing.label}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {categoryTranslations.clothing.description}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm">
+                      {categoryTranslations.food.label}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {categoryTranslations.food.description}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm">
+                      {categoryTranslations.other.label}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {categoryTranslations.other.description}
+                    </p>
+                  </div>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          <Select
+            value={watch("category")}
+            onValueChange={(
+              value: "supplies" | "clothing" | "food" | "other"
+            ) => {
+              setValue("category", value, { shouldValidate: true });
+            }}
+            disabled={isLoading}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecciona la categoría" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="supplies">
+                {categoryTranslations.supplies.label}
+              </SelectItem>
+              <SelectItem value="clothing">
+                {categoryTranslations.clothing.label}
+              </SelectItem>
+              <SelectItem value="food">
+                {categoryTranslations.food.label}
+              </SelectItem>
+              <SelectItem value="other">
+                {categoryTranslations.other.label}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <FieldError errors={[errors.category]} />
+        </Field>}
+
+        {donationType === "money" ? (
+          <Fragment>
+            <Field className="col-span-2" data-invalid={!!errors.amount}>
+              <FieldLabel htmlFor="amount">Monto</FieldLabel>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                aria-invalid={!!errors.amount}
+                {...register("amount")}
+                placeholder="0.00"
+                disabled={isLoading}
+              />
+              <FieldError errors={[errors.amount]} />
+            </Field>
+
+            <Field className="col-span-2" data-invalid={!!errors.attachment_name}>
+              <div className="flex items-center gap-2">
+                <FieldLabel className="flex-1">Comprobante de transferencia</FieldLabel>
+                {attachment && attachment.length > 0 ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={clearImage}
+                    disabled={isLoading}
+                    size="icon-sm"
+                  >
+                    <Eraser />
+                    <span className="sr-only">Quitar archivo</span>
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      if (fileInputRef.current) {
+                        fileInputRef.current.click();
+                      }
+                    }}
+                    disabled={isLoading}
+                    size="icon-sm"
+                  >
+                    <ImagePlus />
+                    <span className="sr-only">Adjuntar archivo</span>
+                  </Button>
+                )}
+              </div>
+              <input
+                id="attachment_name"
+                type="file"
+                lang="es"
+                className="hidden"
+                accept=".png,.jpg,.jpeg,.pdf"
+                {...register("attachment_name")}
+                disabled={isLoading}
+                ref={(e) => {
+                  register("attachment_name").ref(e);
+                  fileInputRef.current = e;
+                }}
+              />
+              <FieldError>{errors.attachment_name?.message as string | undefined}</FieldError>
+              {imagePreview && (
+                <div className="mt-2">
+                  <ImagePreview
+                    src={imagePreview}
+                    alt="Preview del comprobante"
+                  />
+                </div>
+              )}
+            </Field>
+          </Fragment>
+        ) : (
+          <Fragment>
+            <Field className="col-span-2" data-invalid={!!errors.name}>
+              <FieldLabel htmlFor="name">Nombre</FieldLabel>
+              <Input
+                id="name"
+                aria-invalid={!!errors.name}
+                {...register("name")}
+                placeholder="Ej: Ropa de invierno"
+                disabled={isLoading}
+              />
+              <FieldError errors={[errors.name]} />
+            </Field>
+
+            <Field className="col-span-2" data-invalid={!!errors.description}>
+              <FieldLabel htmlFor="description">Descripción</FieldLabel>
+              <FieldDescription>
+                Danos detalle de la donación, qué se ofrece, cómo se pretende
+                colaborar, qué recaudos hay que tener en cuenta (frágiles,
+                conservación, etc.). Sé tan específico como puedas, para que
+                los usuarios puedan entender mejor
+              </FieldDescription>
+              <Textarea
+                id="description"
+                aria-invalid={!!errors.description}
+                {...register("description")}
+                disabled={isLoading}
+              />
+              <FieldError errors={[errors.description]} />
+            </Field>
+
+            <Field className="col-span-2" data-invalid={!!errors.attachment_name}>
+              <div className="flex items-center gap-2">
+                <FieldLabel className="flex-1">Imagen adjunta</FieldLabel>
+                {attachment && attachment.length > 0 ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={clearImage}
+                    disabled={isLoading}
+                    size="icon-sm"
+                  >
+                    <Eraser />
+                    <span className="sr-only">Quitar archivo</span>
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      if (fileInputRef.current) {
+                        fileInputRef.current.click();
+                      }
+                    }}
+                    disabled={isLoading}
+                    size="icon-sm"
+                  >
+                    <ImagePlus />
+                    <span className="sr-only">Adjuntar archivo</span>
+                  </Button>
+                )}
+              </div>
+              <input
+                type="file"
+                lang="es"
+                className="hidden"
+                accept=".png,.jpg,.jpeg,.pdf"
+                {...register("attachment_name")}
+                disabled={isLoading}
+                ref={(e) => {
+                  register("attachment_name").ref(e);
+                  fileInputRef.current = e;
+                }}
+              />
+              <FieldError>{errors.attachment_name?.message as string | undefined}</FieldError>
+              {imagePreview && (
+                <div className="mt-2">
+                  <ImagePreview
+                    src={imagePreview}
+                    alt="Preview de la imagen"
+                  />
+                </div>
+              )}
+            </Field>
+          </Fragment>
+        )}
+      </form>
+    </DrawerLayout>
   );
 }

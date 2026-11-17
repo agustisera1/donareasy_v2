@@ -1,20 +1,13 @@
 "use client";
 
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
+import { DetailItem, DetailList } from "@/components/common/detail-list";
+import { DrawerLayout } from "@/components/common/drawer-layout";
 import { useDonationsContext } from "@/contexts/donations-context";
-import { formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import { StatusBadge } from "./status-badge";
 import { CategoryBadge } from "./category-badge";
 import { DeliveryMethodBadge } from "./delivery-method-badge";
-import { Fragment } from "react";
 import { ImagePreview } from "./image-preview";
 
 export function ViewDonationDrawer() {
@@ -26,161 +19,88 @@ export function ViewDonationDrawer() {
   const isMoney = selectedDonation.amount !== null;
 
   return (
-    <Drawer
-      direction="right"
+    <DrawerLayout
       open={viewDrawerOpen}
       onOpenChange={closeViewDrawer}
+      title="Detalles de la donación"
+      description="Información registrada de la donación"
+      footer={<Button onClick={closeViewDrawer}>Cerrar</Button>}
     >
-      <DrawerContent className="overflow-y-auto overflow-x-hidden">
-        <DrawerHeader
-          aria-describedby={undefined}
-          className="border-b sticky top-0 bg-background"
-        >
-          <DrawerTitle>Detalles de la donación</DrawerTitle>
-          <DrawerDescription>
-            Información registrada de la donación
-          </DrawerDescription>
-        </DrawerHeader>
-
-        <div className="grid grid-cols-2 gap-4 p-4">
-          {isMoney ? (
-            <Fragment>
-              <span className="text-sm font-medium">Monto</span>
-              <span className="text-sm">
-                ${selectedDonation.amount?.toLocaleString()}
+      <DetailList>
+        {isMoney ? (
+          <>
+            <DetailItem label="Monto">
+              <span className="tabular-nums">
+                {formatCurrency(selectedDonation.amount ?? 0)}
               </span>
+            </DetailItem>
+            {selectedDonation.attachment_name && (
+              <DetailItem label="Nombre del comprobante">
+                {selectedDonation.attachment_name}
+              </DetailItem>
+            )}
+          </>
+        ) : (
+          <>
+            {selectedDonation.name && (
+              <DetailItem label="Nombre">{selectedDonation.name}</DetailItem>
+            )}
+            {selectedDonation.description && (
+              <DetailItem label="Descripción">
+                {selectedDonation.description}
+              </DetailItem>
+            )}
+          </>
+        )}
 
-              {selectedDonation.attachment_name && (
-                <Fragment>
-                  <span className="text-sm font-medium">
-                    Nombre del comprobante
-                  </span>
-                  <span className="text-sm">
-                    {selectedDonation.attachment_name}
-                  </span>
-                </Fragment>
-              )}
-
-              {selectedDonation.attachment_url && (
-                <Fragment>
-                  <span className="text-sm font-medium col-span-2">
-                    Imagen adjunta
-                  </span>
-                  <div className="col-span-2">
-                    <ImagePreview
-                      src={selectedDonation.attachment_url}
-                      alt="Comprobante de transferencia"
-                      blur={false}
-                    />
-                  </div>
-                </Fragment>
-              )}
-            </Fragment>
-          ) : (
-            <Fragment>
-              {selectedDonation.name && (
-                <Fragment>
-                  <span className="text-sm font-medium">Nombre</span>
-                  <span className="text-sm">{selectedDonation.name}</span>
-                </Fragment>
-              )}
-
-              {selectedDonation.description && (
-                <Fragment>
-                  <span className="text-sm font-medium">Descripción</span>
-                  <span className="text-sm">
-                    {selectedDonation.description}
-                  </span>
-                </Fragment>
-              )}
-
-              {selectedDonation.attachment_url && (
-                <Fragment>
-                  <span className="text-sm font-medium col-span-2">
-                    Imagen adjunta
-                  </span>
-                  <div className="col-span-2">
-                    <ImagePreview
-                      src={selectedDonation.attachment_url}
-                      alt="Imagen de la donación"
-                    />
-                  </div>
-                </Fragment>
-              )}
-            </Fragment>
-          )}
-
-          <span className="text-sm font-medium">Estado</span>
-          <span className="text-sm">
-            <StatusBadge status={selectedDonation.status} />
-          </span>
-
-          <span className="text-sm font-medium">Categoría</span>
-          <span className="text-sm">
-            <CategoryBadge category={selectedDonation.category} />
-          </span>
-
-          <span className="text-sm font-medium">Forma de entrega</span>
-          <span className="text-sm">
-            <DeliveryMethodBadge
-              deliveryMethod={selectedDonation.delivery_method}
+        {selectedDonation.attachment_url && (
+          <DetailItem label="Imagen adjunta" stacked>
+            <ImagePreview
+              src={selectedDonation.attachment_url}
+              alt={
+                isMoney ? "Comprobante de transferencia" : "Imagen de la donación"
+              }
             />
-          </span>
+          </DetailItem>
+        )}
 
-          <span className="text-sm font-medium">Donante</span>
-          <span className="text-sm">{selectedDonation.donor}</span>
-
-          <span className="text-sm font-medium">Contacto</span>
-          <span className="text-sm">{selectedDonation.donor_phone}</span>
-
-          <span className="text-sm font-medium">Fecha de creación</span>
-          <span className="text-sm">
-            {formatDate(selectedDonation.date_created)}
-          </span>
-
-          {selectedDonation.date_accepted && (
-            <Fragment>
-              <span className="text-sm font-medium">Fecha de aceptación</span>
-              <span className="text-sm">
-                {formatDate(selectedDonation.date_accepted)}
-              </span>
-            </Fragment>
-          )}
-
-          {selectedDonation.date_cancelled && (
-            <Fragment>
-              <span className="text-sm font-medium">Fecha de rechazo</span>
-              <span className="text-sm">
-                {formatDate(selectedDonation.date_cancelled)}
-              </span>
-            </Fragment>
-          )}
-
-          {selectedDonation.dellivered_date && (
-            <Fragment>
-              <span className="text-sm font-medium">Fecha de entrega</span>
-              <span className="text-sm">
-                {formatDate(selectedDonation.dellivered_date)}
-              </span>
-            </Fragment>
-          )}
-
-          {selectedDonation.cancellation_reason && (
-            <Fragment>
-              <span className="text-sm font-medium">Motivo de rechazo</span>
-              <span className="text-sm col-span-2">
-                {selectedDonation.cancellation_reason}
-              </span>
-            </Fragment>
-          )}
-        </div>
-
-        <DrawerFooter className="border-t sticky bottom-0 bg-background">
-          <Button className="w-1/2 mx-auto" onClick={closeViewDrawer}>
-            Cerrar
-          </Button>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+        <DetailItem label="Estado">
+          <StatusBadge status={selectedDonation.status} />
+        </DetailItem>
+        <DetailItem label="Categoría">
+          <CategoryBadge category={selectedDonation.category} />
+        </DetailItem>
+        <DetailItem label="Forma de entrega">
+          <DeliveryMethodBadge
+            deliveryMethod={selectedDonation.delivery_method}
+          />
+        </DetailItem>
+        <DetailItem label="Donante">{selectedDonation.donor}</DetailItem>
+        <DetailItem label="Contacto">{selectedDonation.donor_phone}</DetailItem>
+        <DetailItem label="Fecha de creación">
+          {formatDate(selectedDonation.date_created)}
+        </DetailItem>
+        {selectedDonation.date_accepted && (
+          <DetailItem label="Fecha de aceptación">
+            {formatDate(selectedDonation.date_accepted)}
+          </DetailItem>
+        )}
+        {selectedDonation.date_cancelled && (
+          <DetailItem label="Fecha de rechazo">
+            {formatDate(selectedDonation.date_cancelled)}
+          </DetailItem>
+        )}
+        {selectedDonation.dellivered_date && (
+          <DetailItem label="Fecha de entrega">
+            {formatDate(selectedDonation.dellivered_date)}
+          </DetailItem>
+        )}
+        {selectedDonation.cancellation_reason && (
+          <DetailItem label="Motivo de rechazo" stacked>
+            {selectedDonation.cancellation_reason}
+          </DetailItem>
+        )}
+      </DetailList>
+    </DrawerLayout>
   );
 }

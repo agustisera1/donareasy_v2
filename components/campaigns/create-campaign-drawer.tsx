@@ -1,18 +1,12 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { DatePicker, isPastDay } from "@/components/common/date-picker";
+import { DrawerLayout } from "@/components/common/drawer-layout";
 import { Button } from "@/components/ui/button";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { campaignSchema, type CampaignFormSchema } from "@/lib/validations";
 import { createCampaign } from "@/actions/campaign/create";
@@ -29,6 +23,7 @@ export function CreateCampaignDrawer() {
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors },
     reset,
@@ -89,65 +84,14 @@ export function CreateCampaignDrawer() {
   };
 
   return (
-    <Drawer
-      direction="right"
+    <DrawerLayout
       open={createDrawerOpen}
       onOpenChange={handleClose}
+      title="Crear nueva campaña"
+      description="Completa los datos para crear una nueva campaña"
       dismissible={false}
-    >
-      <DrawerContent>
-        <DrawerHeader aria-describedby={undefined} className="border-b">
-          <DrawerTitle>Crear nueva campaña</DrawerTitle>
-          <DrawerDescription>
-            Completa los datos para crear una nueva campaña
-          </DrawerDescription>
-        </DrawerHeader>
-
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="grid grid-cols-2 gap-4 p-4"
-        >
-          <div className="grid gap-2 col-span-2">
-            <Label htmlFor="type">Nombre</Label>
-            <Input
-              id="type"
-              {...register("type")}
-              placeholder="Ej: Donación de alimentos, Ropa, Medicamentos..."
-            />
-            {errors.type && (
-              <p className="text-sm text-red-500">{errors.type.message}</p>
-            )}
-          </div>
-
-          <div className="grid gap-2 col-span-2">
-            <Label htmlFor="description">Descripción</Label>
-            <span className="text-xs text-gray-500">
-              Danos el detalle de la campaña, qué se necesita, con qué se
-              pretende colaborar. Sé tan específico como puedas, para que los
-              usuarios puedan entender mejor (cantidades, tamaños, etc.).
-            </span>
-            <Textarea id="description" {...register("description")} rows={5} />
-            {errors.description && (
-              <p className="text-xs text-red-500">
-                {errors.description.message}
-              </p>
-            )}
-          </div>
-
-          <div className="grid gap-2 col-span-2">
-            <Label htmlFor="termination_date">
-              Fecha de finalización (opcional)
-            </Label>
-            <Input type="date" lang="es-ES" {...register("termination_date")} />
-            {errors.termination_date && (
-              <p className="text-xs text-red-500">
-                {errors.termination_date.message}
-              </p>
-            )}
-          </div>
-        </form>
-
-        <DrawerFooter className="border-t">
+      footer={
+        <>
           <Button
             type="button"
             variant="outline"
@@ -158,14 +102,66 @@ export function CreateCampaignDrawer() {
           </Button>
           <Button
             type="button"
-            variant="default"
             onClick={handleSubmit(onSubmit)}
             disabled={isLoading}
           >
-            {isLoading ? "Creando..." : "Crear Campaña"}
+            {isLoading ? "Creando…" : "Crear campaña"}
           </Button>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+        </>
+      }
+    >
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="grid grid-cols-2 gap-4"
+      >
+        <Field className="col-span-2" data-invalid={!!errors.type}>
+          <FieldLabel htmlFor="type">Nombre</FieldLabel>
+          <Input
+            id="type"
+            aria-invalid={!!errors.type}
+            {...register("type")}
+            placeholder="Ej: Donación de alimentos, Ropa, Medicamentos..."
+          />
+          <FieldError errors={[errors.type]} />
+        </Field>
+
+        <Field className="col-span-2" data-invalid={!!errors.description}>
+          <FieldLabel htmlFor="description">Descripción</FieldLabel>
+          <FieldDescription>
+            Danos el detalle de la campaña, qué se necesita, con qué se
+            pretende colaborar. Sé tan específico como puedas, para que los
+            usuarios puedan entender mejor (cantidades, tamaños, etc.).
+          </FieldDescription>
+          <Textarea
+            id="description"
+            aria-invalid={!!errors.description}
+            {...register("description")}
+            rows={5}
+          />
+          <FieldError errors={[errors.description]} />
+        </Field>
+
+        <Field className="col-span-2" data-invalid={!!errors.termination_date}>
+          <FieldLabel htmlFor="termination_date">
+            Fecha de finalización (opcional)
+          </FieldLabel>
+          <Controller
+            control={control}
+            name="termination_date"
+            render={({ field }) => (
+              <DatePicker
+                id="termination_date"
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                disabledDays={isPastDay}
+                aria-invalid={!!errors.termination_date}
+              />
+            )}
+          />
+          <FieldError errors={[errors.termination_date]} />
+        </Field>
+      </form>
+    </DrawerLayout>
   );
 }

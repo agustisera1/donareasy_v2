@@ -1,17 +1,10 @@
 "use client";
 
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
+import { DetailItem, DetailList } from "@/components/common/detail-list";
+import { DrawerLayout } from "@/components/common/drawer-layout";
 import { useCampaignsContext } from "@/contexts/campaigns-context";
 import { formatDate } from "@/lib/utils";
-import { Fragment } from "react";
 
 export function ViewCampaignDrawer() {
   const { viewDrawerOpen, closeViewDrawer, selectedCampaign } =
@@ -22,51 +15,29 @@ export function ViewCampaignDrawer() {
   }
 
   return (
-    <Drawer
-      direction="right"
+    <DrawerLayout
       open={viewDrawerOpen}
       onOpenChange={closeViewDrawer}
+      title="Detalles de la campaña"
+      description="Información registrada de la campaña"
+      footer={<Button onClick={closeViewDrawer}>Cerrar</Button>}
     >
-      <DrawerContent>
-        <DrawerHeader aria-describedby={undefined} className="border-b">
-          <DrawerTitle>Detalles de la campaña</DrawerTitle>
-          <DrawerDescription>
-            Información registrada de la campaña
-          </DrawerDescription>
-        </DrawerHeader>
-
-        <div className="grid grid-cols-2 gap-4 p-4">
-          <span className="text-sm font-medium">Nombre</span>
-          <span className="text-sm">{selectedCampaign.type}</span>
-
-          <span className="text-sm font-medium">Fecha de inicio</span>
-          <span className="text-sm">
-            {formatDate(selectedCampaign.start_date)}
-          </span>
-
-          <span className="text-sm font-medium">Fecha de finalización</span>
-          <span className="text-sm">
-            {selectedCampaign.termination_date
-              ? formatDate(selectedCampaign.termination_date)
-              : "Campaña activa"}
-          </span>
-
-          {selectedCampaign.description && (
-            <Fragment>
-              <span className="text-sm font-medium">Descripción</span>
-              <span className="text-sm col-span-2">
-                {selectedCampaign.description}
-              </span>
-            </Fragment>
-          )}
-        </div>
-
-        <DrawerFooter className="border-t">
-          <Button className="w-1/2 mx-auto" onClick={closeViewDrawer}>
-            Cerrar
-          </Button>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+      <DetailList>
+        <DetailItem label="Nombre">{selectedCampaign.type}</DetailItem>
+        <DetailItem label="Fecha de inicio">
+          {formatDate(selectedCampaign.start_date)}
+        </DetailItem>
+        <DetailItem label="Fecha de finalización">
+          {selectedCampaign.termination_date
+            ? formatDate(selectedCampaign.termination_date)
+            : "Campaña activa"}
+        </DetailItem>
+        {selectedCampaign.description && (
+          <DetailItem label="Descripción" stacked>
+            {selectedCampaign.description}
+          </DetailItem>
+        )}
+      </DetailList>
+    </DrawerLayout>
   );
 }

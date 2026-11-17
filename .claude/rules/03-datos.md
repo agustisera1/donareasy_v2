@@ -11,8 +11,7 @@ paths:
 # Datos / persistencia
 
 Criterios para construir y revisar el modelo de datos en PostgreSQL (Supabase): constraints,
-índices, tipos, RLS y dónde vive el schema. Las secciones de criterios no dependen del proyecto. Lo
-propio de este repo está al final, en **En este repo**.
+índices, tipos, RLS y dónde vive el schema.
 
 **Cómo se usa:** los criterios se aplican solo a lo que cambió en la tarea, antes de reportarla. Cada
 uno es **Base** (se cumple siempre) o **Condicional** (solo si se cumple su "Aplica cuando"); un
@@ -151,15 +150,7 @@ la consulta contra el índice, el plan lo confirma. Ref: [PG 11.12][pg-examine].
 **Dónde vive cada cosa (objetivo):** migraciones en `supabase/migrations/`, aplicadas con
 `supabase db push`; seed en `supabase/seed.sql`; tipos generados en `lib/types/database.ts`.
 
-**Estado actual:** `DB.sql` es un dump de referencia ("for context only, not meant to be run"), sin
-índices propios, RLS ni policies versionadas, y puede estar desactualizado respecto de la base real
-(p. ej. `donations.institution_id` figura `NOT NULL`, pero el código trata donaciones abiertas con
-`null`). Pasar a migraciones (D4) es el primer paso del refactor de datos; hasta entonces, ante una
-duda sobre el schema, confirmar contra la base y no contra `DB.sql`.
-
-| Criterio | Ref |
-|---|---|
-| Ejemplos canónicos | Pendiente: se completa a medida que el refactor deja referencias |
+Ante una duda sobre el schema, se confirma contra la base, no contra `DB.sql`.
 
 [pg-examine]: https://www.postgresql.org/docs/current/using-explain.html
 [pg-multi]: https://www.postgresql.org/docs/current/indexes-multicolumn.html
