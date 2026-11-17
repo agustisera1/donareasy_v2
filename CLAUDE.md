@@ -94,7 +94,7 @@ Un archivo por área. Las que tienen `paths:` se cargan solo al tocar archivos q
 |---|---|---|
 | `01-capas.md` | Capas (queries, actions, route handlers), `ServiceResult`, `authorize`, forma de una action | `actions/`, `queries/`, `lib/`, `app/api/` |
 | `02-api.md` | Criterios de contrato: errores, auth, validación, idempotencia, listas, HTTP | `actions/`, `queries/`, `app/api/`, `lib/shared/` |
-| `03-datos.md` | Modelo de datos en PostgreSQL / Supabase: constraints, índices, tipos, RLS, migraciones | `DB.sql`, `seed.sql`, `supabase/`, `queries/`, `actions/` |
+| `03-datos.md` | Modelo de datos en PostgreSQL / Supabase: constraints, índices, tipos, RLS, migraciones | `supabase/`, `scripts/db-*.mjs`, `queries/`, `actions/` |
 | `04-frontend.md` | Capas de UI, tokens, estados, efectos, TanStack Query, forms, confirmaciones, guidelines | `components/`, `app/**/*.tsx`, `contexts/`, `hooks/`, estilos |
 
 **Código existente:** no todo cumple estas reglas todavía. Se aplican a lo que cambia en la tarea:

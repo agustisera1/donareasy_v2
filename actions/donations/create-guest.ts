@@ -1,18 +1,7 @@
 "use server";
 
-import { createServerClient } from "@supabase/ssr";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { guestDonationSchema } from "@/lib/validations";
-
-function createServiceRoleClient() {
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      cookies: { getAll: () => [], setAll: () => {} },
-      auth: { persistSession: false },
-    }
-  );
-}
 
 export async function createGuestDonation(
   token: string,
@@ -36,7 +25,7 @@ export async function createGuestDonation(
     };
   }
 
-  const supabase = createServiceRoleClient();
+  const supabase = createAdminClient();
 
   try {
     // 1. Validar el token
