@@ -3,17 +3,10 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, Fragment } from "react";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { DrawerLayout } from "@/components/common/drawer-layout";
 import { Button } from "@/components/ui/button";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DonorData, InstitutionData } from "@/app/api/user/route";
 import {
@@ -112,261 +105,204 @@ export function EditDrawer({
   };
 
   return (
-    <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
-      <DrawerContent>
-        <DrawerHeader aria-describedby={undefined} className="border-b">
-          <DrawerTitle>Editar perfil</DrawerTitle>
-          <DrawerDescription>Editar los datos del Usuario</DrawerDescription>
-        </DrawerHeader>
+    <DrawerLayout
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Editar perfil"
+      description="Editar los datos del usuario"
+      footer={
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="button"
+            onClick={
+              isDonor
+                ? donorForm.handleSubmit(onSubmit)
+                : institutionForm.handleSubmit(onSubmit)
+            }
+            disabled={isLoading || (!isDonor && !isInstitution)}
+          >
+            {isLoading ? "Guardando…" : "Guardar cambios"}
+          </Button>
+        </>
+      }
+    >
+      {isDonor ? (
+        <Fragment>
+          <form className="grid grid-cols-2 gap-4">
+            <Field data-invalid={!!donorForm.formState.errors.name}>
+              <FieldLabel htmlFor="name">Nombre</FieldLabel>
+              <Input
+                id="name"
+                disabled
+                aria-invalid={!!donorForm.formState.errors.name}
+                {...donorForm.register("name")}
+                placeholder="Nombre"
+              />
+              <FieldError errors={[donorForm.formState.errors.name]} />
+            </Field>
 
-        {isDonor ? (
-          <Fragment>
-            <form className="grid grid-cols-2 gap-4 p-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Nombre</Label>
-                <Input
-                  id="name"
-                  disabled
-                  {...donorForm.register("name")}
-                  placeholder="Nombre"
-                />
-                {donorForm.formState.errors.name && (
-                  <p className="text-sm text-red-500">
-                    {donorForm.formState.errors.name.message}
-                  </p>
-                )}
-              </div>
+            <Field data-invalid={!!donorForm.formState.errors.lastname}>
+              <FieldLabel htmlFor="lastname">Apellido</FieldLabel>
+              <Input
+                id="lastname"
+                disabled
+                aria-invalid={!!donorForm.formState.errors.lastname}
+                {...donorForm.register("lastname")}
+                placeholder="Apellido"
+              />
+              <FieldError errors={[donorForm.formState.errors.lastname]} />
+            </Field>
 
-              <div className="grid gap-2">
-                <Label htmlFor="lastname">Apellido</Label>
-                <Input
-                  id="lastname"
-                  disabled
-                  {...donorForm.register("lastname")}
-                  placeholder="Apellido"
-                />
-                {donorForm.formState.errors.lastname && (
-                  <p className="text-sm text-red-500">
-                    {donorForm.formState.errors.lastname.message}
-                  </p>
-                )}
-              </div>
+            <Field data-invalid={!!donorForm.formState.errors.dni}>
+              <FieldLabel htmlFor="dni">DNI</FieldLabel>
+              <Input
+                disabled
+                id="dni"
+                type="text"
+                inputMode="numeric"
+                aria-invalid={!!donorForm.formState.errors.dni}
+                {...donorForm.register("dni")}
+                placeholder="DNI"
+              />
+              <FieldError errors={[donorForm.formState.errors.dni]} />
+            </Field>
 
-              <div className="grid gap-2">
-                <Label htmlFor="dni">DNI</Label>
-                <Input
-                  disabled
-                  id="dni"
-                  type="text"
-                  inputMode="numeric"
-                  {...donorForm.register("dni")}
-                  placeholder="DNI"
-                />
-                {donorForm.formState.errors.dni && (
-                  <p className="text-sm text-red-500">
-                    {donorForm.formState.errors.dni.message}
-                  </p>
-                )}
-              </div>
+            <Field data-invalid={!!donorForm.formState.errors.phone}>
+              <FieldLabel htmlFor="phone">Teléfono</FieldLabel>
+              <Input
+                id="phone"
+                aria-invalid={!!donorForm.formState.errors.phone}
+                {...donorForm.register("phone")}
+                placeholder="Teléfono"
+              />
+              <FieldError errors={[donorForm.formState.errors.phone]} />
+            </Field>
 
-              <div className="grid gap-2">
-                <Label htmlFor="phone">Teléfono</Label>
-                <Input
-                  id="phone"
-                  {...donorForm.register("phone")}
-                  placeholder="Teléfono"
-                />
-                {donorForm.formState.errors.phone && (
-                  <p className="text-sm text-red-500">
-                    {donorForm.formState.errors.phone.message}
-                  </p>
-                )}
-              </div>
+            <Field data-invalid={!!donorForm.formState.errors.province}>
+              <FieldLabel htmlFor="province">Provincia</FieldLabel>
+              <Input
+                id="province"
+                aria-invalid={!!donorForm.formState.errors.province}
+                {...donorForm.register("province")}
+                placeholder="Provincia"
+              />
+              <FieldError errors={[donorForm.formState.errors.province]} />
+            </Field>
 
-              <div className="grid gap-2">
-                <Label htmlFor="province">Provincia</Label>
-                <Input
-                  id="province"
-                  {...donorForm.register("province")}
-                  placeholder="Provincia"
-                />
-                {donorForm.formState.errors.province && (
-                  <p className="text-sm text-red-500">
-                    {donorForm.formState.errors.province.message}
-                  </p>
-                )}
-              </div>
+            <Field data-invalid={!!donorForm.formState.errors.city}>
+              <FieldLabel htmlFor="city">Localidad</FieldLabel>
+              <Input
+                id="city"
+                aria-invalid={!!donorForm.formState.errors.city}
+                {...donorForm.register("city")}
+                placeholder="Ciudad"
+              />
+              <FieldError errors={[donorForm.formState.errors.city]} />
+            </Field>
 
-              <div className="grid gap-2">
-                <Label htmlFor="city">Localidad</Label>
-                <Input
-                  id="city"
-                  {...donorForm.register("city")}
-                  placeholder="Ciudad"
-                />
-                {donorForm.formState.errors.city && (
-                  <p className="text-sm text-red-500">
-                    {donorForm.formState.errors.city.message}
-                  </p>
-                )}
-              </div>
+            <Field data-invalid={!!donorForm.formState.errors.address}>
+              <FieldLabel htmlFor="address">Dirección</FieldLabel>
+              <Input
+                id="address"
+                aria-invalid={!!donorForm.formState.errors.address}
+                {...donorForm.register("address")}
+                placeholder="Dirección"
+              />
+              <FieldError errors={[donorForm.formState.errors.address]} />
+            </Field>
+          </form>
+        </Fragment>
+      ) : isInstitution ? (
+        <Fragment>
+          <form className="grid grid-cols-2 gap-4">
+            <Field data-invalid={!!institutionForm.formState.errors.director}>
+              <FieldLabel htmlFor="director">Director</FieldLabel>
+              <Input
+                id="director"
+                aria-invalid={!!institutionForm.formState.errors.director}
+                {...institutionForm.register("director")}
+                placeholder="Director"
+              />
+              <FieldError errors={[institutionForm.formState.errors.director]} />
+            </Field>
 
-              <div className="grid gap-2">
-                <Label htmlFor="address">Dirección</Label>
-                <Input
-                  id="address"
-                  {...donorForm.register("address")}
-                  placeholder="Dirección"
-                />
-                {donorForm.formState.errors.address && (
-                  <p className="text-sm text-red-500">
-                    {donorForm.formState.errors.address.message}
-                  </p>
-                )}
-              </div>
-            </form>
+            <Field data-invalid={!!institutionForm.formState.errors.bank}>
+              <FieldLabel htmlFor="bank">CBU/Alias</FieldLabel>
+              <Input
+                id="bank"
+                aria-invalid={!!institutionForm.formState.errors.bank}
+                {...institutionForm.register("bank")}
+                placeholder="CBU o Alias"
+              />
+              <FieldError errors={[institutionForm.formState.errors.bank]} />
+            </Field>
 
-            <DrawerFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="button"
-                variant="default"
-                onClick={donorForm.handleSubmit(onSubmit)}
-                disabled={isLoading}
-              >
-                {isLoading ? "Actualizando..." : "Guardar Cambios"}
-              </Button>
-            </DrawerFooter>
-          </Fragment>
-        ) : isInstitution ? (
-          <Fragment>
-            <form className="grid grid-cols-2 gap-4 p-4">
-              <div className="grid gap-2">
-                <Label htmlFor="director">Director</Label>
-                <Input
-                  id="director"
-                  {...institutionForm.register("director")}
-                  placeholder="Director"
-                />
-                {institutionForm.formState.errors.director && (
-                  <p className="text-sm text-red-500">
-                    {institutionForm.formState.errors.director.message}
-                  </p>
-                )}
-              </div>
+            <Field data-invalid={!!institutionForm.formState.errors.phone}>
+              <FieldLabel htmlFor="phone">Teléfono</FieldLabel>
+              <Input
+                id="phone"
+                aria-invalid={!!institutionForm.formState.errors.phone}
+                {...institutionForm.register("phone")}
+                placeholder="Teléfono"
+              />
+              <FieldError errors={[institutionForm.formState.errors.phone]} />
+            </Field>
 
-              <div className="grid gap-2">
-                <Label htmlFor="bank">CBU/Alias</Label>
-                <Input
-                  id="bank"
-                  {...institutionForm.register("bank")}
-                  placeholder="CBU o Alias"
-                />
-                {institutionForm.formState.errors.bank && (
-                  <p className="text-sm text-red-500">
-                    {institutionForm.formState.errors.bank.message}
-                  </p>
-                )}
-              </div>
+            <Field data-invalid={!!institutionForm.formState.errors.province}>
+              <FieldLabel htmlFor="province">Provincia</FieldLabel>
+              <Input
+                id="province"
+                aria-invalid={!!institutionForm.formState.errors.province}
+                {...institutionForm.register("province")}
+                placeholder="Provincia"
+              />
+              <FieldError errors={[institutionForm.formState.errors.province]} />
+            </Field>
 
-              <div className="grid gap-2">
-                <Label htmlFor="phone">Teléfono</Label>
-                <Input
-                  id="phone"
-                  {...institutionForm.register("phone")}
-                  placeholder="Teléfono"
-                />
-                {institutionForm.formState.errors.phone && (
-                  <p className="text-sm text-red-500">
-                    {institutionForm.formState.errors.phone.message}
-                  </p>
-                )}
-              </div>
+            <Field data-invalid={!!institutionForm.formState.errors.city}>
+              <FieldLabel htmlFor="city">Localidad</FieldLabel>
+              <Input
+                id="city"
+                aria-invalid={!!institutionForm.formState.errors.city}
+                {...institutionForm.register("city")}
+                placeholder="Ciudad"
+              />
+              <FieldError errors={[institutionForm.formState.errors.city]} />
+            </Field>
 
-              <div className="grid gap-2">
-                <Label htmlFor="province">Provincia</Label>
-                <Input
-                  id="province"
-                  {...institutionForm.register("province")}
-                  placeholder="Provincia"
-                />
-                {institutionForm.formState.errors.province && (
-                  <p className="text-sm text-red-500">
-                    {institutionForm.formState.errors.province.message}
-                  </p>
-                )}
-              </div>
+            <Field data-invalid={!!institutionForm.formState.errors.address}>
+              <FieldLabel htmlFor="address">Dirección</FieldLabel>
+              <Input
+                id="address"
+                aria-invalid={!!institutionForm.formState.errors.address}
+                {...institutionForm.register("address")}
+                placeholder="Dirección"
+              />
+              <FieldError errors={[institutionForm.formState.errors.address]} />
+            </Field>
 
-              <div className="grid gap-2">
-                <Label htmlFor="city">Localidad</Label>
-                <Input
-                  id="city"
-                  {...institutionForm.register("city")}
-                  placeholder="Ciudad"
-                />
-                {institutionForm.formState.errors.city && (
-                  <p className="text-sm text-red-500">
-                    {institutionForm.formState.errors.city.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="address">Dirección</Label>
-                <Input
-                  id="address"
-                  {...institutionForm.register("address")}
-                  placeholder="Dirección"
-                />
-                {institutionForm.formState.errors.address && (
-                  <p className="text-sm text-red-500">
-                    {institutionForm.formState.errors.address.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid gap-2 col-span-2">
-                <Label htmlFor="lore">Acerca de la institución</Label>
-                <Textarea
-                  id="lore"
-                  {...institutionForm.register("lore")}
-                  placeholder="Descripción de la institución..."
-                  rows={4}
-                />
-                {institutionForm.formState.errors.lore && (
-                  <p className="text-sm text-red-500">
-                    {institutionForm.formState.errors.lore.message}
-                  </p>
-                )}
-              </div>
-            </form>
-
-            <DrawerFooter className="border-t">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="button"
-                variant="default"
-                onClick={institutionForm.handleSubmit(onSubmit)}
-                disabled={isLoading}
-              >
-                {isLoading ? "Guardando..." : "Guardar Cambios"}
-              </Button>
-            </DrawerFooter>
-          </Fragment>
-        ) : null}
-      </DrawerContent>
-    </Drawer>
+            <Field className="col-span-2" data-invalid={!!institutionForm.formState.errors.lore}>
+              <FieldLabel htmlFor="lore">Acerca de la institución</FieldLabel>
+              <Textarea
+                id="lore"
+                aria-invalid={!!institutionForm.formState.errors.lore}
+                {...institutionForm.register("lore")}
+                placeholder="Descripción de la institución..."
+                rows={4}
+              />
+              <FieldError errors={[institutionForm.formState.errors.lore]} />
+            </Field>
+          </form>
+        </Fragment>
+      ) : null}
+    </DrawerLayout>
   );
 }
