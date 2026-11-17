@@ -12,7 +12,7 @@ paths:
 
 Criterios para construir y revisar el contrato entre cliente y server: Server Actions (RPC), queries
 que consumen los Server Components y Route Handlers. Las secciones de criterios no dependen del
-proyecto. Lo propio de este repo está al final, en **En este repo**.
+proyecto.
 
 **Cómo se usa:** los criterios se aplican solo a lo que cambió en la tarea, antes de reportarla. Cada
 uno es **Base** (se cumple siempre) o **Condicional** (solo si se cumple su "Aplica cuando"); un
@@ -183,14 +183,3 @@ cambio va como "para otro branch: X".
 - **S2. Un bucket con datos de usuarios es privado y se lee con signed URLs de vida corta.**
   Verificación: ningún `getPublicUrl` sobre un bucket que guarde comprobantes o datos personales.
 
----
-
-## En este repo
-
-Ejemplos canónicos de los criterios que ya se cumplen. Se completa a medida que el refactor
-deja referencias.
-
-| Criterio | Ref |
-|---|---|
-| C1, C2, R4 | Pendiente: `actions/donations/accept.ts` reescrito según `01-capas.md` |
-| R2 mapper HTTP | Pendiente: `lib/shared/http.ts` |

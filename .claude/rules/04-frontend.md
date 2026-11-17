@@ -44,22 +44,24 @@ semánticos en un solo lugar (p. ej. `status-badge.tsx`), no con clases sueltas 
 
 | Primitivo | Qué resuelve | Server-safe |
 |-----------|--------------|-------------|
-| `DataTable` | Tabla de datos (TanStack + `ui/table`): toolbar, filtros facetados, estados ("Cargando", error, vacío y vacío por filtros con `Empty` de shadcn), conteo y paginación. La feature pasa `errorMessage` desde el `error` de su query. Uso: `components/donations/donations-data-table.tsx` | Client |
-| `DataTableColumnHeader` | Header ordenable alineado con la celda (`-ml-2.5` compensa el padding del `Button`) | Client |
+| `DataTable` | Tabla de datos (TanStack + `ui/table`): toolbar, filtros facetados, estados y paginación. Uso: `components/donations/donations-data-table.tsx` | Client |
+| `DataTableColumnHeader` | Header de columna ordenable | Client |
 | `DataTableFacetedFilter` | Filtro multi-select de valores enumerables con conteos (`getFacetedUniqueValues`); lo renderiza `DataTable` desde `facetedFilters` | Client |
 | `DataTablePagination` | `Pagination` de shadcn con links `?page=N` (`Button asChild` + `Link`) | Client |
-| `DataTableRowAction` | Botón de acción solo-ícono con `Tooltip` y `sr-only`; si está deshabilitado, lo envuelve en un `span` (patrón de Radix) | Client |
+| `DataTableRowAction` | Botón de acción solo-ícono con `Tooltip` | Client |
+| `DrawerLayout` | Drawer lateral: header, cuerpo con scroll y footer. Uso: `components/donations/edit-donation-drawer.tsx` | Client |
+| `DatePicker` | Selector de fecha (`Popover` + `Calendar`), valor `yyyy-MM-dd`. Uso: `components/campaigns/create-campaign-drawer.tsx` | Client |
+| `DetailList`, `DetailItem` | Pares etiqueta / valor de solo lectura. Uso: `components/donations/view-donation-drawer.tsx` | ✓ |
 | `DataTableTabs` | Pestañas de la toolbar (`Tabs` de shadcn) sincronizadas con un search param; `parseTab` lee el valor | Client |
 
-Candidatos a extraer cuando el refactor los toque (patrones que hoy se repiten a mano):
+Primitivos objetivo (se crean en `common/` la primera vez que se necesitan):
 
 | Primitivo | Qué resuelve | Server-safe |
 |-----------|--------------|-------------|
-| `FormField`, `FieldError` | Fila de formulario: label + control + error (o texto de ayuda) | ✓ |
 | `ConfirmDialog` | Confirmación de acción con efecto real (encapsula open + pending + retry) | Client |
-| `EmptyState` | Estado vacío centrado (ícono + título + descripción + acción) | ✓ |
+| `EmptyState` | Estado vacío (título + descripción + acción) | ✓ |
 | `PageLayout` | Shell de página del dashboard: heading + slots `actions`/`toolbar` | ✓ |
-| `Money` | Monto en ARS con `formatCurrency` y `tabular-nums` | ✓ |
+| `Money` | Monto en ARS con `formatCurrency` | ✓ |
 
 Cada primitivo nuevo se suma a esta tabla con su referencia de uso.
 
@@ -68,13 +70,14 @@ Cada primitivo nuevo se suma a esta tabla con su referencia de uso.
 | Situación | Solución |
 |-----------|----------|
 | Encabezado + estructura de una página del dashboard | `PageLayout` — nunca rearmar el header con un `<h1>` y clases a mano en cada página |
-| Fila de formulario (label + control + error) | `FormField` — nunca reconstruir el `<div className="grid gap-2">` a mano |
-| Tabla de datos | `DataTable` — la feature solo define `columns`, `toolbar`, `actions` y `facetedFilters`. Sin anchos fijos (`size`, `table-fixed`, estilos inline): el ancho lo reparte el navegador. Página, pestaña, orden y filtros viven en la URL (`?page=`, `?view=`, `?sort=`, `?status=`). La carga muestra el texto "Cargando", sin puntos suspensivos |
+| Fila de formulario (label + control + error) | `Field` de `ui/` — nunca reconstruir el `<div className="grid gap-2">` a mano |
+| Tabla de datos | `DataTable` — la feature solo define `columns`, `toolbar`, `actions` y `facetedFilters`. Página, pestaña, orden y filtros viven en la URL (`?page=`, `?view=`, `?sort=`, `?status=`) |
 | Columna de acciones de una tabla | `header: "Acciones"` y un `DataTableRowAction` por acción, con un label que diga qué hace ("Ver detalle", "Editar") |
 | Filtro por valores enumerables (estado, categoría) | `facetedFilters` de `DataTable` + `filterFn: "arrIncludesSome"` en la columna; nunca un `filterFn` a mano ni un popover en el header |
-| Mensaje de error de un campo suelto | `FieldError` (o el prop `error` de `FormField`) — nunca `<p className="text-sm text-red-500">` |
+| Mensaje de error de un campo | `FieldError` — nunca `<p className="text-sm text-red-500">` |
 | Área de texto | `Textarea` de `ui/` — nunca un `<textarea>` con clases crudas |
 | Monto en pesos | `formatCurrency` de `lib/utils.ts` (o `Money`) — nunca `toLocaleString` / `Intl` a mano |
+| Selector de fecha | `DatePicker` — nunca `<Input type="date">` |
 | Fecha | `formatDate` de `lib/utils.ts` — nunca `toLocaleDateString` a mano |
 | Etiqueta de categoría o método de entrega | `categoryTranslations` / `deliveryMethodTranslations` de `lib/constants.ts` |
 | Acción con efecto real fuera de un form | `ConfirmDialog` (ver "Patrón de acciones de confirmación") |
@@ -101,7 +104,7 @@ return <DonationsTable data={rows} />;
 Cuando un componente de feature **acumula varios sub-componentes, mezcla lógica pura con rendering,
 o junta estado/efectos con presentación**, se parte en una carpeta con un archivo por
 responsabilidad. Cada archivo aísla una dependencia distinta (React vs. lógica pura, estado vs.
-markup). Candidatos claros hoy: los `*-data-table.tsx` y los `*-drawer.tsx`.
+markup).
 
 | Archivo | Responsabilidad | `"use client"` |
 |---------|-----------------|----------------|
@@ -135,8 +138,7 @@ escribirlo.
 - **Un prop que cambia nunca se copia a estado con un Effect.** En orden de preferencia: derivarlo
   en el render, resetear con `key`, o ajustar el estado durante el render guardando el valor anterior.
 - **El estado mutable de afuera de React (media queries, conexión, una API del browser) se lee con
-  `useSyncExternalStore`; nunca se espeja en un `useState` desde un efecto.** Caso a corregir:
-  `hooks/use-mobile.ts`.
+  `useSyncExternalStore`; nunca se espeja en un `useState` desde un efecto.**
 - **Pedirle al server otra porción de datos (paginar, filtrar, buscar) es navegar:** el parámetro va
   en la URL, la página lo lee de `searchParams` y el control es un `<Link>` (o `router.replace` desde
   un input de búsqueda). Nunca un fetch del cliente con estado propio.
@@ -193,11 +195,11 @@ if (isSubmitSuccessful) return <SuccessUI />;
 
 | Situación | Solución |
 |-----------|----------|
-| Fila de campo (label + control + error) | `FormField`: `<FormField label htmlFor error={errors.x?.message}>…control…</FormField>` |
+| Fila de campo (label + control + error) | `Field` + `FieldLabel` + control con `aria-invalid` + `FieldError` |
 | Control de entrada | `Input` / `Textarea` de `ui/` con `{...register("field")}` |
 | Componente controlado (Select, Switch, DatePicker, Checkbox) | `<Controller control={control} name="field" render={...} />` |
 | Observar un campo reactivamente | `useWatch({ control, name: "field" })` — **no** `watch("field")` (incompatible con React Compiler) |
-| Función impura en el render (`Date.now()`, `Math.random()`, `crypto.randomUUID()`) | Capturarla una vez con `useState(() => …)` — nunca llamarla directo en el cuerpo del render |
+| Función impura en el render (`Date.now()`, `Math.random()`, `crypto.randomUUID()`) | Fuera del render (también de `useState(() => …)`, que corre en el prerender): en un event handler o en código que corre tras la interacción |
 | Estado de envío | `isSubmitting` de RHF — **no** `useState` |
 | Estado de éxito | `isSubmitSuccessful` de RHF — **no** `useState` |
 | Error `VALIDATION` de la action sobre un campo | `setError("field", { message })`; el resto, `toast.error(result.error)` |
@@ -210,9 +212,8 @@ if (isSubmitSuccessful) return <SuccessUI />;
 
 Para acciones destructivas o irreversibles fuera de un formulario RHF (rechazar, finalizar,
 eliminar), no usar `confirm()` nativo ni un `onClick` directo a la action. Usar **`ConfirmDialog`**
-(`components/common/confirm-dialog.tsx`, a crear sobre `ui/alert-dialog.tsx`), que encapsula
-`open` + pending + retry. Candidatos: `accept-donation-dialog`, `deliver-donation-dialog`,
-`finish-campaign-dialog`.
+(`components/common/confirm-dialog.tsx`, sobre `ui/alert-dialog.tsx`), que encapsula
+`open` + pending + retry.
 
 ```tsx
 "use client";
@@ -244,7 +245,6 @@ export function FinishCampaignButton({ campaignId }: { campaignId: string }) {
 |-----------|----------|
 | Error de la action | `toast.error(result.error)` y `return false` — el diálogo queda abierto |
 | Éxito | `toast.success(...)` y devolver `undefined`/`true` — cierra el diálogo |
-| Texto del botón durante el request | `pendingLabel` en gerundio ("Rechazando…", "Finalizando…") |
 | Diálogo con contenido propio (p. ej. motivo de rechazo) | No usar `ConfirmDialog`: form RHF dentro de un `AlertDialog` con el mismo contrato de estados |
 
 ---
@@ -263,24 +263,19 @@ las verificaciones excluyen `components/ui/`.
 - **Navegar es un `<Link>`; `router.push` solo después de una acción (submit, delete).**
 - **Cada página define su título.** Verificación: cada `page.tsx` exporta `metadata` o
   `generateMetadata`.
-- **Todo campo tiene label: `FormField`, o `aria-label` si el diseño no muestra uno.**
+- **Todo campo tiene label: `FieldLabel`, o `aria-label` si el diseño no muestra uno.**
 - **Las acciones no dependen del hover:** lo que aparece en hover también es visible con foco y en
   pantallas táctiles.
 
 ### Animación
 
-- **Nunca `transition-all`: se transiciona solo la propiedad que cambia.** Verificación: grep → 0.
 - **Toda animación respeta `prefers-reduced-motion`:** cada `animate-*` propio va con `motion-safe:`.
 
 ### Contenido
 
 - **Todo el texto visible está en español (es-AR, voseo):** "Iniciá sesión", "Guardá los cambios".
-- **Los textos de carga usan el carácter `…`, nunca `...`.** Verificación: grep de `...` dentro de
-  strings y JSX de `.tsx` → 0. Excepción: tablas y fallbacks de página dicen "Cargando", sin `…`.
 - **Imágenes con `next/image`, nunca `<img>`.** Verificación: grep de `<img` → 0.
-- **Montos y conteos que se comparan llevan `tabular-nums`.**
 - **El error de carga dice "No se pudo cargar <cosa>. Recargá la página."**
-- **Títulos y botones con mayúscula solo inicial** ("Nueva campaña", "Donaciones recibidas").
 
 ### Formularios y estado
 
@@ -292,13 +287,10 @@ las verificaciones excluyen `components/ui/`.
 - **Filtros, búsqueda, paginación y tab activa viven en la URL** (`searchParams`), no en `useState`.
 - **Los campos de texto se recortan en el schema** (`z.string().trim()`; email:
   `z.string().trim().pipe(z.email())`).
-- **Toda zona con scroll dentro de un diálogo o drawer lleva `overscroll-contain`.**
 
-### Tamaños y forma
+### Primitivos de `ui/`
 
-- **Alto de viewport con `dvh`, nunca `h-screen`/`min-h-screen`.**
-- **Inputs, triggers y botones con la altura y el radio de su componente de `ui/`;** sin `h-*` ni
-  `rounded-*` encima.
+- **Inputs, triggers y botones no se reestilan por encima de su componente de `ui/`** (sin `h-*` ni
+  `rounded-*` encima).
 - **Separadores con `Separator`, carga con `Skeleton`.** Verificación: grep de `h-px` y
   `animate-pulse` fuera de `ui/` → 0.
-- **Solo lo clickeable tiene hover de elevación.**
