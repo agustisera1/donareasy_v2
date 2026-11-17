@@ -31,8 +31,8 @@ pueden borrar en el primer branch de refactor; si alguno se quiere implementar, 
 (`FormField`, `ConfirmDialog`, `EmptyState`). Arreglar los 5 errores de lint actuales
 (`use-mobile.ts`, `tailwind.config.ts`, …) para que el hook de Stop no moleste.
 
-**Datos (transversal).** `DB.sql` no es ejecutable y diverge del código (`institution_id NOT NULL` vs.
-donaciones abiertas; faltan `guest_tokens`). Pasar a `supabase/migrations/` y auditar RLS por tabla.
+**Datos (transversal).** Schema en `supabase/migrations/` y RLS por dueño hechos. Falta: `status`
+como enum, tipos generados (`supabase gen types`), RLS de `notifications` cuando se implemente.
 
 | Feature | Hallazgos principales | Tamaño |
 |---|---|---|

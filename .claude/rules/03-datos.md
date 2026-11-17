@@ -1,7 +1,6 @@
 ---
 paths:
-  - "DB.sql"
-  - "seed.sql"
+  - "scripts/db-*.mjs"
   - "supabase/**"
   - "queries/**"
   - "actions/**"
@@ -148,9 +147,9 @@ la consulta contra el índice, el plan lo confirma. Ref: [PG 11.12][pg-examine].
 ## En este repo
 
 **Dónde vive cada cosa (objetivo):** migraciones en `supabase/migrations/`, aplicadas con
-`supabase db push`; seed en `supabase/seed.sql`; tipos generados en `lib/types/database.ts`.
+`supabase db push`; seed en `scripts/db-seed.mjs` (`npm run db:seed`); tipos generados en `lib/types/database.ts`.
 
-Ante una duda sobre el schema, se confirma contra la base, no contra `DB.sql`.
+Ante una duda sobre el schema, se confirma contra la base y `supabase/migrations/`.
 
 [pg-examine]: https://www.postgresql.org/docs/current/using-explain.html
 [pg-multi]: https://www.postgresql.org/docs/current/indexes-multicolumn.html

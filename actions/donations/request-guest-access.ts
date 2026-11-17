@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { guestAccessSchema } from "@/lib/validations";
 import { Resend } from "resend";
 import { guestInvitationHtml } from "@/lib/email/guest-invitation";
@@ -22,7 +22,7 @@ export async function requestGuestAccess(formData: {
   }
 
   const { name, lastname, email, phone } = parsed.data;
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   try {
     // 1. Crear el token con expiración de 30 minutos

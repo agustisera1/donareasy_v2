@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { GuestDonationForm } from "@/components/guest/guest-donation-form";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ interface PageProps {
 
 export default async function GuestDonationPage({ params }: PageProps) {
   const { token } = await params;
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data: tokenRow } = await supabase
     .from("guest_tokens")
