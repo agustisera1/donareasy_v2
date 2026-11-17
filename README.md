@@ -33,6 +33,17 @@
 - Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
   - Environment variables automatically assigned to Vercel project
 
+## Datos de demo
+
+Las migraciones viven en `supabase/migrations/`. Con `SUPABASE_SERVICE_ROLE_KEY` en `.env`:
+
+```bash
+npm run db:reset   # borra datos de public (salvo roles), usuarios de Auth y adjuntos
+npm run db:seed    # reset + 2 instituciones, 2 donantes, campañas y donaciones
+```
+
+Las cuentas demo usan la contraseña `demo1234` (el seed las imprime al terminar).
+
 ## Demo
 
 You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
