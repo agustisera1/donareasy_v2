@@ -26,7 +26,7 @@ Estados:
 | Onboarding (rol + perfil) | Listo | — | Atómico vía RPC. `/dashboard/*` y `/onboarding` redirigen según el estado de la cuenta |
 | Aprobación de instituciones | Listo | — | Se aprueba a mano (`institutions.approved`). Mientras tanto la cuenta solo ve el aviso de revisión y no figura en los listados. La notificación no se envía |
 | Perfil (ver y editar) | Listo | — | `userId` llega desde el cliente. RLS limita al propio registro |
-| Eliminar cuenta | Sin hacer | `actions/user/delete.ts` | Stub sin `"use server"` y sin UI |
+| Eliminar cuenta | Fuera de alcance | — | — |
 | Crear campaña | **Roto para demo** | `actions/campaign/create.ts:54-61`, `components/campaigns/campaigns-data-table.tsx:97` | No setea `finished` y la columna no tiene default, así que queda `null`. El botón "Donar" solo aparece con `finished === false`: **una campaña nueva no se puede donar** |
 | Listar / ver campaña | Listo | — | El drawer dice "Campaña activa" según `termination_date`, no según `finished` (`view-campaign-drawer.tsx:31-33`) |
 | Editar campaña | Listo | — | El server no valida que la campaña no esté finalizada (solo la UI) |
@@ -86,8 +86,6 @@ Pasos previos:
 - Recorrer el guion con la app corriendo para confirmar lo que esta auditoría dedujo del código: la
   foto de más de 1 MB, el `FileList` del invitado en la Server Action, el registro real y el mail de
   Resend.
-- Armar las fundaciones mínimas de `.claude/rules/01-capas.md` (`lib/shared/{result,revalidate,http}.ts`
-  y `lib/auth/authorize.ts`), solo las que usen estos cambios.
 
 | # | Corte | Qué hacer |
 |---|---|---|
@@ -96,21 +94,12 @@ Pasos previos:
 | c | Métricas | Función `institution_public_metrics(p_institution_id)` `security definer`, con `search_path` vacío y `execute` solo para `authenticated`: devuelve únicamente conteos. Query `queries/institutions/get-institution-metrics.ts` que devuelve `full` (propia, bajo RLS, con montos de aceptadas y entregadas) o `public` (rpc). Route handler `app/api/institutions/[id]/metrics` para el drawer. Página `/dashboard/metrics` para la institución logueada, con ítem de menú solo para ese rol. Se borra `actions/institutions/metrics.ts` |
 | d | Invitado | La página del token valida `expires_at` y redirige a `/donate?expired=1`, que muestra un aviso. `create-guest` marca `used_at` con `.is("used_at", null)` antes de crear y aborta si no actualizó nada |
 | e | Upload | `serverActions.bodySizeLimit` según la doc instalada de Next. Validar MIME y tamaño en el server con el schema de `lib/validations/donation.ts` |
-| f | Limpieza | Borrar los stubs `deleteCampaign`, `deleteUser` y `createUser`, `app/api/metrics` (consulta una tabla `metrics` inexistente), los placeholders money/needs, y el link al PDF |
+| f | Limpieza | Borrar los stubs `deleteCampaign` y `deleteUser`, `app/api/metrics` (consulta una tabla `metrics` inexistente), los placeholders money/needs, y el link al PDF |
 
 ## 5. Estado de las capas respecto de `.claude/rules`
 
-El patrón objetivo de `01-capas.md` todavía no existe en el código:
-- No hay `queries/`, `lib/shared/`, `lib/auth/` ni `lib/policies/`.
-- Todas las lecturas pasan por `app/api` (GET) → hooks de TanStack → contexts que guardan datos del
-  server (04-frontend lo prohíbe).
-- Hay lecturas directas a Supabase desde la UI: `create-donation-drawer.tsx`, con el cliente del
-  browser, y `app/donate/[token]/page.tsx`, con el cliente admin.
-- Las actions reciben argumentos posicionales, devuelven `{ success, error }`, hacen `throw` y
-  exponen `error.message`. Cada una repite la cadena `getUser → user_roles → roles → entidad`.
-- Los route handlers arman su propio `NextResponse` con `details: error.message`, sin auth gate y sin
-  `.limit()`.
-- El rol se resuelve en el cliente (`hooks/use-user.ts`). El proxy solo chequea sesión.
+El código existente todavía no sigue el patrón de `01-capas.md` (lecturas por `app/api` → hooks →
+contexts, actions sin `authorize` ni `ServiceResult`). Se migra a medida que se toca cada feature.
 
 ## 6. Backlog de refactor (después de la demo)
 
@@ -129,9 +118,7 @@ Es una demo de un solo usuario, así que no se hace hardening de producción. Qu
   autenticado leer, sobrescribir o borrar cualquier objeto (S1/S2). Además, el bucket no se crea en
   ninguna migración.
 - Sin rate limit en el mail del invitado (R3).
-- `/api/institutions` y `/api/donations` sin auth gate ni tope. `/api/donations` acepta cualquier
-  `donor_id`.
-- La RLS de `user_roles` permite insertar cualquier `role_id`: cualquiera puede darse rol institución.
+- `/api/donations` sin auth gate ni tope, y acepta cualquier `donor_id`.
 - Los adjuntos PDF se aceptan, pero se renderizan con `next/image` y se ven rotos.
 - Reemplazar un adjunto no borra el objeto anterior en Storage.
 - `guest_tokens` crece sin retención (P5).
