@@ -4,21 +4,25 @@ import * as z from "zod";
 
 export const nameSchema = z
   .string()
+  .trim()
   .min(2, "El nombre debe tener al menos 2 caracteres")
   .max(100, "El nombre no puede exceder 100 caracteres");
 
 export const institutionNameSchema = z
   .string()
+  .trim()
   .min(3, "El nombre de la institución debe tener al menos 3 caracteres")
   .max(200, "El nombre no puede exceder 200 caracteres");
 
 export const lastnameSchema = z
   .string()
+  .trim()
   .min(2, "El apellido debe tener al menos 2 caracteres")
   .max(100, "El apellido no puede exceder 100 caracteres");
 
 export const dniSchema = z
   .string()
+  .trim()
   .min(1, "El DNI es requerido")
   .regex(/^\d+$/, "El DNI solo puede contener números")
   .refine(
@@ -33,21 +37,25 @@ export const dniSchema = z
 
 export const addressSchema = z
   .string()
+  .trim()
   .min(5, "La dirección debe tener al menos 5 caracteres")
   .max(200, "La dirección no puede exceder 200 caracteres");
 
 export const provinceSchema = z
   .string()
+  .trim()
   .min(2, "La provincia es requerida")
   .max(100, "La provincia no puede exceder 100 caracteres");
 
 export const citySchema = z
   .string()
+  .trim()
   .min(2, "La ciudad es requerida")
   .max(100, "La ciudad no puede exceder 100 caracteres");
 
 export const phoneSchema = z
   .string()
+  .trim()
   .min(10, "El teléfono debe tener al menos 10 caracteres")
   .max(20, "El teléfono no puede exceder 20 caracteres")
   .regex(
@@ -57,11 +65,13 @@ export const phoneSchema = z
 
 export const directorSchema = z
   .string()
+  .trim()
   .min(2, "El nombre del director debe tener al menos 2 caracteres")
   .max(100, "El nombre del director no puede exceder 100 caracteres");
 
 export const foundationDateSchema = z
   .string()
+  .trim()
   .min(1, "La fecha de fundación es requerida")
   .refine(
     (date) => {
@@ -76,6 +86,7 @@ export const foundationDateSchema = z
 
 export const bankSchema = z
   .string()
+  .trim()
   .min(1, "El CBU o alias es requerido")
   .max(50, "El CBU o alias no puede exceder 50 caracteres")
   .refine(
@@ -102,6 +113,7 @@ export const bankSchema = z
 
 export const loreSchema = z
   .string()
+  .trim()
   .max(2000, "La descripción no puede exceder 2000 caracteres")
   .optional();
 

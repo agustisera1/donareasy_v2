@@ -1,8 +1,6 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { toHttpResponse } from "@/lib/shared/http";
+import { listInstitutions } from "@/queries/institutions/list-institutions";
 
 export async function GET() {
-  const supabase = await createClient();
-  const { data } = await supabase.from("institutions").select("*");
-  return NextResponse.json(data);
+  return toHttpResponse(await listInstitutions());
 }

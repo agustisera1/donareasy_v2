@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { format, isBefore, isSameDay, parse, startOfToday } from "date-fns";
+import { format, isAfter, isBefore, isSameDay, parse, startOfToday } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { dateMatchModifiers, type Matcher } from "react-day-picker";
 import { es } from "react-day-picker/locale";
@@ -18,6 +18,7 @@ const VALUE_FORMAT = "yyyy-MM-dd";
 
 // Matcher, no fecha: "hoy" se lee al abrir el calendario, no en el prerender (Next: blocking-prerender-current-time).
 export const isPastDay = (date: Date) => isBefore(date, startOfToday());
+export const isFutureDay = (date: Date) => isAfter(date, startOfToday());
 
 interface DatePickerProps {
   id?: string;
@@ -28,6 +29,8 @@ interface DatePickerProps {
   placeholder?: string;
   disabled?: boolean;
   disabledDays?: Matcher | Matcher[];
+  /** `dropdown` para fechas lejanas (p. ej. fundación): elige mes y año sin paginar. */
+  captionLayout?: "label" | "dropdown";
   "aria-invalid"?: boolean;
 }
 
@@ -39,6 +42,7 @@ export function DatePicker({
   placeholder = "Seleccionar fecha",
   disabled = false,
   disabledDays,
+  captionLayout = "label",
   "aria-invalid": ariaInvalid,
 }: DatePickerProps) {
   // Popover controlado para cerrarlo al elegir: ejemplo "Date of Birth" del Date Picker de shadcn.
@@ -78,6 +82,7 @@ export function DatePicker({
         <Calendar
           mode="single"
           locale={es}
+          captionLayout={captionLayout}
           selected={selected}
           defaultMonth={selected}
           onSelect={(date) => {

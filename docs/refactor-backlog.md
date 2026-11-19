@@ -18,29 +18,29 @@ Estados:
 | Feature | Estado | Evidencia | Corte / nota |
 |---|---|---|---|
 | Landing | Sin hacer | `app/page.tsx:4` | Solo hace `redirect("/dashboard")`. El hero vive en el layout de auth (`components/hero.tsx`), oculto en mobile (`hidden lg:flex`) |
-| Login | Listo | `components/login-form.tsx` | — |
-| Registro | Listo | `components/sign-up-form.tsx` | — |
-| Confirmación de mail | Listo | `app/auth/confirm/route.ts` | El link se abre en el mismo navegador del registro (PKCE) |
-| Recuperar / cambiar contraseña | A mitad | `components/forgot-password-form.tsx:36` | El `redirectTo` no pasa por `/auth/confirm`: el `code` no se canjea y `updateUser` falla sin sesión |
-| Logout | Listo | `components/sidebar/app-sidebar.tsx:73-80` | — |
-| Onboarding (rol + perfil) | A mitad | `actions/user/create.ts` | Hace 4 escrituras sin atomicidad. Si falla después del insert en `user_roles` (UNIQUE), el usuario queda trabado. Solo `/dashboard` chequea `onboarding_complete` (`app/dashboard/page.tsx`), así que el resto de las rutas del dashboard entra sin onboarding |
-| Aprobación de instituciones | Sin hacer | `components/onboarding/role-switch.tsx:44-47` | La UI promete revisión de un administrador, pero no hay columna, rol admin ni flujo |
-| Perfil (ver y editar) | Listo | `components/sidebar/profile-drawer.tsx`, `edit-drawer.tsx` | `userId` llega desde el cliente. RLS limita al propio registro |
+| Login | Listo | — | — |
+| Registro | Listo | — | — |
+| Confirmación de mail | Listo | — | El link se abre en el mismo navegador del registro (PKCE) |
+| Recuperar / cambiar contraseña | Listo | — | El link se abre en el mismo navegador del pedido (PKCE) |
+| Logout | Listo | — | — |
+| Onboarding (rol + perfil) | Listo | — | Atómico vía RPC. `/dashboard/*` y `/onboarding` redirigen según el estado de la cuenta |
+| Aprobación de instituciones | Listo | — | Se aprueba a mano (`institutions.approved`). Mientras tanto la cuenta solo ve el aviso de revisión y no figura en los listados. La notificación no se envía |
+| Perfil (ver y editar) | Listo | — | `userId` llega desde el cliente. RLS limita al propio registro |
 | Eliminar cuenta | Sin hacer | `actions/user/delete.ts` | Stub sin `"use server"` y sin UI |
 | Crear campaña | **Roto para demo** | `actions/campaign/create.ts:54-61`, `components/campaigns/campaigns-data-table.tsx:97` | No setea `finished` y la columna no tiene default, así que queda `null`. El botón "Donar" solo aparece con `finished === false`: **una campaña nueva no se puede donar** |
-| Listar / ver campaña | Listo | `app/api/campaigns/route.ts`, `view-campaign-drawer.tsx` | El drawer dice "Campaña activa" según `termination_date`, no según `finished` (`:31-33`) |
-| Editar campaña | Listo | `actions/campaign/update.ts` | El server no valida que la campaña no esté finalizada (solo la UI) |
-| Finalizar campaña | Listo | `actions/campaign/finish.ts:66-72` | Sin guard `finished = false` en el `WHERE` |
+| Listar / ver campaña | Listo | — | El drawer dice "Campaña activa" según `termination_date`, no según `finished` (`view-campaign-drawer.tsx:31-33`) |
+| Editar campaña | Listo | — | El server no valida que la campaña no esté finalizada (solo la UI) |
+| Finalizar campaña | Listo | — | Sin guard `finished = false` en el `WHERE` |
 | Eliminar campaña | Sin hacer | `actions/campaign/delete.ts` | Stub. Tampoco hay policy DELETE en `campaigns` |
 | Imágenes de campaña | Sin hacer | `supabase/migrations/20261117145838_remote_schema.sql:3-13` | Sin columna ni UI |
 | Donar (donante logueado) | A mitad | `components/donations/create-donation-drawer.tsx:57`, `actions/donations/create.ts` | **La donación no queda ligada a la campaña:** no existe `donations.campaign_id` y el drawer descarta el `campaign_id` de la URL. Además, el body de las Server Actions tiene un límite de 1 MB por defecto, así que fotos más grandes fallan |
 | Editar donación (donante) | A mitad | `actions/donations/update.ts:72-90` | No chequea estado: se puede editar una donación aceptada o entregada |
 | Eliminar donación (donante) | Sin hacer (UI) | `actions/donations/delete.ts` | La action existe, pero ninguna UI la llama. No chequea estado |
-| Aceptar / rechazar / entregar | Listo | `actions/donations/{accept,reject,deliver}.ts` | Sin estado esperado en el `WHERE` (carrera). `reject` no valida el estado en el server (`reject.ts:95-101`). Las abiertas no se pueden rechazar |
-| Tomar donaciones abiertas | Listo | `actions/donations/accept.ts` | — |
+| Aceptar / rechazar / entregar | Listo | — | Sin estado esperado en el `WHERE` (carrera). `reject` no valida el estado en el server (`reject.ts:95-101`). Las abiertas no se pueden rechazar |
+| Tomar donaciones abiertas | Listo | — | — |
 | Donar como invitado | A mitad | `app/donate/[token]/page.tsx:16,34`, `actions/donations/create-guest.ts` | Chequea `used_at` pero no `expires_at` al abrir. `/donate?expired=1` no se lee. `used_at` se marca al final y sin guard, así que un doble submit genera dos donaciones. El donante invitado se crea antes del upload (puede quedar huérfano). Remitente `onboarding@resend.dev` (`request-guest-access.ts:51`): solo entrega al mail dueño de la cuenta de Resend |
-| Directorio de instituciones | Listo | `app/api/institutions/route.ts`, `contexts/institutions-context.tsx:58-60` | Excluye a la institución propia de la lista |
-| Detalle de institución | Listo | `components/institutions/view-institution-drawer.tsx` | — |
+| Directorio de instituciones | Listo | — | Excluye a la institución propia de la lista |
+| Detalle de institución | Listo | — | — |
 | Métricas de institución (drawer) | **Roto para demo** | `supabase/migrations/20261117160000_rls_policies.sql:112-118`, `actions/institutions/metrics.ts:114-145` | Ver §2 |
 | Página `/dashboard/metrics` | Sin hacer | `app/dashboard/metrics/page.tsx` | Placeholder, fuera del menú |
 | Donaciones de dinero / necesidades | Sin hacer | `app/dashboard/donations/{money,needs}/page.tsx` | Placeholders sin links |
@@ -117,11 +117,10 @@ El patrón objetivo de `01-capas.md` todavía no existe en el código:
 1. Transiciones de donación con el estado esperado en el `WHERE`, y `reject` que valide el estado (D3).
 2. Edición y borrado del donante restringidos a donaciones `pending`.
 3. Contexts → Server Components + `queries/`. Hooks solo para lo que se refetchea en el cliente.
-4. Onboarding atómico (función en la DB o transacción) y gate de onboarding en el layout del dashboard.
-5. Datos: `status` como enum, `quantity` como entero, `finished` not null (si no se hizo en §4) y
+4. Datos: `status` como enum, `quantity` como entero, `finished` not null (si no se hizo en §4) y
    renombrar `dellivered_date`.
-6. Tipos generados con `supabase gen types` en `lib/types/database.ts`.
-7. Landing real y `metadata` en las páginas.
+5. Tipos generados con `supabase gen types` en `lib/types/database.ts`.
+6. Landing real y `metadata` en las páginas.
 
 ## 7. Limitaciones conocidas / fuera de alcance de la demo
 

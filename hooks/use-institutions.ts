@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Institution } from "@/lib/types";
+import type { ServiceResult } from "@/lib/shared/result";
 
 interface UseInstitutionsOptions {
   enabled?: boolean; // Para controlar si se debe hacer fetch automáticamente
@@ -35,13 +36,9 @@ export function useInstitutions(
     queryKey: ["institutions"],
     queryFn: async () => {
       const response = await fetch("/api/institutions");
-
-      if (!response.ok) {
-        throw new Error(`Error fetching institutions: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return (data || []) as Institution[];
+      const result = (await response.json()) as ServiceResult<Institution[]>;
+      if (!result.ok) throw new Error(result.error);
+      return result.data;
     },
     enabled: options.enabled,
     staleTime: 2 * 60 * 1000, // 2 minutos - datos frescos
