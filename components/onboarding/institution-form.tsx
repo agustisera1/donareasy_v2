@@ -1,7 +1,11 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { completeInstitutionOnboarding } from "@/actions/user/complete-onboarding";
+import { DatePicker, isFutureDay } from "@/components/common/date-picker";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,68 +14,32 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { createClient } from "@/lib/supabase/client";
-import { createInstitution } from "@/actions/user/create";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 import {
   institutionSchema,
   type InstitutionFormSchema,
 } from "@/lib/validations";
 
-type InstitutionFormData = InstitutionFormSchema;
-
 export function InstitutionForm() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const {
+    control,
     register,
     handleSubmit,
-    formState: { errors },
-  } = useForm<InstitutionFormData>({
+    formState: { errors, isSubmitting },
+  } = useForm<InstitutionFormSchema>({
     resolver: zodResolver(institutionSchema),
+    defaultValues: { foundation_date: "" },
   });
 
-  const onSubmit = async (data: InstitutionFormData) => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const supabase = createClient();
-      const { data: user, error: userError } = await supabase.auth.getUser();
-
-      if (userError) {
-        throw new Error(`Error getting user: ${userError.message}`);
-      }
-
-      const userId = user.user?.id;
-      if (!userId) {
-        throw new Error("User ID not found");
-      }
-
-      // Llamar al server action
-      const result = await createInstitution(data, userId);
-
-      if (!result.success) {
-        throw new Error(result.error || "Error al crear la institución");
-      }
-
-      // Redirigir al dashboard después de éxito
-      router.push("/dashboard");
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Ocurrió un error inesperado";
-      setError(errorMessage);
-      console.error("Error submitting form:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  async function onSubmit(data: InstitutionFormSchema) {
+    const result = await completeInstitutionOnboarding(data);
+    if (!result.ok) return void toast.error(result.error);
+    router.refresh();
+  }
 
   return (
     <Card className="w-full max-w-2xl shadow-none">
@@ -82,126 +50,120 @@ export function InstitutionForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {error && (
-            <div className="p-3 text-sm text-red-500 bg-red-50 dark:bg-red-900/20 rounded-md border border-red-200 dark:border-red-800">
-              {error}
-            </div>
-          )}
-          <div className="grid gap-2">
-            <Label htmlFor="institution-name">Nombre de la Institución</Label>
+        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-2 gap-4">
+          <Field className="col-span-2" data-invalid={!!errors.name}>
+            <FieldLabel htmlFor="institution-name">Nombre de la Institución</FieldLabel>
             <Input
               id="institution-name"
+              autoComplete="organization"
+              aria-invalid={!!errors.name}
               {...register("name")}
               placeholder="Fundación Ayuda Social"
             />
-            {errors.name && (
-              <p className="text-sm text-red-500">{errors.name.message}</p>
-            )}
-          </div>
+            <FieldError errors={[errors.name]} />
+          </Field>
 
-          <div className="grid gap-2">
-            <Label htmlFor="director">Director a Cargo</Label>
+          <Field className="col-span-2" data-invalid={!!errors.director}>
+            <FieldLabel htmlFor="director">Director a Cargo</FieldLabel>
             <Input
               id="director"
+              autoComplete="name"
+              aria-invalid={!!errors.director}
               {...register("director")}
               placeholder="Juan Pérez"
             />
-            {errors.director && (
-              <p className="text-sm text-red-500">{errors.director.message}</p>
-            )}
-          </div>
+            <FieldError errors={[errors.director]} />
+          </Field>
 
-          <div className="grid gap-2">
-            <Label htmlFor="institution-address">Dirección</Label>
+          <Field className="col-span-2" data-invalid={!!errors.address}>
+            <FieldLabel htmlFor="institution-address">Dirección</FieldLabel>
             <Input
               id="institution-address"
+              autoComplete="street-address"
+              aria-invalid={!!errors.address}
               {...register("address")}
               placeholder="Av. Principal 456"
             />
-            {errors.address && (
-              <p className="text-sm text-red-500">{errors.address.message}</p>
-            )}
-          </div>
+            <FieldError errors={[errors.address]} />
+          </Field>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="institution-province">Provincia</Label>
-              <Input
-                id="institution-province"
-                {...register("province")}
-                placeholder="Santa Fe"
-              />
-              {errors.province && (
-                <p className="text-sm text-red-500">
-                  {errors.province.message}
-                </p>
+          <Field data-invalid={!!errors.province}>
+            <FieldLabel htmlFor="institution-province">Provincia</FieldLabel>
+            <Input
+              id="institution-province"
+              autoComplete="address-level1"
+              aria-invalid={!!errors.province}
+              {...register("province")}
+              placeholder="Santa Fe"
+            />
+            <FieldError errors={[errors.province]} />
+          </Field>
+
+          <Field data-invalid={!!errors.city}>
+            <FieldLabel htmlFor="institution-city">Ciudad</FieldLabel>
+            <Input
+              id="institution-city"
+              autoComplete="address-level2"
+              aria-invalid={!!errors.city}
+              {...register("city")}
+              placeholder="Rosario"
+            />
+            <FieldError errors={[errors.city]} />
+          </Field>
+
+          <Field data-invalid={!!errors.phone}>
+            <FieldLabel htmlFor="institution-phone">Teléfono</FieldLabel>
+            <Input
+              id="institution-phone"
+              type="tel"
+              autoComplete="tel"
+              aria-invalid={!!errors.phone}
+              {...register("phone")}
+              placeholder="+54 11 1234-5678"
+            />
+            <FieldError errors={[errors.phone]} />
+          </Field>
+
+          <Field data-invalid={!!errors.foundation_date}>
+            <FieldLabel htmlFor="foundation-date">Fecha de Fundación</FieldLabel>
+            <Controller
+              control={control}
+              name="foundation_date"
+              render={({ field }) => (
+                <DatePicker
+                  id="foundation-date"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  disabledDays={isFutureDay}
+                  captionLayout="dropdown"
+                  aria-invalid={!!errors.foundation_date}
+                />
               )}
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="institution-city">Ciudad</Label>
-              <Input
-                id="institution-city"
-                {...register("city")}
-                placeholder="Rosario"
-              />
-              {errors.city && (
-                <p className="text-sm text-red-500">{errors.city.message}</p>
-              )}
-            </div>
-          </div>
+            />
+            <FieldError errors={[errors.foundation_date]} />
+          </Field>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="institution-phone">Teléfono</Label>
-              <Input
-                id="institution-phone"
-                {...register("phone")}
-                placeholder="+54 11 1234-5678"
-              />
-              {errors.phone && (
-                <p className="text-sm text-red-500">{errors.phone.message}</p>
-              )}
-            </div>
+          <Field className="col-span-2" data-invalid={!!errors.bank}>
+            <FieldLabel htmlFor="bank">CBU o Alias</FieldLabel>
+            <Input id="bank" aria-invalid={!!errors.bank} {...register("bank")} />
+            <FieldError errors={[errors.bank]} />
+          </Field>
 
-            <div className="grid gap-2">
-              <Label htmlFor="foundation-date">Fecha de Fundación</Label>
-              <Input
-                id="foundation-date"
-                type="date"
-                {...register("foundation_date")}
-              />
-              {errors.foundation_date && (
-                <p className="text-sm text-red-500">
-                  {errors.foundation_date.message}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="bank">CBU o Alias</Label>
-            <Input id="bank" {...register("bank")} />
-            {errors.bank && (
-              <p className="text-sm text-red-500">{errors.bank.message}</p>
-            )}
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="lore">Acerca de tu institución</Label>
+          <Field className="col-span-2" data-invalid={!!errors.lore}>
+            <FieldLabel htmlFor="lore">Acerca de tu institución</FieldLabel>
             <Textarea
               id="lore"
-              {...register("lore", { required: false })}
+              aria-invalid={!!errors.lore}
+              {...register("lore")}
               placeholder="Contanos sobre la misma: A qué se dedican, cuáles son sus valores, su historia..."
               rows={5}
             />
-            {errors.lore && (
-              <p className="text-sm text-red-500">{errors.lore.message}</p>
-            )}
-          </div>
+            <FieldError errors={[errors.lore]} />
+          </Field>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Guardando..." : "Continuar"}
+          <Button type="submit" className="col-span-2" disabled={isSubmitting}>
+            {isSubmitting ? "Guardando..." : "Continuar"}
           </Button>
         </form>
       </CardContent>

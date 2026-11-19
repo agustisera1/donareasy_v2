@@ -2,6 +2,8 @@
 
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { authErrorMessage } from "@/lib/auth-errors";
+import { forgotPasswordSchema, type ForgotPasswordInput } from "@/lib/validations";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,88 +12,82 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useState } from "react";
+import { useForm } from "react-hook-form";
 
 export function ForgotPasswordForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting, isSubmitSuccessful },
+  } = useForm<ForgotPasswordInput>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: "" },
+  });
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
+  async function onSubmit({ email }: ForgotPasswordInput) {
     const supabase = createClient();
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // The url which will be included in the email. This URL needs to be configured in your redirect URLs in the Supabase dashboard at https://supabase.com/dashboard/project/_/auth/url-configuration
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/update-password`,
-      });
-      if (error) throw error;
-      setSuccess(true);
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/confirm?next=/auth/update-password`,
+    });
+    if (error) setError("root", { message: authErrorMessage(error) });
+  }
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      {success ? (
+      {isSubmitSuccessful ? (
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Revisa tu email</CardTitle>
-            <CardDescription>Instrucciones para cambiar tu contraseña enviadas</CardDescription>
+            <CardTitle className="text-2xl">Revisá tu email</CardTitle>
+            <CardDescription>Te enviamos las instrucciones para cambiar tu contraseña</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Si te registraste usando tu email y contraseña, recibirás un email para cambiar tu contraseña.
+              Si el email tiene una cuenta, vas a recibir un link. Abrilo en este mismo navegador.
             </p>
           </CardContent>
         </Card>
       ) : (
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Cambiar contraseña</CardTitle>
+            <CardTitle className="text-2xl">Recuperar contraseña</CardTitle>
             <CardDescription>
-              Ingresa tu email y te enviaremos un link para cambiar tu contraseña
+              Ingresá tu email y te enviamos un link para cambiar tu contraseña
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleForgotPassword}>
+            <form onSubmit={handleSubmit(onSubmit)} noValidate>
               <div className="flex flex-col gap-6">
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email:</Label>
+                <Field data-invalid={!!errors.email}>
+                  <FieldLabel htmlFor="email">Email</FieldLabel>
                   <Input
                     id="email"
                     type="email"
+                    autoComplete="email"
+                    autoCapitalize="none"
+                    spellCheck={false}
                     placeholder="pablo@doneasy.com"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    aria-invalid={!!errors.email}
+                    {...register("email")}
                   />
-                </div>
-                {error && <p className="text-sm text-red-500">{error}</p>}
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Enviando..." : "Enviar enlace"}
+                  <FieldError errors={[errors.email]} />
+                </Field>
+                <FieldError errors={[errors.root]} />
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? "Enviando..." : "Enviar link"}
                 </Button>
               </div>
               <div className="mt-4 text-center text-sm">
-                Ya tenés una cuenta?{" "}
-                <Link
-                  href="/auth/login"
-                  className="underline underline-offset-4"
-                >
-                  Iniciar sesión
+                ¿Ya tenés cuenta?{" "}
+                <Link href="/auth/login" className="underline underline-offset-4">
+                  Iniciá sesión
                 </Link>
               </div>
             </form>

@@ -5,30 +5,23 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Fragment } from "react/jsx-runtime";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Revisá tu email | Donareasy" };
 
 export default function Page() {
   return (
-    <Fragment>
-      <div className="flex flex-col gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">
-              Gracias por registrarte!
-            </CardTitle>
-            <CardDescription>
-              Revisa tu email para confirmar tu cuenta
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Te hemos enviado un email para confirmar tu cuenta. Por favor,
-              revisa tu email y haz click en el enlace para confirmar tu
-              cuenta.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    </Fragment>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-2xl">¡Gracias por registrarte!</CardTitle>
+        <CardDescription>Revisá tu email para confirmar tu cuenta</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground">
+          Te enviamos un link de confirmación. Abrilo en este mismo navegador para entrar directo a
+          completar tu perfil.
+        </p>
+      </CardContent>
+    </Card>
   );
 }

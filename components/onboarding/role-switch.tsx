@@ -7,10 +7,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
+import type { RoleName } from "@/lib/types";
 
 interface RoleSwitchProps {
-  role: "donor" | "institution";
-  onRoleChange: (role: "donor" | "institution") => void;
+  role: RoleName;
+  onRoleChange: (role: RoleName) => void;
 }
 
 export function RoleSwitch({ role, onRoleChange }: RoleSwitchProps) {

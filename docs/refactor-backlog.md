@@ -1,48 +1,139 @@
-# Features y backlog de refactor
+# Auditoría de features, guion de demo y backlog
 
-Escaneo del código del 2026-11-16 (sin correr la app). Solo se refactoriza lo **desarrollado**; lo
-**sin hacer** queda fuera de alcance.
+Auditoría del 2026-11-17, hecha leyendo el código (sin correr la app). Reemplaza el escaneo del
+2026-11-16, que había quedado viejo: era anterior a la estandarización de drawers, a las migraciones
+con RLS y al seed, y tenía errores (por ejemplo, daba la landing por hecha).
 
-## Inventario de features de negocio
+Objetivo: preparar una demo mínima y funcional para la cátedra. Primero se define **qué se demuestra**
+y qué cortes tiene el camino crítico. El refactor viene después.
 
-| # | Feature | Estado | Qué hay / qué falta |
+Estados:
+- **Listo:** funciona de punta a punta.
+- **A mitad:** existe, pero tiene huecos que se pueden ver en la demo.
+- **Roto para demo:** corta el guion.
+- **Sin hacer:** solo hay un placeholder, un stub o una promesa en la UI.
+
+## 1. Matriz de features
+
+| Feature | Estado | Evidencia | Corte / nota |
 |---|---|---|---|
-| 1 | Landing | Desarrollado | Hero con accesos a login, registro y donación como invitado |
-| 2 | Auth (login, registro, recuperar y cambiar contraseña) | Desarrollado | Flujos de Supabase completos; el login redirige según `onboarding_complete` |
-| 3 | Onboarding (elegir rol + perfil de donante o institución) | Desarrollado | `createDonor` / `createInstitution` crean el rol, el perfil y marcan `onboarding_complete`. `createUser()` es un stub sin uso |
-| 4 | Perfil (ver, editar, cerrar sesión) | Desarrollado - incompleto | Ver y editar funcionan. Eliminar cuenta: `actions/user/delete.ts` es un stub sin UI |
-| 5 | Campañas (institución crea, edita, finaliza; todos listan y ven) | Desarrollado - incompleto | Tabla con filtros, drawers, finalizar, y "Donar" que lleva a donaciones con la campaña preseleccionada. Eliminar: `actions/campaign/delete.ts` es un stub sin UI |
-| 6 | Donaciones de donante (crear con adjunto, editar, ver; dirigidas o abiertas) | Desarrollado - incompleto | Completo salvo eliminar: `actions/donations/delete.ts` existe pero no hay UI que la use |
-| 7 | Gestión de donaciones de institución (aceptar, rechazar con motivo, entregar) | Desarrollado | Incluye tomar donaciones abiertas |
-| 8 | Directorio de instituciones (listar, ver detalle) | Desarrollado | Tabla con filtros y drawer de detalle |
-| 9 | Métricas por institución (drawer) | Desarrollado | Estados, categorías, métodos de entrega y montos recaudados |
-| 10 | Donación como invitado (`/donate`: pedir enlace por mail, donar con token) | Desarrollado | Token de 30 minutos enviado con Resend |
-| 11 | Página de métricas (`/dashboard/metrics`) | Sin hacer | Placeholder; se sacó del menú. `app/api/metrics` consulta una tabla `metrics` que no figura en el schema |
-| 12 | Donaciones de dinero / necesidades (`/dashboard/donations/money`, `/needs`) | Sin hacer | Placeholders sin links desde ningún lado |
+| Landing | Sin hacer | `app/page.tsx:4` | Solo hace `redirect("/dashboard")`. El hero vive en el layout de auth (`components/hero.tsx`), oculto en mobile (`hidden lg:flex`) |
+| Login | Listo | — | — |
+| Registro | Listo | — | — |
+| Confirmación de mail | Listo | — | El link se abre en el mismo navegador del registro (PKCE) |
+| Recuperar / cambiar contraseña | Listo | — | El link se abre en el mismo navegador del pedido (PKCE) |
+| Logout | Listo | — | — |
+| Onboarding (rol + perfil) | Listo | — | Atómico vía RPC. `/dashboard/*` y `/onboarding` redirigen según el estado de la cuenta |
+| Aprobación de instituciones | Listo | — | Se aprueba a mano (`institutions.approved`). Mientras tanto la cuenta solo ve el aviso de revisión y no figura en los listados. La notificación no se envía |
+| Perfil (ver y editar) | Listo | — | `userId` llega desde el cliente. RLS limita al propio registro |
+| Eliminar cuenta | Sin hacer | `actions/user/delete.ts` | Stub sin `"use server"` y sin UI |
+| Crear campaña | **Roto para demo** | `actions/campaign/create.ts:54-61`, `components/campaigns/campaigns-data-table.tsx:97` | No setea `finished` y la columna no tiene default, así que queda `null`. El botón "Donar" solo aparece con `finished === false`: **una campaña nueva no se puede donar** |
+| Listar / ver campaña | Listo | — | El drawer dice "Campaña activa" según `termination_date`, no según `finished` (`view-campaign-drawer.tsx:31-33`) |
+| Editar campaña | Listo | — | El server no valida que la campaña no esté finalizada (solo la UI) |
+| Finalizar campaña | Listo | — | Sin guard `finished = false` en el `WHERE` |
+| Eliminar campaña | Sin hacer | `actions/campaign/delete.ts` | Stub. Tampoco hay policy DELETE en `campaigns` |
+| Imágenes de campaña | Sin hacer | `supabase/migrations/20261117145838_remote_schema.sql:3-13` | Sin columna ni UI |
+| Donar (donante logueado) | A mitad | `components/donations/create-donation-drawer.tsx:57`, `actions/donations/create.ts` | **La donación no queda ligada a la campaña:** no existe `donations.campaign_id` y el drawer descarta el `campaign_id` de la URL. Además, el body de las Server Actions tiene un límite de 1 MB por defecto, así que fotos más grandes fallan |
+| Editar donación (donante) | A mitad | `actions/donations/update.ts:72-90` | No chequea estado: se puede editar una donación aceptada o entregada |
+| Eliminar donación (donante) | Sin hacer (UI) | `actions/donations/delete.ts` | La action existe, pero ninguna UI la llama. No chequea estado |
+| Aceptar / rechazar / entregar | Listo | — | Sin estado esperado en el `WHERE` (carrera). `reject` no valida el estado en el server (`reject.ts:95-101`). Las abiertas no se pueden rechazar |
+| Tomar donaciones abiertas | Listo | — | — |
+| Donar como invitado | A mitad | `app/donate/[token]/page.tsx:16,34`, `actions/donations/create-guest.ts` | Chequea `used_at` pero no `expires_at` al abrir. `/donate?expired=1` no se lee. `used_at` se marca al final y sin guard, así que un doble submit genera dos donaciones. El donante invitado se crea antes del upload (puede quedar huérfano). Remitente `onboarding@resend.dev` (`request-guest-access.ts:51`): solo entrega al mail dueño de la cuenta de Resend |
+| Directorio de instituciones | Listo | — | Excluye a la institución propia de la lista |
+| Detalle de institución | Listo | — | — |
+| Métricas de institución (drawer) | **Roto para demo** | `supabase/migrations/20261117160000_rls_policies.sql:112-118`, `actions/institutions/metrics.ts:114-145` | Ver §2 |
+| Página `/dashboard/metrics` | Sin hacer | `app/dashboard/metrics/page.tsx` | Placeholder, fuera del menú |
+| Donaciones de dinero / necesidades | Sin hacer | `app/dashboard/donations/{money,needs}/page.tsx` | Placeholders sin links |
+| Notificaciones | Sin hacer | `notifications`, `notification_reads` en el schema | Tablas y publicación realtime sin uso en la app |
+| Botón "Descargar documentación" | Roto | `components/documentation-button.tsx:6` | `/docs/documentacion.pdf` no existe en `public/` |
 
-Los stubs sin uso (11, 12, `createUser`, `deleteUser`, `deleteCampaign`, `app/api/metrics`) se
-pueden borrar en el primer branch de refactor; si alguno se quiere implementar, es feature nueva.
+## 2. Métricas: problema y regla
 
-## Backlog de refactor (solo features desarrolladas)
+**Problema actual.** El drawer se abre desde el directorio para cualquier institución y lee las
+donaciones con el cliente del usuario. La RLS de `donations` solo deja ver las propias: un donante ve
+las que hizo y una institución las que recibió. Por eso las métricas de otra institución salen
+parciales o en 0. Y una institución no puede ver las suyas, porque el directorio la excluye. Además,
+`actions/institutions/metrics.ts` cuenta mal:
+- no cuenta `delivered`, así que los porcentajes no suman 100
+- no cuenta el método `transfer`
+- suma las donaciones rechazadas a "Total recaudado"
+- es una lectura hecha como Server Action (R5)
 
-**0. Fundaciones (antes que cualquier feature).** `lib/shared/{result,http,revalidate}.ts`,
-`lib/auth/authorize.ts` (hoy cada action repite ~50 líneas de `getUser` → rol → entidad),
-`server-only`, tipos generados de Supabase, primeros primitivos en `components/common/`
-(`FormField`, `ConfirmDialog`, `EmptyState`). Arreglar los 5 errores de lint actuales
-(`use-mobile.ts`, `tailwind.config.ts`, …) para que el hook de Stop no moleste.
+**Regla:**
+- **Métricas completas** (con montos): solo las ve una institución que mira **sus propias** métricas.
+- **Métricas públicas:** las ve cualquier otro caso (un donante, u otra institución):
+  - tasas de aceptación y rechazo
+  - conteos por estado, categoría y método de entrega
+  - **cantidad** de donaciones de dinero, sin montos
 
-**Datos (transversal).** Schema en `supabase/migrations/` y RLS por dueño hechos. Falta: `status`
-como enum, tipos generados (`supabase gen types`), RLS de `notifications` cuando se implemente.
+## 3. Guion de demo
 
-| Feature | Hallazgos principales | Tamaño |
+Usuarios del seed (`npm run db:seed`), todos con password `demo1234`: `hogar@demo.donareasy.com`,
+`comedor@demo.donareasy.com`, `lucia@demo.donareasy.com` y `martin@demo.donareasy.com`.
+
+| # | Paso | Estado hoy |
 |---|---|---|
-| 10 Invitado | **Prioridad por seguridad:** mail sin rate limit; service role key; `used_at` se chequea y después se actualiza (carrera); adjuntos con `getPublicUrl`; form de 489 líneas | M |
-| 5 Campañas | Actions con `throw`/`error.message`, sin `ServiceResult` ni `revalidatePath`; lectura por route handler + context; tabla de 473 líneas. **Buen piloto del patrón** | M |
-| 6 + 7 Donaciones | Lo mismo que campañas, más: transiciones de estado sin estado esperado en el `WHERE` (dos instituciones pueden aceptar a la vez); drawers de 729 y 651 líneas y tabla de 644; `watch()` y `useEffect` en drawers; dialogs → `ConfirmDialog` | L |
-| 8 + 9 Instituciones y métricas | Route handler sin auth, sin manejo de error ni tope; métricas es una lectura hecha como Server Action → `queries/` | M |
-| 3 + 4 Onboarding y perfil | `use-user` resuelve el rol en el cliente para los tres contexts; `use-update-user` con toasts y refetch manual; `edit-drawer` de 372 líneas | M |
-| 2 Auth | Forms sin RHF + zod; `error.message` de Supabase directo al usuario | S |
-| 1 Landing | Revisar contra `04-frontend.md` (tokens, `metadata`); probablemente poco | S |
+| 1 | Hogar inicia sesión y crea una campaña | Se crea, pero sin "Donar" (§1, crear campaña) |
+| 2 | Lucía ve la campaña, toca "Donar" y dona con foto | Corta en el paso 1. Además, la donación no queda ligada a la campaña y las fotos de más de 1 MB fallan |
+| 3 | Lucía abre las métricas públicas del Hogar en el directorio | Datos incorrectos (§2) |
+| 4 | Hogar acepta y marca como entregada la donación | Listo |
+| 5 | Hogar ve sus métricas completas | Sin hacer (§2) |
+| 6 | Un invitado pide el link por mail (al de la cuenta de Resend) y dona | Funciona en el camino feliz. El token expirado no avisa |
 
-Orden sugerido: 0 → Invitado → Campañas (piloto) → Donaciones → Instituciones y métricas →
-Onboarding y perfil → Auth → Landing.
+## 4. Cortes a cerrar para la demo (plan, sin implementar)
+
+Pasos previos:
+- Recorrer el guion con la app corriendo para confirmar lo que esta auditoría dedujo del código: la
+  foto de más de 1 MB, el `FileList` del invitado en la Server Action, el registro real y el mail de
+  Resend.
+- Armar las fundaciones mínimas de `.claude/rules/01-capas.md` (`lib/shared/{result,revalidate,http}.ts`
+  y `lib/auth/authorize.ts`), solo las que usen estos cambios.
+
+| # | Corte | Qué hacer |
+|---|---|---|
+| a | Campaña nueva sin "Donar" | Migración: backfill `finished = false` y después `not null default false`. `createCampaign` al patrón: input único validado, `authorize("campaigns:manage")` y `institution_id` puesto por el server. El drawer de vista usa `finished` |
+| b | Donación sin campaña | Migración: `donations.campaign_id uuid null references campaigns on delete set null` + índice. `createDonation` acepta `campaignId` y valida que la campaña exista, esté activa y sea de la institución destino. El drawer conserva la campaña preseleccionada y la vista la muestra. El seed vincula parte de las donaciones |
+| c | Métricas | Función `institution_public_metrics(p_institution_id)` `security definer`, con `search_path` vacío y `execute` solo para `authenticated`: devuelve únicamente conteos. Query `queries/institutions/get-institution-metrics.ts` que devuelve `full` (propia, bajo RLS, con montos de aceptadas y entregadas) o `public` (rpc). Route handler `app/api/institutions/[id]/metrics` para el drawer. Página `/dashboard/metrics` para la institución logueada, con ítem de menú solo para ese rol. Se borra `actions/institutions/metrics.ts` |
+| d | Invitado | La página del token valida `expires_at` y redirige a `/donate?expired=1`, que muestra un aviso. `create-guest` marca `used_at` con `.is("used_at", null)` antes de crear y aborta si no actualizó nada |
+| e | Upload | `serverActions.bodySizeLimit` según la doc instalada de Next. Validar MIME y tamaño en el server con el schema de `lib/validations/donation.ts` |
+| f | Limpieza | Borrar los stubs `deleteCampaign`, `deleteUser` y `createUser`, `app/api/metrics` (consulta una tabla `metrics` inexistente), los placeholders money/needs, y el link al PDF |
+
+## 5. Estado de las capas respecto de `.claude/rules`
+
+El patrón objetivo de `01-capas.md` todavía no existe en el código:
+- No hay `queries/`, `lib/shared/`, `lib/auth/` ni `lib/policies/`.
+- Todas las lecturas pasan por `app/api` (GET) → hooks de TanStack → contexts que guardan datos del
+  server (04-frontend lo prohíbe).
+- Hay lecturas directas a Supabase desde la UI: `create-donation-drawer.tsx`, con el cliente del
+  browser, y `app/donate/[token]/page.tsx`, con el cliente admin.
+- Las actions reciben argumentos posicionales, devuelven `{ success, error }`, hacen `throw` y
+  exponen `error.message`. Cada una repite la cadena `getUser → user_roles → roles → entidad`.
+- Los route handlers arman su propio `NextResponse` con `details: error.message`, sin auth gate y sin
+  `.limit()`.
+- El rol se resuelve en el cliente (`hooks/use-user.ts`). El proxy solo chequea sesión.
+
+## 6. Backlog de refactor (después de la demo)
+
+1. Transiciones de donación con el estado esperado en el `WHERE`, y `reject` que valide el estado (D3).
+2. Edición y borrado del donante restringidos a donaciones `pending`.
+3. Contexts → Server Components + `queries/`. Hooks solo para lo que se refetchea en el cliente.
+4. Datos: `status` como enum, `quantity` como entero, `finished` not null (si no se hizo en §4) y
+   renombrar `dellivered_date`.
+5. Tipos generados con `supabase gen types` en `lib/types/database.ts`.
+6. Landing real y `metadata` en las páginas.
+
+## 7. Limitaciones conocidas / fuera de alcance de la demo
+
+Es una demo de un solo usuario, así que no se hace hardening de producción. Quedan registradas:
+- El bucket `donations` se lee con `getPublicUrl` y sus policies permiten a cualquier usuario
+  autenticado leer, sobrescribir o borrar cualquier objeto (S1/S2). Además, el bucket no se crea en
+  ninguna migración.
+- Sin rate limit en el mail del invitado (R3).
+- `/api/institutions` y `/api/donations` sin auth gate ni tope. `/api/donations` acepta cualquier
+  `donor_id`.
+- La RLS de `user_roles` permite insertar cualquier `role_id`: cualquiera puede darse rol institución.
+- Los adjuntos PDF se aceptan, pero se renderizan con `next/image` y se ven rotos.
+- Reemplazar un adjunto no borra el objeto anterior en Storage.
+- `guest_tokens` crece sin retención (P5).
+- `roles.name` tiene default `'donnor'` (typo) y `campaigns.institution_id` tiene default
+  `gen_random_uuid()`.

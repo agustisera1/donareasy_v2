@@ -188,7 +188,7 @@ async function seed() {
   const institutionRows = [];
   for (const { email, profile } of INSTITUTIONS) {
     const userId = await createAccount(supabase, email, roles.institution);
-    institutionRows.push({ ...profile, user_id: userId });
+    institutionRows.push({ ...profile, user_id: userId, approved: true });
   }
   const institutionIds = await insertReturningIds(supabase, "institutions", institutionRows);
 

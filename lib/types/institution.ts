@@ -14,5 +14,6 @@ export type Institution = {
   bank: string | null; // text (nullable)
   lore: string | null; // character varying (nullable)
   user_id: string | null; // uuid (nullable, UNIQUE)
+  approved: boolean;
 };
 

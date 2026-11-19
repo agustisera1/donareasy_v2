@@ -1,27 +1,31 @@
-"use client";
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { OnboardingForms } from "@/components/onboarding/onboarding-forms";
+import { PendingApproval } from "@/components/onboarding/pending-approval";
+import { getAccountStatus } from "@/queries/user/get-account-status";
 
-import { useState } from "react";
-import { DonorForm } from "@/components/onboarding/donor-form";
-import { InstitutionForm } from "@/components/onboarding/institution-form";
-import { RoleSwitch } from "@/components/onboarding/role-switch";
+export const metadata: Metadata = { title: "Completá tu perfil" };
 
+async function OnboardingContent() {
+  const status = await getAccountStatus();
+  if (!status.ok)
+    return (
+      <p className="p-6 text-sm text-muted-foreground">
+        No se pudo cargar tu cuenta. Recargá la página.
+      </p>
+    );
+
+  if (status.data === "active") redirect("/dashboard/campaign");
+  if (status.data === "pending") return <PendingApproval />;
+  return <OnboardingForms />;
+}
+
+// Session/cookie access must happen inside <Suspense> with cacheComponents.
 export default function OnboardingPage() {
-  const [role, setRole] = useState<"donor" | "institution">("donor");
-
   return (
-    <div className="w-full max-w-6xl p-6 space-y-6">
-      <div className="flex flex-col items-center justify-center space-y-4">
-        <h1 className="text-3xl font-bold">Completa tu Perfil</h1>
-        <p className="text-muted-foreground w-1/2 text-center">
-          Seleccioná tu tipo de cuenta y completa la información.
-        </p>
-
-        <RoleSwitch role={role} onRoleChange={setRole} />
-      </div>
-
-      <div className="flex justify-center">
-        {role === "donor" ? <DonorForm /> : <InstitutionForm />}
-      </div>
-    </div>
+    <Suspense fallback={<p className="p-6 text-sm text-muted-foreground">Cargando</p>}>
+      <OnboardingContent />
+    </Suspense>
   );
 }

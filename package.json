@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "eslint .",
     "db:reset": "node --env-file=.env scripts/db-reset.mjs",
-    "db:seed": "node --env-file=.env scripts/db-seed.mjs"
+    "db:seed": "node --env-file=.env scripts/db-seed.mjs",
+    "db:user": "node --env-file=.env scripts/create-dev-user.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.2",

@@ -48,6 +48,7 @@ export default async function GuestDonationPage({ params }: PageProps) {
   const { data: institutions } = await supabase
     .from("institutions")
     .select("id, name")
+    .eq("approved", true)
     .order("name");
 
   return (

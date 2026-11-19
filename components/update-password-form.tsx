@@ -2,6 +2,9 @@
 
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { authErrorMessage } from "@/lib/auth-errors";
+import { updatePasswordSchema, type UpdatePasswordInput } from "@/lib/validations";
+import { PasswordInput } from "@/components/common/password-input";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,64 +13,69 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 export function UpdatePasswordForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<UpdatePasswordInput>({
+    resolver: zodResolver(updatePasswordSchema),
+    defaultValues: { password: "", repeatPassword: "" },
+  });
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
+  async function onSubmit({ password }: UpdatePasswordInput) {
     const supabase = createClient();
-    setIsLoading(true);
-    setError(null);
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) return setError("root", { message: authErrorMessage(error) });
 
-    try {
-      const { error } = await supabase.auth.updateUser({ password });
-      if (error) throw error;
-      // Update this route to redirect to an authenticated route. The user already has an active session.
-      router.push("/dashboard");
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    toast.success("Contraseña actualizada");
+    router.push("/dashboard");
+  }
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Cambiar contraseña</CardTitle>
-          <CardDescription>
-            Por favor, ingresa tu nueva contraseña a continuación.
-          </CardDescription>
+          <CardDescription>Ingresá tu nueva contraseña</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleForgotPassword}>
+          <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="password">Nueva contraseña</Label>
-                <Input
+              <Field data-invalid={!!errors.password}>
+                <FieldLabel htmlFor="password">Nueva contraseña</FieldLabel>
+                <PasswordInput
                   id="password"
-                  type="password"
-                  placeholder="Nueva contraseña"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
+                  aria-invalid={!!errors.password}
+                  {...register("password")}
                 />
-              </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Actualizando..." : "Actualizar contraseña"}
+                <FieldError errors={[errors.password]} />
+              </Field>
+              <Field data-invalid={!!errors.repeatPassword}>
+                <FieldLabel htmlFor="repeat-password">Repetir contraseña</FieldLabel>
+                <PasswordInput
+                  id="repeat-password"
+                  autoComplete="new-password"
+                  aria-invalid={!!errors.repeatPassword}
+                  {...register("repeatPassword")}
+                />
+                <FieldError errors={[errors.repeatPassword]} />
+              </Field>
+              <FieldError errors={[errors.root]} />
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Guardando..." : "Guardar contraseña"}
               </Button>
             </div>
           </form>

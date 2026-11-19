@@ -53,6 +53,7 @@ semánticos en un solo lugar (p. ej. `status-badge.tsx`), no con clases sueltas 
 | `DatePicker` | Selector de fecha (`Popover` + `Calendar`), valor `yyyy-MM-dd`. Uso: `components/campaigns/create-campaign-drawer.tsx` | Client |
 | `DetailList`, `DetailItem` | Pares etiqueta / valor de solo lectura. Uso: `components/donations/view-donation-drawer.tsx` | ✓ |
 | `DataTableTabs` | Pestañas de la toolbar (`Tabs` de shadcn) sincronizadas con un search param; `parseTab` lee el valor | Client |
+| `PasswordInput` | Input de contraseña con botón de mostrar / ocultar (`InputGroup`). Uso: `components/login-form.tsx` | Client |
 
 Primitivos objetivo (se crean en `common/` la primera vez que se necesitan):
 
