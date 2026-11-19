@@ -2,6 +2,8 @@
 
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { authErrorMessage } from "@/lib/auth-errors";
+import { signUpSchema, type SignUpInput } from "@/lib/validations";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,100 +12,104 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/common/password-input";
+import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useForm } from "react-hook-form";
 
 export function SignUpForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [repeatPassword, setRepeatPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<SignUpInput>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: { email: "", password: "", repeatPassword: "" },
+  });
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  async function onSubmit({ email, password }: SignUpInput) {
     const supabase = createClient();
-    setIsLoading(true);
-    setError(null);
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/confirm?next=/onboarding`,
+      },
+    });
+    if (error) return setError("root", { message: authErrorMessage(error) });
 
-    if (password !== repeatPassword) {
-      setError("Passwords do not match");
-      setIsLoading(false);
-      return;
-    }
+    // Con confirmación activa, Supabase no devuelve error si el mail ya existe: viene sin identities.
+    if (data.user?.identities?.length === 0)
+      return setError("email", { message: "Ya existe una cuenta con ese email" });
 
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
-        },
-      });
-      if (error) throw error;
-      router.push("/auth/sign-up-success");
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    router.push("/auth/sign-up-success");
+  }
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Registrarse</CardTitle>
-          <CardDescription>Crea una nueva cuenta</CardDescription>
+          <CardDescription>Creá una cuenta nueva</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSignUp}>
+          <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email:</Label>
+              <Field data-invalid={!!errors.email}>
+                <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
                   id="email"
                   type="email"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  spellCheck={false}
                   placeholder="m@example.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  aria-invalid={!!errors.email}
+                  {...register("email")}
                 />
-              </div>
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Contraseña:</Label>
-                </div>
-                <Input
+                <FieldError errors={[errors.email]} />
+              </Field>
+              <Field data-invalid={!!errors.password}>
+                <FieldLabel htmlFor="password">Contraseña</FieldLabel>
+                <PasswordInput
                   id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
+                  aria-invalid={!!errors.password}
+                  {...register("password")}
                 />
-              </div>
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="repeat-password">Repetir Contraseña:</Label>
-                </div>
-                <Input
+                <FieldError errors={[errors.password]} />
+              </Field>
+              <Field data-invalid={!!errors.repeatPassword}>
+                <FieldLabel htmlFor="repeat-password">Repetir contraseña</FieldLabel>
+                <PasswordInput
                   id="repeat-password"
-                  type="password"
-                  required
-                  value={repeatPassword}
-                  onChange={(e) => setRepeatPassword(e.target.value)}
+                  autoComplete="new-password"
+                  aria-invalid={!!errors.repeatPassword}
+                  {...register("repeatPassword")}
                 />
-              </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Creando cuenta..." : "Registrarse"}
+                <FieldError errors={[errors.repeatPassword]} />
+              </Field>
+              <FieldError errors={[errors.root]} />
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Creando cuenta..." : "Registrarse"}
               </Button>
+              <p className="text-center text-sm text-muted-foreground lg:hidden">
+                ¿Ya tenés cuenta?{" "}
+                <Link
+                  href="/auth/login"
+                  className="underline underline-offset-4 hover:text-primary"
+                >
+                  Iniciá sesión
+                </Link>
+              </p>
             </div>
           </form>
         </CardContent>
