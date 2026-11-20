@@ -13,11 +13,9 @@ type PageProps = { searchParams: Promise<SearchParams> };
 
 export default function DonationsPage({ searchParams }: PageProps) {
   return (
-    <div className="w-full max-w-6xl p-6 space-y-6">
-      <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-        <DonationsSection searchParams={searchParams} />
-      </Suspense>
-    </div>
+    <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+      <DonationsSection searchParams={searchParams} />
+    </Suspense>
   );
 }
 

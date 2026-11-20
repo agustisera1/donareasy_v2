@@ -20,7 +20,7 @@ export default function DashboardLayout({
       <SidebarInset className="items-center">
         <Header />
         <div className="flex w-full flex-1 flex-col items-center">
-          {children}
+          <main className="w-full max-w-6xl p-6 space-y-6">{children}</main>
         </div>
         <Footer />
       </SidebarInset>

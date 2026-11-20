@@ -9,11 +9,9 @@ export const metadata: Metadata = { title: "Instituciones" };
 
 export default function InstitutionsPage() {
   return (
-    <div className="w-full max-w-6xl p-6 space-y-6">
-      <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-        <InstitutionsSection />
-      </Suspense>
-    </div>
+    <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+      <InstitutionsSection />
+    </Suspense>
   );
 }
 
