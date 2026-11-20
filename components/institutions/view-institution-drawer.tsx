@@ -3,41 +3,36 @@
 import { Button } from "@/components/ui/button";
 import { DetailItem, DetailList } from "@/components/common/detail-list";
 import { DrawerLayout } from "@/components/common/drawer-layout";
-import { useInstitutionsContext } from "@/contexts/institutions-context";
+import type { Institution } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
-export function ViewInstitutionDrawer() {
-  const { viewDrawerOpen, closeViewDrawer, selectedInstitution } =
-    useInstitutionsContext();
+interface ViewInstitutionDrawerProps {
+  institution: Institution;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
 
-  if (!selectedInstitution) {
-    return null;
-  }
-
+export function ViewInstitutionDrawer({ institution, open, onOpenChange }: ViewInstitutionDrawerProps) {
   return (
     <DrawerLayout
-      open={viewDrawerOpen}
-      onOpenChange={closeViewDrawer}
+      open={open}
+      onOpenChange={onOpenChange}
       title="Detalles de la institución"
       description="Información registrada de la institución"
-      footer={<Button onClick={closeViewDrawer}>Cerrar</Button>}
+      footer={<Button onClick={() => onOpenChange(false)}>Cerrar</Button>}
     >
       <DetailList>
-        <DetailItem label="Nombre">{selectedInstitution.name}</DetailItem>
-        <DetailItem label="Director">{selectedInstitution.director}</DetailItem>
-        <DetailItem label="Dirección">{selectedInstitution.address}</DetailItem>
-        <DetailItem label="Provincia">{selectedInstitution.province}</DetailItem>
-        <DetailItem label="Ciudad">{selectedInstitution.city}</DetailItem>
-        <DetailItem label="Teléfono">{selectedInstitution.phone}</DetailItem>
-        <DetailItem label="Fecha de fundación">
-          {formatDate(selectedInstitution.foundation_date)}
-        </DetailItem>
-        {selectedInstitution.bank && (
-          <DetailItem label="Alias | CBU">{selectedInstitution.bank}</DetailItem>
-        )}
-        {selectedInstitution.lore && (
+        <DetailItem label="Nombre">{institution.name}</DetailItem>
+        <DetailItem label="Director">{institution.director}</DetailItem>
+        <DetailItem label="Dirección">{institution.address}</DetailItem>
+        <DetailItem label="Provincia">{institution.province}</DetailItem>
+        <DetailItem label="Ciudad">{institution.city}</DetailItem>
+        <DetailItem label="Teléfono">{institution.phone}</DetailItem>
+        <DetailItem label="Fecha de fundación">{formatDate(institution.foundation_date)}</DetailItem>
+        {institution.bank && <DetailItem label="Alias | CBU">{institution.bank}</DetailItem>}
+        {institution.lore && (
           <DetailItem label="Historia" stacked>
-            {selectedInstitution.lore}
+            {institution.lore}
           </DetailItem>
         )}
       </DetailList>

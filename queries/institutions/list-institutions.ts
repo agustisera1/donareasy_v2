@@ -12,12 +12,10 @@ export async function listInstitutions(): Promise<ServiceResult<Institution[]>> 
   if (!auth.ok) return auth;
 
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("institutions")
-    .select("*")
-    .eq("approved", true)
-    .order("name")
-    .limit(MAX_INSTITUTIONS);
+  let query = supabase.from("institutions").select("*").eq("approved", true);
+  if (auth.data.role === "institution") query = query.neq("id", auth.data.entityId);
+
+  const { data, error } = await query.order("name").limit(MAX_INSTITUTIONS);
   if (error) return unexpected("[listInstitutions]", error);
   return { ok: true, data };
 }

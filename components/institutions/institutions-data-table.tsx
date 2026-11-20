@@ -1,98 +1,93 @@
 "use client";
 
-import { useMemo } from "react";
+import { useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ChartLine, Eye } from "lucide-react";
 
 import { DataTable } from "@/components/common/data-table";
 import { DataTableColumnHeader } from "@/components/common/data-table-column-header";
 import { DataTableRowAction } from "@/components/common/data-table-row-action";
-import { ViewInstitutionDrawer } from "./view-institution-drawer";
-import { InstitutionMetricsDrawer } from "./institution-metrics-drawer";
-import { useInstitutionsContext } from "@/contexts/institutions-context";
-import { Institution } from "@/lib/types";
+import type { Institution } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
+import { InstitutionMetricsDrawer } from "./institution-metrics-drawer";
+import { ViewInstitutionDrawer } from "./view-institution-drawer";
 
-export function InstitutionsDataTable() {
-  const {
-    institutions: data,
-    openViewDrawer,
-    openMetricsDrawer,
-    loading,
-    error,
-  } = useInstitutionsContext();
+type Panel = "view" | "metrics" | null;
 
-  const columns: ColumnDef<Institution>[] = useMemo(
-    () => [
-      {
-        accessorKey: "name",
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Nombre" />
-        ),
-        cell: ({ row }) => (
-          <span className="font-medium">{row.original.name}</span>
-        ),
-      },
-      {
-        accessorKey: "director",
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Director a cargo" />
-        ),
-      },
-      {
-        accessorKey: "city",
-        header: "Ciudad",
-        enableSorting: false,
-      },
-      {
-        accessorKey: "province",
-        header: "Provincia",
-        enableSorting: false,
-      },
-      {
-        accessorKey: "foundation_date",
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Fecha de fundación" />
-        ),
-        cell: ({ row }) => formatDate(row.original.foundation_date),
-      },
-      {
-        id: "actions",
-        header: "Acciones",
-        cell: ({ row }) => {
-          const institution = row.original;
-          return (
-            <div className="flex gap-1">
-              <DataTableRowAction
-                label="Ver detalle"
-                icon={<Eye />}
-                onClick={() => openViewDrawer(institution)}
-              />
-              <DataTableRowAction
-                label="Ver métricas"
-                icon={<ChartLine />}
-                onClick={() => openMetricsDrawer(institution)}
-              />
-            </div>
-          );
-        },
-      },
-    ],
-    [openViewDrawer, openMetricsDrawer]
-  );
+interface InstitutionsDataTableProps {
+  rows: Institution[] | null;
+}
+
+export function InstitutionsDataTable({ rows }: InstitutionsDataTableProps) {
+  const [panel, setPanel] = useState<Panel>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selected = rows?.find((institution) => institution.id === selectedId) ?? null;
+
+  function open(next: Exclude<Panel, null>, institution: Institution) {
+    setSelectedId(institution.id);
+    setPanel(next);
+  }
+
+  function close(open: boolean) {
+    if (!open) setPanel(null);
+  }
+
+  const columns: ColumnDef<Institution>[] = [
+    {
+      accessorKey: "name",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Nombre" />,
+      cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+    },
+    {
+      accessorKey: "director",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Director a cargo" />,
+    },
+    {
+      accessorKey: "city",
+      header: "Ciudad",
+      enableSorting: false,
+    },
+    {
+      accessorKey: "province",
+      header: "Provincia",
+      enableSorting: false,
+    },
+    {
+      accessorKey: "foundation_date",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Fecha de fundación" />,
+      cell: ({ row }) => formatDate(row.original.foundation_date),
+    },
+    {
+      id: "actions",
+      header: "Acciones",
+      cell: ({ row }) => (
+        <div className="flex gap-1">
+          <DataTableRowAction label="Ver detalle" icon={<Eye />} onClick={() => open("view", row.original)} />
+          <DataTableRowAction
+            label="Ver métricas"
+            icon={<ChartLine />}
+            onClick={() => open("metrics", row.original)}
+          />
+        </div>
+      ),
+    },
+  ];
 
   return (
     <>
       <DataTable
         columns={columns}
-        data={data}
-        loading={loading}
-        errorMessage={error ? "No se pudieron cargar las instituciones. Recargá la página." : null}
+        data={rows ?? []}
+        errorMessage={rows ? null : "No se pudieron cargar las instituciones. Recargá la página."}
         emptyMessage="No hay instituciones disponibles"
         countLabel={(count) => `${count} institución(es)`}
       />
-      <ViewInstitutionDrawer />
-      <InstitutionMetricsDrawer />
+      {selected && (
+        <>
+          <ViewInstitutionDrawer institution={selected} open={panel === "view"} onOpenChange={close} />
+          <InstitutionMetricsDrawer institution={selected} open={panel === "metrics"} onOpenChange={close} />
+        </>
+      )}
     </>
   );
 }

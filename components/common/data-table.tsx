@@ -61,7 +61,6 @@ export interface FacetedFilterConfig {
 interface DataTableProps<TData> {
   columns: ColumnDef<TData>[];
   data: TData[];
-  loading?: boolean;
   errorMessage?: string | null;
   emptyMessage: string;
   countLabel: (count: number) => string;
@@ -73,7 +72,6 @@ interface DataTableProps<TData> {
 export function DataTable<TData>({
   columns,
   data,
-  loading = false,
   errorMessage,
   emptyMessage,
   countLabel,
@@ -175,9 +173,7 @@ export function DataTable<TData>({
             ))}
           </TableHeader>
           <TableBody>
-            {loading ? (
-              <StatusRow colSpan={visibleColumns}>Cargando</StatusRow>
-            ) : errorMessage ? (
+            {errorMessage ? (
               <StatusRow colSpan={visibleColumns}>
                 <Empty>
                   <EmptyHeader>

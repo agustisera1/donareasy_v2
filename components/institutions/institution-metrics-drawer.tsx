@@ -10,34 +10,33 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useInstitutionsContext } from "@/contexts/institutions-context";
 import { useInstitutionMetrics } from "@/hooks/use-institution-metrics";
 import {
   deliveryMethodTranslations,
   categoryTranslations,
 } from "@/lib/constants";
+import type { Institution } from "@/lib/types";
 import { calculatePercentage, formatCurrency } from "@/lib/utils";
 
-export function InstitutionMetricsDrawer() {
-  const { metricsDrawerOpen, closeMetricsDrawer, selectedInstitution } =
-    useInstitutionsContext();
+interface InstitutionMetricsDrawerProps {
+  institution: Institution;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
 
+export function InstitutionMetricsDrawer({ institution, open, onOpenChange }: InstitutionMetricsDrawerProps) {
   const { metrics, loading, error } = useInstitutionMetrics({
-    institutionId: selectedInstitution?.id ?? null,
-    enabled: metricsDrawerOpen && !!selectedInstitution,
+    institutionId: institution.id,
+    enabled: open,
   });
-
-  if (!selectedInstitution) {
-    return null;
-  }
 
   return (
     <DrawerLayout
-      open={metricsDrawerOpen}
-      onOpenChange={closeMetricsDrawer}
-      title={`Métricas de ${selectedInstitution.name}`}
+      open={open}
+      onOpenChange={onOpenChange}
+      title={`Métricas de ${institution.name}`}
       description="Información detallada sobre las donaciones de la institución"
-      footer={<Button onClick={closeMetricsDrawer}>Cerrar</Button>}
+      footer={<Button onClick={() => onOpenChange(false)}>Cerrar</Button>}
       className="data-[vaul-drawer-direction=right]:sm:max-w-2xl"
     >
       <div className="space-y-6">
