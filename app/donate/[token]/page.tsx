@@ -1,7 +1,13 @@
-import { createAdminClient } from "@/lib/supabase/admin";
-import { GuestDonationForm } from "@/components/guest/guest-donation-form";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+
 import { Button } from "@/components/ui/button";
+import { GuestDonationForm } from "@/components/donations/guest-donation-form";
+import { getGuestToken } from "@/queries/guest/get-guest-token";
+import { listGuestInstitutions } from "@/queries/guest/list-guest-institutions";
+
+export const metadata: Metadata = { title: "Donar | Donareasy" };
 
 interface PageProps {
   params: Promise<{ token: string }>;
@@ -9,58 +15,38 @@ interface PageProps {
 
 export default async function GuestDonationPage({ params }: PageProps) {
   const { token } = await params;
-  const supabase = createAdminClient();
+  const guest = await getGuestToken(token);
 
-  const { data: tokenRow } = await supabase
-    .from("guest_tokens")
-    .select("name, used_at")
-    .eq("token", token)
-    .maybeSingle();
-
-  if (!tokenRow) {
+  if (guest.ok && guest.data.state === "expired") redirect("/donate?expired=1");
+  if (!guest.ok || guest.data.state === "used") {
+    const used = guest.ok;
     return (
-      <div className="w-full max-w-md text-center space-y-4">
-        <h1 className="text-2xl font-bold">Enlace inválido</h1>
+      <div className="w-full max-w-md space-y-4 text-center">
+        <h1 className="text-2xl font-bold">{used ? "Enlace ya utilizado" : "Enlace inválido"}</h1>
         <p className="text-muted-foreground">
-          Este enlace no existe o ya no es válido.
+          {used
+            ? "Este enlace ya se usó para hacer una donación."
+            : "Este enlace no existe o ya no es válido."}
         </p>
         <Button asChild>
-          <Link href="/donate">Solicitar un nuevo enlace</Link>
+          <Link href="/donate">Pedir un nuevo enlace</Link>
         </Button>
       </div>
     );
   }
 
-  if (tokenRow.used_at) {
-    return (
-      <div className="w-full max-w-md text-center space-y-4">
-        <h1 className="text-2xl font-bold">Enlace ya utilizado</h1>
-        <p className="text-muted-foreground">
-          Este enlace ya fue usado para realizar una donación.
-        </p>
-        <Button asChild>
-          <Link href="/donate">Solicitar un nuevo enlace</Link>
-        </Button>
-      </div>
-    );
-  }
-
-  const { data: institutions } = await supabase
-    .from("institutions")
-    .select("id, name")
-    .eq("approved", true)
-    .order("name");
+  const institutions = await listGuestInstitutions(token);
 
   return (
     <div className="w-full max-w-lg">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold mb-2">Hola, {tokenRow.name}!</h1>
+        <h1 className="mb-2 text-2xl font-bold">¡Hola, {guest.data.name}!</h1>
         <p className="text-muted-foreground">
-          Completá los datos de tu donación. La institución se va a poner en
-          contacto con vos para coordinar.
+          Completá los datos de tu donación. La institución se va a poner en contacto con vos para
+          coordinar.
         </p>
       </div>
-      <GuestDonationForm token={token} institutions={institutions ?? []} />
+      <GuestDonationForm token={token} institutions={institutions.ok ? institutions.data : []} />
     </div>
   );
 }

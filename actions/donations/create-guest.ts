@@ -1,150 +1,65 @@
 "use server";
 
+import { guestAttachmentPrefix, isAttachmentOf } from "@/lib/policies/attachment";
+import { fail, unexpected, type ServiceResult } from "@/lib/shared/result";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { guestDonationSchema } from "@/lib/validations";
+import { createGuestDonationSchema, type CreateGuestDonationInput } from "@/lib/validations";
+import { getGuestToken } from "@/queries/guest/get-guest-token";
 
+// SQLSTATE que levanta `create_guest_donation` (migración 20261120160000).
+const GUEST_TOKEN_NOT_FOUND = "GT001";
+const GUEST_TOKEN_USED = "GT002";
+const GUEST_TOKEN_EXPIRED = "GT003";
+
+export type GuestDonationOutcome = { status: "created" } | { status: "expired" };
+
+// Excepción pública de `authorize`: el token del link es la credencial y se valida primero.
 export async function createGuestDonation(
-  token: string,
-  formData: {
-    institution_id?: string | null;
-    open_donation: boolean;
-    donation_type: "money" | "goods";
-    delivery_method: "pickup" | "shipment" | "agreement" | "transfer";
-    category: "supplies" | "clothing" | "food" | "other";
-    amount?: string;
-    name?: string;
-    description?: string;
-    attachment_name?: FileList | null;
-  }
-) {
-  const parsed = guestDonationSchema.safeParse(formData);
-  if (!parsed.success) {
-    return {
-      success: false,
-      error: parsed.error.issues[0]?.message ?? "Datos inválidos",
-    };
-  }
+  input: CreateGuestDonationInput,
+): Promise<ServiceResult<GuestDonationOutcome>> {
+  const parsed = createGuestDonationSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", parsed.error.issues[0].message);
+  const data = parsed.data;
+
+  const token = await getGuestToken(data.token);
+  if (!token.ok) return token;
+  if (token.data.state === "expired") return { ok: true, data: { status: "expired" } };
+  if (token.data.state === "used") return fail("CONFLICT", "Este enlace ya fue utilizado");
+  if (!isAttachmentOf(data.attachment.path, guestAttachmentPrefix(token.data.id)))
+    return fail("VALIDATION", "La imagen no es válida");
 
   const supabase = createAdminClient();
 
-  try {
-    // 1. Validar el token
-    const { data: tokenRow, error: tokenError } = await supabase
-      .from("guest_tokens")
-      .select("*")
-      .eq("token", token)
-      .maybeSingle();
-
-    if (tokenError) throw new Error(tokenError.message);
-
-    if (!tokenRow) {
-      return { success: false, error: "Token inválido" };
-    }
-
-    if (tokenRow.used_at) {
-      return { success: false, error: "Este enlace ya fue utilizado" };
-    }
-
-    if (new Date(tokenRow.expires_at) < new Date()) {
-      return { success: false, error: "expired" };
-    }
-
-    // 2. Insertar el donor invitado
-    const { data: donor, error: donorError } = await supabase
-      .from("donors")
-      .insert({
-        name: tokenRow.name,
-        lastname: tokenRow.lastname,
-        email: tokenRow.email,
-        phone: tokenRow.phone,
-        is_guest: true,
-        user_id: null,
-      })
+  if (data.institutionId) {
+    const { data: institution, error } = await supabase
+      .from("institutions")
       .select("id")
-      .single();
-
-    if (donorError || !donor) {
-      throw new Error(donorError?.message ?? "Error creando el donante");
-    }
-
-    // 3. Subir el archivo usando el cliente con service role
-    const data = parsed.data;
-    let attachmentUrl = "";
-    let attachmentFileName = "";
-
-    if (data.attachment_name && data.attachment_name.length > 0) {
-      const file = data.attachment_name[0] as File;
-      const fileExt = file.name.split(".").pop();
-      const baseName =
-        data.donation_type === "goods" && data.name
-          ? data.name
-          : file.name.replace(/\.[^/.]+$/, "");
-      const cleanName = baseName
-        .replace(/[^a-z0-9]/gi, "-")
-        .toLowerCase()
-        .substring(0, 50);
-      const fileName = `guest-${cleanName}-${Date.now()}.${fileExt}`;
-
-      const arrayBuffer = await file.arrayBuffer();
-      const fileBuffer = new Uint8Array(arrayBuffer);
-
-      const { error: uploadError } = await supabase.storage
-        .from("donations")
-        .upload(fileName, fileBuffer, {
-          contentType: file.type,
-          upsert: false,
-        });
-
-      if (uploadError) {
-        throw new Error(`Error subiendo archivo: ${uploadError.message}`);
-      }
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("donations").getPublicUrl(fileName);
-
-      attachmentUrl = publicUrl;
-      attachmentFileName = file.name;
-    }
-
-    // 4. Insertar la donación
-    const { error: donationError } = await supabase
-      .from("donations")
-      .insert({
-        donor_id: donor.id,
-        institution_id: data.open_donation
-          ? null
-          : data.institution_id || null,
-        attachment_url: attachmentUrl,
-        attachment_name: attachmentFileName || null,
-        status: "pending",
-        delivery_method: data.delivery_method,
-        category: data.category,
-        name: data.donation_type === "goods" ? data.name || null : null,
-        description:
-          data.donation_type === "goods" ? data.description || null : null,
-        amount:
-          data.donation_type === "money" && data.amount
-            ? parseFloat(data.amount)
-            : null,
-      });
-
-    if (donationError) {
-      throw new Error(`Error creando donación: ${donationError.message}`);
-    }
-
-    // 5. Marcar el token como usado
-    await supabase
-      .from("guest_tokens")
-      .update({ used_at: new Date().toISOString() })
-      .eq("token", token);
-
-    return { success: true };
-  } catch (error) {
-    console.error("Error in createGuestDonation:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Error desconocido",
-    };
+      .eq("id", data.institutionId)
+      .eq("approved", true)
+      .maybeSingle();
+    if (error) return unexpected("[createGuestDonation] institution", error);
+    if (!institution) return fail("NOT_FOUND", "Institución no encontrada");
   }
+
+  const { data: file } = supabase.storage.from("donations").getPublicUrl(data.attachment.path);
+  const { error } = await supabase.rpc("create_guest_donation", {
+    p_token: data.token,
+    p_institution_id: data.institutionId,
+    p_delivery_method: data.deliveryMethod,
+    p_category: data.category,
+    p_name: data.name || null,
+    p_description: data.description || null,
+    p_amount: data.amount,
+    p_attachment_url: file.publicUrl,
+    p_attachment_name: data.attachment.name || null,
+  });
+
+  // Dos envíos del mismo link: el segundo pierde el lock y ve el token usado o vencido.
+  if (error?.code === GUEST_TOKEN_USED) return fail("CONFLICT", "Este enlace ya fue utilizado");
+  if (error?.code === GUEST_TOKEN_EXPIRED) return { ok: true, data: { status: "expired" } };
+  if (error?.code === GUEST_TOKEN_NOT_FOUND)
+    return fail("NOT_FOUND", "Este enlace no existe o ya no es válido");
+  if (error) return unexpected("[createGuestDonation] rpc", error);
+
+  return { ok: true, data: { status: "created" } };
 }

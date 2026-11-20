@@ -1,43 +1,39 @@
 "use client";
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+
+import { ArPhoneInput } from "@/components/common/ar-phone-input";
 import { Button } from "@/components/ui/button";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { guestAccessSchema, type GuestAccessFormSchema } from "@/lib/validations";
 import { requestGuestAccess } from "@/actions/donations/request-guest-access";
+import { guestAccessSchema, type GuestAccessFormSchema } from "@/lib/validations";
 
 export function GuestAccessForm() {
-  const [submitted, setSubmitted] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
-
   const {
     register,
+    control,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    setError,
+    formState: { errors, isSubmitting, isSubmitSuccessful },
   } = useForm<GuestAccessFormSchema>({
     resolver: zodResolver(guestAccessSchema),
+    defaultValues: { name: "", lastname: "", email: "", phone: "" },
   });
 
-  const onSubmit = async (data: GuestAccessFormSchema) => {
-    setServerError(null);
+  // setError dentro del submit deja isSubmitSuccessful en false: el form sigue visible.
+  async function onSubmit(data: GuestAccessFormSchema) {
     const result = await requestGuestAccess(data);
-    if (result.success) {
-      setSubmitted(true);
-    } else {
-      setServerError(result.error ?? "Ocurrió un error inesperado");
-    }
-  };
+    if (!result.ok) setError("root.server", { message: result.error });
+  }
 
-  if (submitted) {
+  if (isSubmitSuccessful) {
     return (
-      <div className="rounded-lg border bg-muted/40 p-6 text-center space-y-2">
-        <p className="font-semibold text-lg">¡Revisá tu correo!</p>
-        <p className="text-muted-foreground text-sm">
-          Te enviamos un enlace para realizar tu donación. Tenés{" "}
-          <strong>30 minutos</strong> para usarlo.
+      <div className="space-y-2 rounded-lg border bg-muted/40 p-6 text-center">
+        <p className="text-lg font-semibold">¡Revisá tu correo!</p>
+        <p className="text-sm text-muted-foreground">
+          Te enviamos un enlace para hacer tu donación. Tenés <strong>30 minutos</strong> para usarlo.
         </p>
       </div>
     );
@@ -45,68 +41,71 @@ export function GuestAccessForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="grid gap-2">
-          <Label htmlFor="name">Nombre</Label>
-          <Input
-            id="name"
-            {...register("name")}
-            placeholder="Juan"
-            disabled={isSubmitting}
-          />
-          {errors.name && (
-            <p className="text-sm text-red-500">{errors.name.message}</p>
-          )}
+      <fieldset disabled={isSubmitting} className="grid gap-4">
+        <div className="grid grid-cols-2 gap-4">
+          <Field data-invalid={!!errors.name}>
+            <FieldLabel htmlFor="name">Nombre</FieldLabel>
+            <Input
+              id="name"
+              autoComplete="given-name"
+              placeholder="Juan"
+              aria-invalid={!!errors.name}
+              {...register("name")}
+            />
+            <FieldError errors={[errors.name]} />
+          </Field>
+          <Field data-invalid={!!errors.lastname}>
+            <FieldLabel htmlFor="lastname">Apellido</FieldLabel>
+            <Input
+              id="lastname"
+              autoComplete="family-name"
+              placeholder="Pérez"
+              aria-invalid={!!errors.lastname}
+              {...register("lastname")}
+            />
+            <FieldError errors={[errors.lastname]} />
+          </Field>
         </div>
 
-        <div className="grid gap-2">
-          <Label htmlFor="lastname">Apellido</Label>
+        <Field data-invalid={!!errors.email}>
+          <FieldLabel htmlFor="email">Correo electrónico</FieldLabel>
           <Input
-            id="lastname"
-            {...register("lastname")}
-            placeholder="Pérez"
-            disabled={isSubmitting}
+            id="email"
+            type="email"
+            autoComplete="email"
+            autoCapitalize="none"
+            spellCheck={false}
+            placeholder="juan@ejemplo.com"
+            aria-invalid={!!errors.email}
+            {...register("email")}
           />
-          {errors.lastname && (
-            <p className="text-sm text-red-500">{errors.lastname.message}</p>
-          )}
-        </div>
-      </div>
+          <FieldError errors={[errors.email]} />
+        </Field>
 
-      <div className="grid gap-2">
-        <Label htmlFor="email">Correo electrónico</Label>
-        <Input
-          id="email"
-          type="email"
-          {...register("email")}
-          placeholder="juan@ejemplo.com"
-          disabled={isSubmitting}
-        />
-        {errors.email && (
-          <p className="text-sm text-red-500">{errors.email.message}</p>
-        )}
-      </div>
+        <Field data-invalid={!!errors.phone}>
+          <FieldLabel htmlFor="phone">Teléfono</FieldLabel>
+          <Controller
+            control={control}
+            name="phone"
+            render={({ field }) => (
+              <ArPhoneInput
+                id="phone"
+                autoComplete="tel"
+                aria-invalid={!!errors.phone}
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+              />
+            )}
+          />
+          <FieldError errors={[errors.phone]} />
+        </Field>
+      </fieldset>
 
-      <div className="grid gap-2">
-        <Label htmlFor="phone">Teléfono</Label>
-        <Input
-          id="phone"
-          type="tel"
-          {...register("phone")}
-          placeholder="+54 11 1234 5678"
-          disabled={isSubmitting}
-        />
-        {errors.phone && (
-          <p className="text-sm text-red-500">{errors.phone.message}</p>
-        )}
-      </div>
-
-      {serverError && (
-        <p className="text-sm text-red-500">{serverError}</p>
-      )}
+      <FieldError errors={[errors.root?.server]} />
 
       <Button type="submit" disabled={isSubmitting} className="w-full">
-        {isSubmitting ? "Enviando..." : "Recibir enlace por email"}
+        {isSubmitting ? "Enviando…" : "Recibir enlace por correo"}
       </Button>
     </form>
   );
