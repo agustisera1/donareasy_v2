@@ -64,7 +64,6 @@ Primitivos objetivo (se crean en `common/` la primera vez que se necesitan):
 | Primitivo | Qué resuelve | Server-safe |
 |-----------|--------------|-------------|
 | `EmptyState` | Estado vacío (título + descripción + acción) | ✓ |
-| `PageLayout` | Shell de página del dashboard: heading + slots `actions`/`toolbar` | ✓ |
 | `Money` | Monto en ARS con `formatCurrency` | ✓ |
 
 Cada primitivo nuevo se suma a esta tabla con su referencia de uso.
@@ -73,7 +72,7 @@ Cada primitivo nuevo se suma a esta tabla con su referencia de uso.
 
 | Situación | Solución |
 |-----------|----------|
-| Encabezado + estructura de una página del dashboard | `PageLayout` — nunca rearmar el header con un `<h1>` y clases a mano en cada página |
+| Encabezado de una página del dashboard | Título y subtítulo en `getHeaderContent` de `components/header.tsx` (lo renderiza el layout) — la página no arma su propio `<h1>` |
 | Fila de formulario (label + control + error) | `Field` de `ui/` — nunca reconstruir el `<div className="grid gap-2">` a mano |
 | Tabla de datos | `DataTable` — la feature solo define `columns`, `toolbar`, `actions` y `facetedFilters`. Página, pestaña, orden y filtros viven en la URL (`?page=`, `?view=`, `?sort=`, `?status=`) |
 | Columna de acciones de una tabla | `header: "Acciones"` y un `DataTableRowAction` por acción, con un label que diga qué hace ("Ver detalle", "Editar") |
