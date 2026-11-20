@@ -37,7 +37,7 @@ se proponen, no se implementan y no se listan como pendientes ni limitaciones. L
 - `/` — Landing page
 - `/auth` — Login, signup, password reset (Supabase cookie-based auth)
 - `/onboarding` — Role selection (donor vs institution) and profile setup after signup
-- `/dashboard` — Protected area with sidebar layout; contains `/campaign`, `/donations`, `/institutions`, `/metrics`
+- `/dashboard` — Protected area with sidebar layout; contains `/campaigns`, `/donations`, `/institutions`, `/metrics`
 - `/donate` — Guest donation flow (token-based access)
 
 ### Data Flow Pattern

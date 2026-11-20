@@ -16,7 +16,7 @@ async function OnboardingContent() {
       </p>
     );
 
-  if (status.data === "active") redirect("/dashboard/campaign");
+  if (status.data === "active") redirect("/dashboard/campaigns");
   if (status.data === "pending") return <PendingApproval />;
   return <OnboardingForms />;
 }

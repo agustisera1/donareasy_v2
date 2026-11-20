@@ -34,6 +34,6 @@ export async function updateCampaign(input: UpdateCampaignInput): Promise<Servic
   if (updated.length === 0)
     return explainUnchangedCampaign(supabase, campaignId, auth.data.entityId, "editar");
 
-  revalidatePaths([{ path: "/dashboard/campaign" }]);
+  revalidatePaths([{ path: "/dashboard/campaigns" }]);
   return { ok: true, data: null };
 }

@@ -32,6 +32,6 @@ export async function createCampaign(
     .single();
   if (error) return unexpected("[createCampaign] insert", error);
 
-  revalidatePaths([{ path: "/dashboard/campaign" }]);
+  revalidatePaths([{ path: "/dashboard/campaigns" }]);
   return { ok: true, data };
 }

@@ -6,7 +6,7 @@ function getHeaderContent(pathname: string) {
   switch (pathname) {
     case "/dashboard/donations":
       return ["Donaciones", "Visualiza y gestiona las donaciones"];
-    case "/dashboard/campaign":
+    case "/dashboard/campaigns":
       return ["Campañas", "Visualiza y gestiona las campañas"];
     case "/dashboard/institutions":
       return ["Instituciones", "Visualiza el listado de instituciones"];

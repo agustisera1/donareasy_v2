@@ -34,7 +34,7 @@ import { Logo } from "@/components/logo";
 const items = [
   {
     title: "Campañas",
-    url: `/dashboard/campaign`,
+    url: `/dashboard/campaigns`,
     icon: ListChecks,
   },
   {

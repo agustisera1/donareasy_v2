@@ -7,13 +7,11 @@ import { listCampaigns } from "@/queries/campaigns/list-campaigns";
 
 export const metadata: Metadata = { title: "Campañas" };
 
-export default function CampaignPage() {
+export default function CampaignsPage() {
   return (
-    <div className="w-full max-w-6xl p-6 space-y-6">
-      <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-        <CampaignsSection />
-      </Suspense>
-    </div>
+    <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+      <CampaignsSection />
+    </Suspense>
   );
 }
 
