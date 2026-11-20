@@ -1,22 +1,23 @@
 "use client";
 
-import { useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Check, Edit, Eye, HandCoins } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { DataTable } from "@/components/common/data-table";
 import { DataTableColumnHeader } from "@/components/common/data-table-column-header";
 import { DataTableRowAction } from "@/components/common/data-table-row-action";
-import { DataTableTabs, parseTab } from "@/components/common/data-table-tabs";
-import { CampaignStatusBadge } from "./campaign-status-badge";
-import { ViewCampaignDrawer } from "./view-campaign-drawer";
-import { EditCampaignDrawer } from "./edit-campaign-drawer";
-import { FinishCampaignDialog } from "./finish-campaign-dialog";
-import { useCampaignsContext } from "@/contexts/campaigns-context";
-import { Campaign } from "@/lib/types";
+import { DataTableTabs } from "@/components/common/data-table-tabs";
+import { finishCampaign } from "@/actions/campaign/finish";
+import type { CampaignWithInstitution as Campaign, RoleName } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
+import { CampaignStatusBadge } from "./campaign-status-badge";
+import { CreateCampaignDrawer } from "./create-campaign-drawer";
+import { EditCampaignDrawer } from "./edit-campaign-drawer";
+import { ViewCampaignDrawer } from "./view-campaign-drawer";
 
 const viewOptions = [
   { value: "all", label: "Todas" },
@@ -28,152 +29,148 @@ const statusOptions = [
   { value: "finished", label: "Finalizada" },
 ];
 
-export function CampaignsDataTable() {
-  const {
-    campaigns: data,
-    institution,
-    isInstitution,
-    openCreateDrawer,
-    openEditDrawer,
-    openViewDrawer,
-    openFinishDialog,
-    loading,
-    error,
-  } = useCampaignsContext();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const view = parseTab(searchParams.get("view"), viewOptions);
+type CampaignsActor = { role: RoleName; entityId: string };
+type Panel = "create" | "view" | "edit" | "finish" | null;
 
-  const filteredData = useMemo(
-    () =>
-      view === "mine" && institution?.id
-        ? data.filter((campaign) => campaign.institution_id === institution.id)
-        : data,
-    [data, view, institution],
-  );
+interface CampaignsDataTableProps {
+  rows: Campaign[] | null;
+  actor: CampaignsActor | null;
+  view: "all" | "mine";
+}
 
-  const columns: ColumnDef<Campaign>[] = useMemo(
-    () => [
-      {
-        accessorKey: "type",
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Tipo" />
-        ),
-        cell: ({ row }) => (
-          <span className="font-medium">{row.original.type}</span>
-        ),
-      },
-      {
-        accessorKey: "start_date",
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Fecha de inicio" />
-        ),
-        cell: ({ row }) => formatDate(row.original.start_date),
-      },
-      {
-        accessorKey: "termination_date",
-        header: "Fecha de finalización",
-        enableSorting: false,
-        cell: ({ row }) =>
-          row.original.termination_date
-            ? formatDate(row.original.termination_date)
-            : "Sin especificar",
-      },
-      {
-        id: "status",
-        accessorFn: (campaign) => (campaign.finished ? "finished" : "active"),
-        enableSorting: false,
-        filterFn: "arrIncludesSome",
-        header: "Estado",
-        cell: ({ row }) => (
-          <CampaignStatusBadge finished={row.original.finished === true} />
-        ),
-      },
-      {
-        id: "actions",
-        header: "Acciones",
-        cell: ({ row }) => {
-          const campaign = row.original;
-          const canDonate = campaign.finished === false && !isInstitution;
-          const redirectUrl = `/dashboard/donations?campaign_id=${campaign.id}&institution_id=${campaign.institution_id}`;
-          const canEdit =
-            isInstitution && campaign.institution_id === institution?.id;
+export function CampaignsDataTable({ rows, actor, view }: CampaignsDataTableProps) {
+  const [panel, setPanel] = useState<Panel>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selected = rows?.find((campaign) => campaign.id === selectedId) ?? null;
+  const isInstitution = actor?.role === "institution";
 
-          return (
-            <div className="flex gap-1">
-              <DataTableRowAction
-                label="Ver detalle"
-                icon={<Eye />}
-                onClick={() => openViewDrawer(campaign)}
-              />
-              {canDonate && (
+  function open(next: Exclude<Panel, null>, campaign?: Campaign) {
+    if (campaign) setSelectedId(campaign.id);
+    setPanel(next);
+  }
+
+  function close(open: boolean) {
+    if (!open) setPanel(null);
+  }
+
+  async function handleFinish() {
+    if (!selected) return;
+    const result = await finishCampaign({ campaignId: selected.id });
+    if (!result.ok) {
+      toast.error(result.error);
+      return false;
+    }
+    toast.success("Campaña finalizada");
+  }
+
+  const columns: ColumnDef<Campaign>[] = [
+    {
+      accessorKey: "type",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Nombre" />,
+      cell: ({ row }) => <span className="font-medium">{row.original.type}</span>,
+    },
+    {
+      id: "institution",
+      accessorFn: (campaign) => campaign.institution?.name ?? "",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Institución" />,
+    },
+    {
+      accessorKey: "start_date",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Fecha de inicio" />,
+      cell: ({ row }) => formatDate(row.original.start_date),
+    },
+    {
+      accessorKey: "termination_date",
+      header: "Fecha de finalización",
+      enableSorting: false,
+      cell: ({ row }) =>
+        row.original.termination_date ? formatDate(row.original.termination_date) : "Sin especificar",
+    },
+    {
+      id: "status",
+      accessorFn: (campaign) => (campaign.finished ? "finished" : "active"),
+      enableSorting: false,
+      filterFn: "arrIncludesSome",
+      header: "Estado",
+      cell: ({ row }) => <CampaignStatusBadge finished={row.original.finished} />,
+    },
+    {
+      id: "actions",
+      header: "Acciones",
+      cell: ({ row }) => {
+        const campaign = row.original;
+        const canDonate = !campaign.finished && actor?.role === "donor";
+        const canManage = isInstitution && campaign.institution_id === actor?.entityId;
+        const donateHref = `/dashboard/donations?${new URLSearchParams({
+          campaign_id: campaign.id,
+          institution_id: campaign.institution_id,
+        })}`;
+
+        return (
+          <div className="flex gap-1">
+            <DataTableRowAction label="Ver detalle" icon={<Eye />} onClick={() => open("view", campaign)} />
+            {canDonate && <DataTableRowAction label="Donar" icon={<HandCoins />} href={donateHref} />}
+            {canManage && (
+              <>
                 <DataTableRowAction
-                  label="Donar"
-                  icon={<HandCoins />}
-                  onClick={() => router.push(redirectUrl)}
+                  label="Editar"
+                  icon={<Edit />}
+                  onClick={() => open("edit", campaign)}
+                  disabled={campaign.finished}
                 />
-              )}
-              {canEdit && (
-                <>
-                  <DataTableRowAction
-                    label="Editar"
-                    icon={<Edit />}
-                    onClick={() => openEditDrawer(campaign)}
-                    disabled={campaign.finished === true}
-                  />
-                  <DataTableRowAction
-                    label="Finalizar"
-                    icon={<Check />}
-                    onClick={() => openFinishDialog(campaign)}
-                    disabled={campaign.finished === true}
-                  />
-                </>
-              )}
-            </div>
-          );
-        },
+                <DataTableRowAction
+                  label="Finalizar"
+                  icon={<Check />}
+                  onClick={() => open("finish", campaign)}
+                  disabled={campaign.finished}
+                />
+              </>
+            )}
+          </div>
+        );
       },
-    ],
-    [
-      isInstitution,
-      institution,
-      openEditDrawer,
-      openViewDrawer,
-      openFinishDialog,
-      router,
-    ],
-  );
+    },
+  ];
 
   return (
     <>
       <DataTable
         columns={columns}
-        data={filteredData}
-        loading={loading}
-        errorMessage={error ? "No se pudieron cargar las campañas. Recargá la página." : null}
-        emptyMessage="No hay campañas disponibles"
+        data={rows ?? []}
+        errorMessage={rows ? null : "No se pudieron cargar las campañas. Recargá la página."}
+        emptyMessage={view === "mine" ? "Todavía no creaste campañas" : "No hay campañas disponibles"}
         countLabel={(count) => `${count} campaña(s)`}
-        toolbar={
-          isInstitution &&
-          !loading && (
-            <DataTableTabs param="view" options={viewOptions} value={view} />
-          )
-        }
+        toolbar={isInstitution && <DataTableTabs param="view" options={viewOptions} value={view} />}
         actions={
-          isInstitution &&
-          !loading && (
-            <Button size="lg" onClick={openCreateDrawer}>
+          isInstitution && (
+            <Button size="lg" onClick={() => open("create")}>
               Nueva campaña
             </Button>
           )
         }
-        facetedFilters={[
-          { columnId: "status", title: "Estado", options: statusOptions },
-        ]}
+        facetedFilters={[{ columnId: "status", title: "Estado", options: statusOptions }]}
       />
-      <ViewCampaignDrawer />
-      <EditCampaignDrawer />
-      <FinishCampaignDialog />
+      {isInstitution && <CreateCampaignDrawer open={panel === "create"} onOpenChange={close} />}
+      {selected && (
+        <>
+          <ViewCampaignDrawer campaign={selected} open={panel === "view"} onOpenChange={close} />
+          <EditCampaignDrawer
+            key={selected.id}
+            campaign={selected}
+            open={panel === "edit"}
+            onOpenChange={close}
+          />
+          <ConfirmDialog
+            open={panel === "finish"}
+            onOpenChange={close}
+            title="¿Finalizar la campaña?"
+            description="La campaña deja de recibir donaciones. No se puede deshacer."
+            confirmLabel="Sí, finalizar"
+            pendingLabel="Finalizando…"
+            onConfirm={handleFinish}
+          />
+        </>
+      )}
     </>
   );
 }

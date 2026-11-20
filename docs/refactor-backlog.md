@@ -27,13 +27,13 @@ Estados:
 | Aprobación de instituciones | Listo | — | Se aprueba a mano (`institutions.approved`). Mientras tanto la cuenta solo ve el aviso de revisión y no figura en los listados. La notificación no se envía |
 | Perfil (ver y editar) | Listo | — | `userId` llega desde el cliente. RLS limita al propio registro |
 | Eliminar cuenta | Fuera de alcance | — | — |
-| Crear campaña | **Roto para demo** | `actions/campaign/create.ts:54-61`, `components/campaigns/campaigns-data-table.tsx:97` | No setea `finished` y la columna no tiene default, así que queda `null`. El botón "Donar" solo aparece con `finished === false`: **una campaña nueva no se puede donar** |
-| Listar / ver campaña | Listo | — | El drawer dice "Campaña activa" según `termination_date`, no según `finished` (`view-campaign-drawer.tsx:31-33`) |
-| Editar campaña | Listo | — | El server no valida que la campaña no esté finalizada (solo la UI) |
-| Finalizar campaña | Listo | — | Sin guard `finished = false` en el `WHERE` |
-| Eliminar campaña | Sin hacer | `actions/campaign/delete.ts` | Stub. Tampoco hay policy DELETE en `campaigns` |
+| Crear campaña | Listo | — | `finished not null default false`. Action con `authorize` y `institution_id` del server |
+| Listar / ver campaña | Listo | — | Server Component + `queries/campaigns/list-campaigns.ts`, con el nombre de la institución. El estado sale de `finished` |
+| Editar campaña | Listo | — | Guard de dueño y `finished = false` en el `WHERE` |
+| Finalizar campaña | Listo | — | Guard de dueño y `finished = false` en el `WHERE`. `ConfirmDialog` |
+| Eliminar campaña | Fuera de alcance | — | Se borró el stub. No hay policy DELETE en `campaigns` |
 | Imágenes de campaña | Sin hacer | `supabase/migrations/20261117145838_remote_schema.sql:3-13` | Sin columna ni UI |
-| Donar (donante logueado) | A mitad | `components/donations/create-donation-drawer.tsx:57`, `actions/donations/create.ts` | **La donación no queda ligada a la campaña:** no existe `donations.campaign_id` y el drawer descarta el `campaign_id` de la URL. Además, el body de las Server Actions tiene un límite de 1 MB por defecto, así que fotos más grandes fallan |
+| Donar (donante logueado) | A mitad | `actions/storage/upload.ts` | Ligada a la campaña vía `donations.campaign_id` (institución bloqueada en el drawer). Falta: el body de las Server Actions tiene un límite de 1 MB por defecto, así que fotos más grandes fallan |
 | Editar donación (donante) | A mitad | `actions/donations/update.ts:72-90` | No chequea estado: se puede editar una donación aceptada o entregada |
 | Eliminar donación (donante) | Sin hacer (UI) | `actions/donations/delete.ts` | La action existe, pero ninguna UI la llama. No chequea estado |
 | Aceptar / rechazar / entregar | Listo | — | Sin estado esperado en el `WHERE` (carrera). `reject` no valida el estado en el server (`reject.ts:95-101`). Las abiertas no se pueden rechazar |
@@ -73,8 +73,8 @@ Usuarios del seed (`npm run db:seed`), todos con password `demo1234`: `hogar@dem
 
 | # | Paso | Estado hoy |
 |---|---|---|
-| 1 | Hogar inicia sesión y crea una campaña | Se crea, pero sin "Donar" (§1, crear campaña) |
-| 2 | Lucía ve la campaña, toca "Donar" y dona con foto | Corta en el paso 1. Además, la donación no queda ligada a la campaña y las fotos de más de 1 MB fallan |
+| 1 | Hogar inicia sesión y crea una campaña | Listo |
+| 2 | Lucía ve la campaña, toca "Donar" y dona con foto | Listo, salvo fotos de más de 1 MB |
 | 3 | Lucía abre las métricas públicas del Hogar en el directorio | Datos incorrectos (§2) |
 | 4 | Hogar acepta y marca como entregada la donación | Listo |
 | 5 | Hogar ve sus métricas completas | Sin hacer (§2) |
@@ -89,12 +89,10 @@ Pasos previos:
 
 | # | Corte | Qué hacer |
 |---|---|---|
-| a | Campaña nueva sin "Donar" | Migración: backfill `finished = false` y después `not null default false`. `createCampaign` al patrón: input único validado, `authorize("campaigns:manage")` y `institution_id` puesto por el server. El drawer de vista usa `finished` |
-| b | Donación sin campaña | Migración: `donations.campaign_id uuid null references campaigns on delete set null` + índice. `createDonation` acepta `campaignId` y valida que la campaña exista, esté activa y sea de la institución destino. El drawer conserva la campaña preseleccionada y la vista la muestra. El seed vincula parte de las donaciones |
 | c | Métricas | Función `institution_public_metrics(p_institution_id)` `security definer`, con `search_path` vacío y `execute` solo para `authenticated`: devuelve únicamente conteos. Query `queries/institutions/get-institution-metrics.ts` que devuelve `full` (propia, bajo RLS, con montos de aceptadas y entregadas) o `public` (rpc). Route handler `app/api/institutions/[id]/metrics` para el drawer. Página `/dashboard/metrics` para la institución logueada, con ítem de menú solo para ese rol. Se borra `actions/institutions/metrics.ts` |
 | d | Invitado | La página del token valida `expires_at` y redirige a `/donate?expired=1`, que muestra un aviso. `create-guest` marca `used_at` con `.is("used_at", null)` antes de crear y aborta si no actualizó nada |
 | e | Upload | `serverActions.bodySizeLimit` según la doc instalada de Next. Validar MIME y tamaño en el server con el schema de `lib/validations/donation.ts` |
-| f | Limpieza | Borrar los stubs `deleteCampaign` y `deleteUser`, `app/api/metrics` (consulta una tabla `metrics` inexistente), los placeholders money/needs, y el link al PDF |
+| f | Limpieza | Borrar el stub `deleteUser`, `app/api/metrics` (consulta una tabla `metrics` inexistente), los placeholders money/needs, y el link al PDF |
 
 ## 5. Estado de las capas respecto de `.claude/rules`
 
@@ -105,11 +103,12 @@ contexts, actions sin `authorize` ni `ServiceResult`). Se migra a medida que se 
 
 1. Transiciones de donación con el estado esperado en el `WHERE`, y `reject` que valide el estado (D3).
 2. Edición y borrado del donante restringidos a donaciones `pending`.
-3. Contexts → Server Components + `queries/`. Hooks solo para lo que se refetchea en el cliente.
-4. Datos: `status` como enum, `quantity` como entero, `finished` not null (si no se hizo en §4) y
-   renombrar `dellivered_date`.
-5. Tipos generados con `supabase gen types` en `lib/types/database.ts`.
-6. Landing real y `metadata` en las páginas.
+3. Drawer de donar: carga de instituciones en un efecto con el cliente de Supabase, `watch` y
+   efectos con `setValue`; `components/auth-button.tsx` importa el cliente del server.
+4. Contexts → Server Components + `queries/`. Hooks solo para lo que se refetchea en el cliente.
+5. Datos: `status` como enum, `quantity` como entero y renombrar `dellivered_date`.
+6. Tipos generados con `supabase gen types` en `lib/types/database.ts`.
+7. Landing real y `metadata` en las páginas.
 
 ## 7. Limitaciones conocidas / fuera de alcance de la demo
 
@@ -122,5 +121,4 @@ Es una demo de un solo usuario, así que no se hace hardening de producción. Qu
 - Los adjuntos PDF se aceptan, pero se renderizan con `next/image` y se ven rotos.
 - Reemplazar un adjunto no borra el objeto anterior en Storage.
 - `guest_tokens` crece sin retención (P5).
-- `roles.name` tiene default `'donnor'` (typo) y `campaigns.institution_id` tiene default
-  `gen_random_uuid()`.
+- `roles.name` tiene default `'donnor'` (typo).

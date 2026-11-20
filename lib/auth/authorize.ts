@@ -8,6 +8,7 @@ const PERMISSIONS = {
   "institutions:list": ["donor", "institution"],
   "donations:create": ["donor"],
   "donations:manage": ["institution"],
+  "campaigns:list": ["donor", "institution"],
   "campaigns:manage": ["institution"],
 } as const satisfies Record<string, readonly RoleName[]>;
 

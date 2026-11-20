@@ -3,40 +3,40 @@
 import { Button } from "@/components/ui/button";
 import { DetailItem, DetailList } from "@/components/common/detail-list";
 import { DrawerLayout } from "@/components/common/drawer-layout";
-import { useCampaignsContext } from "@/contexts/campaigns-context";
+import type { CampaignWithInstitution } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
+import { CampaignStatusBadge } from "./campaign-status-badge";
 
-export function ViewCampaignDrawer() {
-  const { viewDrawerOpen, closeViewDrawer, selectedCampaign } =
-    useCampaignsContext();
+interface ViewCampaignDrawerProps {
+  campaign: CampaignWithInstitution;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
 
-  if (!selectedCampaign) {
-    return null;
-  }
-
+export function ViewCampaignDrawer({ campaign, open, onOpenChange }: ViewCampaignDrawerProps) {
   return (
     <DrawerLayout
-      open={viewDrawerOpen}
-      onOpenChange={closeViewDrawer}
+      open={open}
+      onOpenChange={onOpenChange}
       title="Detalles de la campaña"
       description="Información registrada de la campaña"
-      footer={<Button onClick={closeViewDrawer}>Cerrar</Button>}
+      footer={<Button onClick={() => onOpenChange(false)}>Cerrar</Button>}
     >
       <DetailList>
-        <DetailItem label="Nombre">{selectedCampaign.type}</DetailItem>
-        <DetailItem label="Fecha de inicio">
-          {formatDate(selectedCampaign.start_date)}
-        </DetailItem>
-        <DetailItem label="Fecha de finalización">
-          {selectedCampaign.termination_date
-            ? formatDate(selectedCampaign.termination_date)
-            : "Campaña activa"}
-        </DetailItem>
-        {selectedCampaign.description && (
-          <DetailItem label="Descripción" stacked>
-            {selectedCampaign.description}
-          </DetailItem>
+        <DetailItem label="Nombre">{campaign.type}</DetailItem>
+        {campaign.institution && (
+          <DetailItem label="Institución">{campaign.institution.name}</DetailItem>
         )}
+        <DetailItem label="Estado">
+          <CampaignStatusBadge finished={campaign.finished} />
+        </DetailItem>
+        <DetailItem label="Fecha de inicio">{formatDate(campaign.start_date)}</DetailItem>
+        <DetailItem label="Fecha de finalización">
+          {campaign.termination_date ? formatDate(campaign.termination_date) : "Sin especificar"}
+        </DetailItem>
+        <DetailItem label="Descripción" stacked>
+          {campaign.description}
+        </DetailItem>
       </DetailList>
     </DrawerLayout>
   );

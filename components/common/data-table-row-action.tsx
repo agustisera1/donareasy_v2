@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -9,25 +10,35 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-interface DataTableRowActionProps {
+type DataTableRowActionProps = {
   label: string;
   icon: ReactNode;
-  onClick: () => void;
   disabled?: boolean;
-}
+} & ({ onClick: () => void; href?: never } | { href: string; onClick?: never });
 
 export function DataTableRowAction({
   label,
   icon,
   onClick,
+  href,
   disabled = false,
 }: DataTableRowActionProps) {
-  const button = (
-    <Button variant="ghost" size="icon-sm" onClick={onClick} disabled={disabled}>
+  const content = (
+    <>
       {icon}
       <span className="sr-only">{label}</span>
-    </Button>
+    </>
   );
+  const button =
+    href && !disabled ? (
+      <Button variant="ghost" size="icon-sm" asChild>
+        <Link href={href}>{content}</Link>
+      </Button>
+    ) : (
+      <Button variant="ghost" size="icon-sm" onClick={onClick} disabled={disabled}>
+        {content}
+      </Button>
+    );
 
   return (
     <Tooltip>

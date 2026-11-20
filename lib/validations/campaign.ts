@@ -1,57 +1,41 @@
 import * as z from "zod";
 
-// Schema para el tipo de campaña
-export const campaignTypeSchema = z
-  .string()
-  .min(1, "El tipo de campaña es requerido")
-  .max(50, "El tipo de campaña no puede exceder 50 caracteres");
+const campaignFields = {
+  type: z
+    .string()
+    .trim()
+    .min(1, "El nombre de la campaña es requerido")
+    .max(50, "El nombre no puede exceder 50 caracteres"),
+  description: z
+    .string()
+    .trim()
+    .min(10, "La descripción debe tener al menos 10 caracteres")
+    .max(2000, "La descripción no puede exceder 2000 caracteres"),
+  quantity: z.string().trim().max(100, "La cantidad no puede exceder 100 caracteres").optional(),
+  termination_date: z
+    .string()
+    .trim()
+    .optional()
+    .refine((value) => !value || isTodayOrLater(value), {
+      message: "La fecha de finalización debe ser válida y no puede ser anterior a hoy",
+    }),
+};
 
-// Schema para la descripción de la campaña
-export const campaignDescriptionSchema = z
-  .string()
-  .min(10, "La descripción debe tener al menos 10 caracteres")
-  .max(2000, "La descripción no puede exceder 2000 caracteres");
+function isTodayOrLater(value: string) {
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return date >= today;
+}
 
-// Schema para la cantidad (opcional)
-export const campaignQuantitySchema = z
-  .string()
-  .max(100, "La cantidad no puede exceder 100 caracteres")
-  .optional()
-  .or(z.literal(""));
+const campaignIdSchema = z.uuid("Campaña inválida");
 
-// Schema para la fecha de terminación (opcional)
-export const campaignTerminationDateSchema = z
-  .string()
-  .optional()
-  .refine(
-    (date) => {
-      if (!date || date === "") return true; // Opcional
-      const dateObj = new Date(date);
-      if (isNaN(dateObj.getTime())) {
-        return false; // Fecha inválida
-      }
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      dateObj.setHours(0, 0, 0, 0);
-      return dateObj >= today; // Debe ser hoy o futura
-    },
-    {
-      message: "La fecha de terminación debe ser válida y no puede ser anterior a hoy",
-    }
-  );
+export const createCampaignSchema = z.object(campaignFields);
+export type CreateCampaignInput = z.infer<typeof createCampaignSchema>;
 
-// Schema completo para el formulario de creación de campaña
-export const campaignSchema = z.object({
-  type: campaignTypeSchema,
-  description: campaignDescriptionSchema,
-  quantity: campaignQuantitySchema,
-  termination_date: campaignTerminationDateSchema,
-});
+export const updateCampaignSchema = z.object({ campaignId: campaignIdSchema, ...campaignFields });
+export type UpdateCampaignInput = z.infer<typeof updateCampaignSchema>;
 
-// Schema para edición de campaña (mismo que creación, ya que todos los campos son editables)
-export const campaignEditSchema = campaignSchema;
-
-// Tipo inferido del schema
-export type CampaignFormSchema = z.infer<typeof campaignSchema>;
-export type CampaignEditFormSchema = z.infer<typeof campaignEditSchema>;
-
+export const finishCampaignSchema = z.object({ campaignId: campaignIdSchema });
+export type FinishCampaignInput = z.infer<typeof finishCampaignSchema>;

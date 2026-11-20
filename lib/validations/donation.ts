@@ -68,6 +68,7 @@ export const donationGoodsDescriptionSchema = z
 export const donationSchema = z
   .object({
     institution_id: z.string().optional().or(z.literal("")),
+    campaign_id: z.string().optional(),
     open_donation: z.boolean(),
     donation_type: donationTypeSchema,
     delivery_method: deliveryMethodSchema,
@@ -155,6 +156,25 @@ export const donationSchema = z
 
 // Tipo inferido del schema
 export type DonationFormSchema = z.infer<typeof donationSchema>;
+
+// Input de la action: el archivo ya está subido; donante y estado los pone el server.
+export const createDonationSchema = z
+  .object({
+    institutionId: z.uuid("Institución inválida").nullable(),
+    campaignId: z.uuid("Campaña inválida").optional(),
+    deliveryMethod: deliveryMethodSchema,
+    category: categorySchema,
+    name: z.string().trim().max(200).nullable(),
+    description: z.string().trim().max(200).nullable(),
+    amount: z.number().positive("El monto debe ser mayor a 0").nullable(),
+    attachmentUrl: z.string().trim().min(1, "La imagen es obligatoria"),
+    attachmentName: z.string().trim().nullable(),
+  })
+  .refine((data) => !data.campaignId || data.institutionId, {
+    message: "Una donación a una campaña va dirigida a su institución",
+    path: ["institutionId"],
+  });
+export type CreateDonationInput = z.infer<typeof createDonationSchema>;
 
 // Schema para edición de donación (sin institution_id ni donation_type)
 // En edición, el archivo es opcional (solo se actualiza si se sube uno nuevo)

@@ -75,6 +75,9 @@ export function ViewDonationDrawer() {
             deliveryMethod={selectedDonation.delivery_method}
           />
         </DetailItem>
+        {selectedDonation.campaign && (
+          <DetailItem label="Campaña">{selectedDonation.campaign.type}</DetailItem>
+        )}
         <DetailItem label="Donante">{selectedDonation.donor}</DetailItem>
         <DetailItem label="Contacto">{selectedDonation.donor_phone}</DetailItem>
         <DetailItem label="Fecha de creación">

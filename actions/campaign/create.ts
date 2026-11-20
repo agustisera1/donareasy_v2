@@ -1,81 +1,37 @@
 "use server";
 
+import { authorize } from "@/lib/auth/authorize";
+import { fail, unexpected, type ServiceResult } from "@/lib/shared/result";
+import { revalidatePaths } from "@/lib/shared/revalidate";
 import { createClient } from "@/lib/supabase/server";
-import { type CampaignFormSchema } from "@/lib/validations";
+import { createCampaignSchema, type CreateCampaignInput } from "@/lib/validations";
 
 export async function createCampaign(
-  formData: CampaignFormSchema,
-  institutionId: string
-) {
+  input: CreateCampaignInput,
+): Promise<ServiceResult<{ id: string }>> {
+  const auth = await authorize("campaigns:manage");
+  if (!auth.ok) return auth;
+
+  const parsed = createCampaignSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", parsed.error.issues[0].message);
+
+  const { type, description, quantity, termination_date } = parsed.data;
   const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("campaigns")
+    .insert({
+      type,
+      description,
+      quantity: quantity || null,
+      termination_date: termination_date || null,
+      start_date: new Date().toISOString().slice(0, 10),
+      finished: false,
+      institution_id: auth.data.entityId,
+    })
+    .select("id")
+    .single();
+  if (error) return unexpected("[createCampaign] insert", error);
 
-  try {
-    // 1. Verificar que el usuario esté autenticado
-    const {
-      data: { user: authUser },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !authUser) {
-      return {
-        success: false,
-        error: "Usuario no autenticado",
-      };
-    }
-
-    // 2. Verificar que la institución existe y pertenece al usuario
-    const { data: institution, error: institutionError } = await supabase
-      .from("institutions")
-      .select("id, user_id")
-      .eq("id", institutionId)
-      .eq("user_id", authUser.id)
-      .maybeSingle();
-
-    if (institutionError) {
-      throw new Error(
-        `Error verificando institución: ${institutionError.message}`
-      );
-    }
-
-    if (!institution) {
-      return {
-        success: false,
-        error: "Institución no encontrada o no autorizada",
-      };
-    }
-
-    // 3. Preparar la fecha de inicio (fecha actual en formato YYYY-MM-DD)
-    const today = new Date();
-    const startDate = today.toISOString().split("T")[0]; // Formato YYYY-MM-DD
-
-    // 4. Insertar la campaña
-    const { data: campaign, error: campaignError } = await supabase
-      .from("campaigns")
-      .insert({
-        type: formData.type,
-        description: formData.description,
-        quantity: formData.quantity || null,
-        termination_date: formData.termination_date || null,
-        start_date: startDate,
-        institution_id: institutionId,
-      })
-      .select("id")
-      .single();
-
-    if (campaignError) {
-      throw new Error(`Error creando campaña: ${campaignError.message}`);
-    }
-
-    if (!campaign) {
-      throw new Error("Error: No se pudo crear la campaña");
-    }
-
-    return { success: true, data: campaign };
-  } catch (error) {
-    console.error("Error in createCampaign:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
+  revalidatePaths([{ path: "/dashboard/campaign" }]);
+  return { ok: true, data };
 }

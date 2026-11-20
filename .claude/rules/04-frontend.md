@@ -48,18 +48,18 @@ semánticos en un solo lugar (p. ej. `status-badge.tsx`), no con clases sueltas 
 | `DataTableColumnHeader` | Header de columna ordenable | Client |
 | `DataTableFacetedFilter` | Filtro multi-select de valores enumerables con conteos (`getFacetedUniqueValues`); lo renderiza `DataTable` desde `facetedFilters` | Client |
 | `DataTablePagination` | `Pagination` de shadcn con links `?page=N` (`Button asChild` + `Link`) | Client |
-| `DataTableRowAction` | Botón de acción solo-ícono con `Tooltip` | Client |
+| `DataTableRowAction` | Botón de acción solo-ícono con `Tooltip`; con `href` navega con `Link` | Client |
 | `DrawerLayout` | Drawer lateral: header, cuerpo con scroll y footer. Uso: `components/donations/edit-donation-drawer.tsx` | Client |
-| `DatePicker` | Selector de fecha (`Popover` + `Calendar`), valor `yyyy-MM-dd`. Uso: `components/campaigns/create-campaign-drawer.tsx` | Client |
+| `DatePicker` | Selector de fecha (`Popover` + `Calendar`), valor `yyyy-MM-dd`. Uso: `components/campaigns/campaign-form-drawer.tsx` | Client |
 | `DetailList`, `DetailItem` | Pares etiqueta / valor de solo lectura. Uso: `components/donations/view-donation-drawer.tsx` | ✓ |
 | `DataTableTabs` | Pestañas de la toolbar (`Tabs` de shadcn) sincronizadas con un search param; `parseTab` lee el valor | Client |
 | `PasswordInput` | Input de contraseña con botón de mostrar / ocultar (`InputGroup`). Uso: `components/login-form.tsx` | Client |
+| `ConfirmDialog` | Confirmación de acción con efecto real (open + pending + retry; controlado o con `trigger`). Uso: `components/campaigns/campaigns-data-table.tsx` | Client |
 
 Primitivos objetivo (se crean en `common/` la primera vez que se necesitan):
 
 | Primitivo | Qué resuelve | Server-safe |
 |-----------|--------------|-------------|
-| `ConfirmDialog` | Confirmación de acción con efecto real (encapsula open + pending + retry) | Client |
 | `EmptyState` | Estado vacío (título + descripción + acción) | ✓ |
 | `PageLayout` | Shell de página del dashboard: heading + slots `actions`/`toolbar` | ✓ |
 | `Money` | Monto en ARS con `formatCurrency` | ✓ |

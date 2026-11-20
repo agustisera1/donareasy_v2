@@ -1,86 +1,32 @@
 "use server";
 
+import { authorize } from "@/lib/auth/authorize";
+import { fail, unexpected, type ServiceResult } from "@/lib/shared/result";
+import { revalidatePaths } from "@/lib/shared/revalidate";
 import { createClient } from "@/lib/supabase/server";
+import { finishCampaignSchema, type FinishCampaignInput } from "@/lib/validations";
+import { explainUnchangedCampaign } from "./shared";
 
-export async function finishCampaign(campaignId: string) {
+export async function finishCampaign(input: FinishCampaignInput): Promise<ServiceResult<null>> {
+  const auth = await authorize("campaigns:manage");
+  if (!auth.ok) return auth;
+
+  const parsed = finishCampaignSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", parsed.error.issues[0].message);
+
+  const { campaignId } = parsed.data;
   const supabase = await createClient();
+  const { data: updated, error } = await supabase
+    .from("campaigns")
+    .update({ finished: true, termination_date: new Date().toISOString().slice(0, 10) })
+    .eq("id", campaignId)
+    .eq("institution_id", auth.data.entityId)
+    .eq("finished", false)
+    .select("id");
+  if (error) return unexpected("[finishCampaign] update", error);
+  if (updated.length === 0)
+    return explainUnchangedCampaign(supabase, campaignId, auth.data.entityId, "finalizar");
 
-  try {
-    // 1. Verificar que el usuario esté autenticado
-    const {
-      data: { user: authUser },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !authUser) {
-      return {
-        success: false,
-        error: "Usuario no autenticado",
-      };
-    }
-
-    // 2. Verificar que la campaña existe
-    const { data: campaign, error: campaignError } = await supabase
-      .from("campaigns")
-      .select("id, institution_id")
-      .eq("id", campaignId)
-      .maybeSingle();
-
-    if (campaignError) {
-      throw new Error(`Error verificando campaña: ${campaignError.message}`);
-    }
-
-    if (!campaign) {
-      return {
-        success: false,
-        error: "Campaña no encontrada",
-      };
-    }
-
-    // 3. Verificar que la institución pertenece al usuario autenticado
-    const { data: institution, error: institutionError } = await supabase
-      .from("institutions")
-      .select("id, user_id")
-      .eq("id", campaign.institution_id)
-      .eq("user_id", authUser.id)
-      .maybeSingle();
-
-    if (institutionError) {
-      throw new Error(
-        `Error verificando institución: ${institutionError.message}`
-      );
-    }
-
-    if (!institution) {
-      return {
-        success: false,
-        error: "No tienes permisos para finalizar esta campaña",
-      };
-    }
-
-    // 4. Preparar la fecha de finalización (fecha actual en formato YYYY-MM-DD)
-    const today = new Date();
-    const terminationDate = today.toISOString().split("T")[0]; // Formato YYYY-MM-DD
-
-    // 5. Actualizar la campaña marcándola como finalizada y actualizando la fecha de finalización
-    const { error: updateError } = await supabase
-      .from("campaigns")
-      .update({
-        finished: true,
-        termination_date: terminationDate,
-      })
-      .eq("id", campaignId);
-
-    if (updateError) {
-      throw new Error(`Error finalizando campaña: ${updateError.message}`);
-    }
-
-    return { success: true };
-  } catch (error) {
-    console.error("Error in finishCampaign:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
+  revalidatePaths([{ path: "/dashboard/campaign" }]);
+  return { ok: true, data: null };
 }
