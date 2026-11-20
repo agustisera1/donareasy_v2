@@ -1,174 +1,69 @@
 import * as z from "zod";
 
-// Schema para el ID de institución
-export const institutionIdSchema = z
-  .string()
-  .min(1, "La institución es obligatoria");
+import { attachmentFileSchema } from "./upload";
 
-// Schema para el tipo de donación
 export const donationTypeSchema = z.enum(["money", "goods"]);
-
-// Schema para la forma de entrega
 export const deliveryMethodSchema = z.enum(["pickup", "shipment", "agreement", "transfer"]);
-
-// Schema para la categoría
 export const categorySchema = z.enum(["supplies", "clothing", "food", "other"]);
 
-// Schema para el monto (obligatorio para donaciones monetarias)
-export const donationAmountSchema = z
-  .string()
-  .min(1, "El monto es obligatorio")
-  .refine(
-    (value) => {
-      const num = parseFloat(value);
-      return !isNaN(num) && num > 0;
-    },
-    {
-      message: "El monto debe ser un número mayor a 0",
-    }
-  );
+// ---------- Form (crear, editar e invitado) ----------
 
-// Schema para el comprobante de transferencia (archivo)
-// Nota: Zod no tiene soporte nativo para FileList/File, por lo que usamos z.any()
-// con refinements. Esta es la práctica recomendada según la documentación de Zod.
-// Referencia: https://github.com/colinhacks/zod/issues/387
-export const transferReceiptSchema = z
-  .any()
-  .refine((files) => files && files.length > 0, {
-    message: "El comprobante de transferencia es obligatorio",
-  })
-  .refine(
-    (files) => {
-      if (!files || files.length === 0) return false;
-      const file = files[0];
-      const validTypes = [
-        "image/png",
-        "image/jpeg",
-        "image/jpg",
-        "application/pdf",
-      ];
-      return validTypes.includes(file.type);
-    },
-    {
-      message: "El archivo debe ser PNG, JPG o PDF",
-    }
-  );
+const donationFormFields = z.object({
+  donationType: donationTypeSchema,
+  openDonation: z.boolean(),
+  institutionId: z.string(),
+  deliveryMethod: deliveryMethodSchema,
+  category: categorySchema,
+  amount: z.string().trim(),
+  name: z.string().trim().max(200, "El nombre no puede exceder 200 caracteres"),
+  description: z.string().trim().max(200, "La descripción no puede exceder 200 caracteres"),
+  attachment: attachmentFileSchema.nullable(),
+});
 
-// Schema para el nombre de la donación
-export const donationNameSchema = z.string().optional().or(z.literal(""));
+type ContentFields = Pick<
+  z.infer<typeof donationFormFields>,
+  "donationType" | "amount" | "description"
+>;
 
-// Schema para la descripción de bienes (obligatorio para donaciones de bienes)
-export const donationGoodsDescriptionSchema = z
-  .string()
-  .min(1, "La descripción es obligatoria")
-  .max(200, "La descripción no puede exceder 200 caracteres");
+function refineContent(data: ContentFields, ctx: z.RefinementCtx) {
+  if (data.donationType === "money" && !(Number(data.amount) > 0))
+    ctx.addIssue({ code: "custom", path: ["amount"], message: "El monto debe ser un número mayor a 0" });
+  if (data.donationType === "goods" && !data.description)
+    ctx.addIssue({ code: "custom", path: ["description"], message: "La descripción es obligatoria" });
+}
 
-// Schema completo para el formulario de creación de donación
-// Usamos un schema base y luego refinamos según el tipo
-export const donationSchema = z
-  .object({
-    institution_id: z.string().optional().or(z.literal("")),
-    campaign_id: z.string().optional(),
-    open_donation: z.boolean(),
-    donation_type: donationTypeSchema,
-    delivery_method: deliveryMethodSchema,
-    category: categorySchema,
-    amount: z.string().optional().or(z.literal("")),
-    attachment_name: z.any().nullable().optional(),
-    name: z.string().optional().or(z.literal("")),
-    description: z.string().optional().or(z.literal("")),
-  })
-  .refine(
-    (data) => {
-      // Si es donación monetaria, amount es obligatorio
-      if (data.donation_type === "money") {
-        if (!data.amount || data.amount.trim() === "") {
-          return false;
-        }
-        const num = parseFloat(data.amount);
-        if (isNaN(num) || num <= 0) {
-          return false;
-        }
-      }
-      return true;
-    },
-    {
-      message: "El monto es obligatorio y debe ser un número mayor a 0",
-      path: ["amount"],
-    }
-  )
-  .refine(
-    (data) => {
-      // attachment_name es obligatorio tanto para donaciones monetarias como de bienes
-      return data.attachment_name && data.attachment_name.length > 0;
-    },
-    {
-      message: "La imagen es obligatoria",
-      path: ["attachment_name"],
-    }
-  )
-  .refine(
-    (data) => {
-      // Validar el archivo para ambos tipos de donación
-      if (data.attachment_name && data.attachment_name.length > 0) {
-        const file = data.attachment_name[0];
-        const validTypes = [
-          "image/png",
-          "image/jpeg",
-          "image/jpg",
-          "application/pdf",
-        ];
-        return validTypes.includes(file.type);
-      }
-      return true;
-    },
-    {
-      message: "El archivo debe ser PNG, JPG o PDF",
-      path: ["attachment_name"],
-    }
-  )
-  .refine(
-    (data) => {
-      // Si es donación de bienes, la descripción es obligatoria
-      if (data.donation_type === "goods") {
-        return data.description && data.description.trim() !== "";
-      }
-      return true;
-    },
-    {
-      message: "La descripción es obligatoria para donaciones de bienes",
-      path: ["description"],
-    }
-  )
-  .refine(
-    (data) => {
-      // Si no es donación abierta, la institución es obligatoria
-      if (!data.open_donation) {
-        return !!data.institution_id && data.institution_id.trim().length > 0;
-      }
-      return true;
-    },
-    {
-      message: "La institución es obligatoria",
-      path: ["institution_id"],
-    }
-  );
+export const donationFormSchema = donationFormFields.superRefine((data, ctx) => {
+  refineContent(data, ctx);
+  if (!data.openDonation && !data.institutionId)
+    ctx.addIssue({ code: "custom", path: ["institutionId"], message: "La institución es obligatoria" });
+  if (!data.attachment)
+    ctx.addIssue({ code: "custom", path: ["attachment"], message: "La imagen es obligatoria" });
+});
+export type DonationFormValues = z.infer<typeof donationFormSchema>;
 
-// Tipo inferido del schema
-export type DonationFormSchema = z.infer<typeof donationSchema>;
+// En edición el tipo y la institución no cambian, y la imagen solo se reemplaza si se elige otra.
+export const editDonationFormSchema = donationFormFields.superRefine(refineContent);
 
-// Input de la action: el archivo ya está subido; donante y estado los pone el server.
-export const createDonationSchema = z
-  .object({
+// ---------- Input de las actions ----------
+
+const donationContentInput = z.object({
+  deliveryMethod: deliveryMethodSchema,
+  category: categorySchema,
+  name: z.string().trim().max(200).nullable(),
+  description: z.string().trim().max(200).nullable(),
+  amount: z.number().positive("El monto debe ser mayor a 0").nullable(),
+});
+
+const attachmentInput = z.object({
+  path: z.string().min(1, "La imagen es obligatoria").max(300),
+  name: z.string().trim().max(200),
+});
+
+export const createDonationSchema = donationContentInput
+  .extend({
     institutionId: z.uuid("Institución inválida").nullable(),
     campaignId: z.uuid("Campaña inválida").optional(),
-    deliveryMethod: deliveryMethodSchema,
-    category: categorySchema,
-    name: z.string().trim().max(200).nullable(),
-    description: z.string().trim().max(200).nullable(),
-    amount: z.number().positive("El monto debe ser mayor a 0").nullable(),
-    attachmentUrl: z.string().trim().min(1, "La imagen es obligatoria"),
-    attachmentName: z.string().trim().nullable(),
+    attachment: attachmentInput,
   })
   .refine((data) => !data.campaignId || data.institutionId, {
     message: "Una donación a una campaña va dirigida a su institución",
@@ -176,53 +71,27 @@ export const createDonationSchema = z
   });
 export type CreateDonationInput = z.infer<typeof createDonationSchema>;
 
-// Schema para edición de donación (sin institution_id ni donation_type)
-// En edición, el archivo es opcional (solo se actualiza si se sube uno nuevo)
-export const donationEditSchema = z
-  .object({
-    amount: z.string().optional().or(z.literal("")),
-    attachment_name: z.any().nullable().optional(),
-    name: z.string().optional().or(z.literal("")),
-    description: z.string().optional().or(z.literal("")),
-    delivery_method: deliveryMethodSchema,
-    category: categorySchema,
-  })
-  .refine(
-    (data) => {
-      // Si hay amount, debe ser válido
-      if (data.amount && data.amount.trim() !== "") {
-        const num = parseFloat(data.amount);
-        if (isNaN(num) || num <= 0) {
-          return false;
-        }
-      }
-      return true;
-    },
-    {
-      message: "El monto debe ser un número mayor a 0",
-      path: ["amount"],
-    }
-  )
-  .refine(
-    (data) => {
-      // Si hay attachment_name, validar el archivo
-      if (data.attachment_name && data.attachment_name.length > 0) {
-        const file = data.attachment_name[0];
-        const validTypes = [
-          "image/png",
-          "image/jpeg",
-          "image/jpg",
-          "application/pdf",
-        ];
-        return validTypes.includes(file.type);
-      }
-      return true;
-    },
-    {
-      message: "El archivo debe ser PNG, JPG o PDF",
-      path: ["attachment_name"],
-    }
-  );
+export const updateDonationSchema = donationContentInput.extend({
+  donationId: z.int().positive("Donación inválida"),
+  attachment: attachmentInput.optional(),
+});
+export type UpdateDonationInput = z.infer<typeof updateDonationSchema>;
 
-// Tipo inferido del schema de edición
-export type DonationEditFormSchema = z.infer<typeof donationEditSchema>;
+export const donationIdSchema = z.object({ donationId: z.int().positive("Donación inválida") });
+export type DonationIdInput = z.infer<typeof donationIdSchema>;
+
+export const rejectDonationSchema = donationIdSchema.extend({
+  reason: z
+    .string()
+    .trim()
+    .min(10, "El motivo debe tener al menos 10 caracteres")
+    .max(200, "El motivo no puede exceder 200 caracteres"),
+});
+export type RejectDonationInput = z.infer<typeof rejectDonationSchema>;
+
+export const createGuestDonationSchema = donationContentInput.extend({
+  token: z.uuid("Enlace inválido"),
+  institutionId: z.uuid("Institución inválida").nullable(),
+  attachment: attachmentInput,
+});
+export type CreateGuestDonationInput = z.infer<typeof createGuestDonationSchema>;

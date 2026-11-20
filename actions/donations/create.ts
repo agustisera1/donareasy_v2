@@ -1,6 +1,7 @@
 "use server";
 
 import { authorize } from "@/lib/auth/authorize";
+import { donorAttachmentPrefix, isAttachmentOf } from "@/lib/policies/attachment";
 import { fail, unexpected, type ServiceResult } from "@/lib/shared/result";
 import { revalidatePaths } from "@/lib/shared/revalidate";
 import { createClient } from "@/lib/supabase/server";
@@ -16,6 +17,10 @@ export async function createDonation(
   if (!parsed.success) return fail("VALIDATION", parsed.error.issues[0].message);
 
   const data = parsed.data;
+  const donorId = auth.data.entityId;
+  if (!isAttachmentOf(data.attachment.path, donorAttachmentPrefix(donorId)))
+    return fail("VALIDATION", "La imagen no es válida");
+
   const supabase = await createClient();
 
   if (data.institutionId) {
@@ -41,10 +46,11 @@ export async function createDonation(
     if (campaign.finished) return fail("CONFLICT", "La campaña ya finalizó");
   }
 
+  const { data: file } = supabase.storage.from("donations").getPublicUrl(data.attachment.path);
   const { data: donation, error } = await supabase
     .from("donations")
     .insert({
-      donor_id: auth.data.entityId,
+      donor_id: donorId,
       institution_id: data.institutionId,
       campaign_id: data.campaignId ?? null,
       status: "pending",
@@ -53,8 +59,8 @@ export async function createDonation(
       name: data.name || null,
       description: data.description || null,
       amount: data.amount,
-      attachment_url: data.attachmentUrl,
-      attachment_name: data.attachmentName,
+      attachment_url: file.publicUrl,
+      attachment_name: data.attachment.name || null,
     })
     .select("id")
     .single();

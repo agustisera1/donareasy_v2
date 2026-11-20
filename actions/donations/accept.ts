@@ -1,148 +1,50 @@
 "use server";
 
+import { authorize } from "@/lib/auth/authorize";
+import { canAccept, isAddressedTo } from "@/lib/policies/donation";
+import { fail, unexpected, type ServiceResult } from "@/lib/shared/result";
+import { revalidatePaths } from "@/lib/shared/revalidate";
 import { createClient } from "@/lib/supabase/server";
+import { donationIdSchema, type DonationIdInput } from "@/lib/validations";
 
-export async function acceptDonation(donationId: number) {
+export async function acceptDonation(input: DonationIdInput): Promise<ServiceResult<null>> {
+  const auth = await authorize("donations:manage");
+  if (!auth.ok) return auth;
+
+  const parsed = donationIdSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", parsed.error.issues[0].message);
+
+  const { donationId } = parsed.data;
+  const institutionId = auth.data.entityId;
   const supabase = await createClient();
 
-  try {
-    // 1. Verificar que el usuario esté autenticado
-    const {
-      data: { user: authUser },
-      error: authError,
-    } = await supabase.auth.getUser();
+  const { data: donation, error: loadError } = await supabase
+    .from("donations")
+    .select("status, institution_id")
+    .eq("id", donationId)
+    .maybeSingle();
+  if (loadError) return unexpected("[acceptDonation] load", loadError);
 
-    if (authError || !authUser) {
-      return {
-        success: false,
-        error: "Usuario no autenticado",
-      };
-    }
+  // Una donación dirigida a otra institución se lee igual que una inexistente.
+  if (!donation || !isAddressedTo(donation, institutionId))
+    return fail("NOT_FOUND", "Donación no encontrada");
+  if (!canAccept(donation, institutionId))
+    return fail("CONFLICT", "Solo se pueden aceptar donaciones pendientes");
 
-    // 2. Verificar que el usuario es una institución
-    const { data: userRole, error: userRoleError } = await supabase
-      .from("user_roles")
-      .select("role_id")
-      .eq("user_id", authUser.id)
-      .maybeSingle();
-
-    if (userRoleError) {
-      throw new Error(`Error verificando rol: ${userRoleError.message}`);
-    }
-
-    if (!userRole) {
-      return {
-        success: false,
-        error: "Usuario sin rol asignado",
-      };
-    }
-
-    const { data: role, error: roleError } = await supabase
-      .from("roles")
-      .select("name")
-      .eq("id", userRole.role_id)
-      .maybeSingle();
-
-    if (roleError) {
-      throw new Error(`Error obteniendo rol: ${roleError.message}`);
-    }
-
-    if (role?.name !== "institution") {
-      return {
-        success: false,
-        error: "Solo las instituciones pueden aceptar donaciones",
-      };
-    }
-
-    // 3. Obtener la institución del usuario autenticado
-    const { data: institution, error: institutionError } = await supabase
-      .from("institutions")
-      .select("id, user_id")
-      .eq("user_id", authUser.id)
-      .maybeSingle();
-
-    if (institutionError) {
-      throw new Error(
-        `Error verificando institución: ${institutionError.message}`
-      );
-    }
-
-    if (!institution) {
-      return {
-        success: false,
-        error: "Institución no encontrada",
-      };
-    }
-
-    // 4. Verificar que la donación existe y pertenece a esta institución
-    const { data: donation, error: donationError } = await supabase
-      .from("donations")
-      .select("id, status, institution_id")
-      .eq("id", donationId)
-      .maybeSingle();
-
-    if (donationError) {
-      throw new Error(`Error verificando donación: ${donationError.message}`);
-    }
-
-    if (!donation) {
-      return {
-        success: false,
-        error: "Donación no encontrada",
-      };
-    }
-
-    // Verificar permisos: donaciones abiertas pueden ser aceptadas por cualquier institución;
-    // donaciones dirigidas solo por la institución destino
-    if (donation.institution_id !== null && donation.institution_id !== institution.id) {
-      return {
-        success: false,
-        error: "No tienes permisos para aceptar esta donación",
-      };
-    }
-
-    if (donation.status !== "pending") {
-      return {
-        success: false,
-        error: "Solo se pueden aceptar donaciones pendientes",
-      };
-    }
-
-    // 5. Preparar la fecha de aceptación (fecha actual)
-    const today = new Date();
-    const acceptedDate = today.toISOString();
-
-    // 6. Actualizar la donación marcándola como aceptada.
-    // Para donaciones abiertas, también se asigna la institución que acepta.
-    const updateData: {
-      status: string;
-      date_accepted: string;
-      institution_id?: string;
-    } = {
+  // El estado esperado va en el WHERE: si otra institución ganó la carrera, no actualiza nada.
+  const { data: updated, error: updateError } = await supabase
+    .from("donations")
+    .update({
       status: "accepted",
-      date_accepted: acceptedDate,
-    };
+      date_accepted: new Date().toISOString(),
+      institution_id: institutionId,
+    })
+    .eq("id", donationId)
+    .eq("status", "pending")
+    .select("id");
+  if (updateError) return unexpected("[acceptDonation] update", updateError);
+  if (updated.length === 0) return fail("CONFLICT", "La donación ya fue tomada por otra institución");
 
-    if (donation.institution_id === null) {
-      updateData.institution_id = institution.id;
-    }
-
-    const { error: updateError } = await supabase
-      .from("donations")
-      .update(updateData)
-      .eq("id", donationId);
-
-    if (updateError) {
-      throw new Error(`Error aceptando donación: ${updateError.message}`);
-    }
-
-    return { success: true };
-  } catch (error) {
-    console.error("Error in acceptDonation:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
+  revalidatePaths([{ path: "/dashboard/donations" }]);
+  return { ok: true, data: null };
 }
-

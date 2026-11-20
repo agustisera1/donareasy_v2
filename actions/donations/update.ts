@@ -1,104 +1,61 @@
 "use server";
 
+import { authorize } from "@/lib/auth/authorize";
+import { donorAttachmentPrefix, isAttachmentOf } from "@/lib/policies/attachment";
+import { canEditOrCancel } from "@/lib/policies/donation";
+import { fail, unexpected, type ServiceResult } from "@/lib/shared/result";
+import { revalidatePaths } from "@/lib/shared/revalidate";
 import { createClient } from "@/lib/supabase/server";
+import { updateDonationSchema, type UpdateDonationInput } from "@/lib/validations";
 
-interface UpdateDonationData {
-  name?: string | null;
-  description?: string | null;
-  amount?: number | null;
-  attachment_name?: string | null;
-  attachment_url?: string;
-  delivery_method?: "pickup" | "shipment" | "agreement" | "transfer";
-  category?: "supplies" | "clothing" | "food" | "other";
-}
+export async function updateDonation(input: UpdateDonationInput): Promise<ServiceResult<null>> {
+  const auth = await authorize("donations:own");
+  if (!auth.ok) return auth;
 
-export async function updateDonation(
-  donationId: number,
-  formData: UpdateDonationData
-) {
+  const parsed = updateDonationSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", parsed.error.issues[0].message);
+
+  const { donationId, attachment, ...content } = parsed.data;
+  const donorId = auth.data.entityId;
+  if (attachment && !isAttachmentOf(attachment.path, donorAttachmentPrefix(donorId)))
+    return fail("VALIDATION", "La imagen no es válida");
+
   const supabase = await createClient();
+  const { data: donation, error: loadError } = await supabase
+    .from("donations")
+    .select("status, donor_id, amount")
+    .eq("id", donationId)
+    .maybeSingle();
+  if (loadError) return unexpected("[updateDonation] load", loadError);
 
-  try {
-    // 1. Verificar que el usuario esté autenticado
-    const {
-      data: { user: authUser },
-      error: authError,
-    } = await supabase.auth.getUser();
+  if (!donation || donation.donor_id !== donorId) return fail("NOT_FOUND", "Donación no encontrada");
+  if (!canEditOrCancel(donation, donorId))
+    return fail("CONFLICT", "Solo se pueden editar donaciones pendientes");
+  if ((donation.amount === null) !== (content.amount === null))
+    return fail("VALIDATION", "No se puede cambiar el tipo de la donación");
 
-    if (authError || !authUser) {
-      return {
-        success: false,
-        error: "Usuario no autenticado",
-      };
-    }
+  const file = attachment && {
+    attachment_url: supabase.storage.from("donations").getPublicUrl(attachment.path).data.publicUrl,
+    attachment_name: attachment.name || null,
+  };
 
-    // 2. Verificar que la donación existe y pertenece al usuario autenticado
-    const { data: donation, error: donationError } = await supabase
-      .from("donations")
-      .select("id, donor_id")
-      .eq("id", donationId)
-      .maybeSingle();
+  // El estado esperado va en el WHERE: si una institución la aceptó en el medio, no actualiza.
+  const { data: updated, error: updateError } = await supabase
+    .from("donations")
+    .update({
+      delivery_method: content.deliveryMethod,
+      category: content.category,
+      name: content.name || null,
+      description: content.description || null,
+      amount: content.amount,
+      ...file,
+    })
+    .eq("id", donationId)
+    .eq("status", "pending")
+    .select("id");
+  if (updateError) return unexpected("[updateDonation] update", updateError);
+  if (updated.length === 0) return fail("CONFLICT", "La donación ya no está pendiente");
 
-    if (donationError) {
-      throw new Error(`Error verificando donación: ${donationError.message}`);
-    }
-
-    if (!donation) {
-      return {
-        success: false,
-        error: "Donación no encontrada",
-      };
-    }
-
-    // 3. Verificar que el donante pertenece al usuario autenticado
-    const { data: donor, error: donorError } = await supabase
-      .from("donors")
-      .select("id, user_id")
-      .eq("id", donation.donor_id)
-      .eq("user_id", authUser.id)
-      .maybeSingle();
-
-    if (donorError) {
-      throw new Error(`Error verificando donante: ${donorError.message}`);
-    }
-
-    if (!donor) {
-      return {
-        success: false,
-        error: "No tienes permisos para editar esta donación",
-      };
-    }
-
-    // 4. Actualizar la donación
-    const updateData: Partial<UpdateDonationData> = {};
-    if (formData.name !== undefined) updateData.name = formData.name;
-    if (formData.description !== undefined)
-      updateData.description = formData.description;
-    if (formData.amount !== undefined) updateData.amount = formData.amount;
-    if (formData.attachment_name !== undefined)
-      updateData.attachment_name = formData.attachment_name;
-    if (formData.attachment_url !== undefined)
-      updateData.attachment_url = formData.attachment_url;
-    if (formData.delivery_method !== undefined)
-      updateData.delivery_method = formData.delivery_method;
-    if (formData.category !== undefined)
-      updateData.category = formData.category;
-
-    const { error: updateError } = await supabase
-      .from("donations")
-      .update(updateData)
-      .eq("id", donationId);
-
-    if (updateError) {
-      throw new Error(`Error actualizando donación: ${updateError.message}`);
-    }
-
-    return { success: true };
-  } catch (error) {
-    console.error("Error in updateDonation:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
+  revalidatePaths([{ path: "/dashboard/donations" }]);
+  return { ok: true, data: null };
 }

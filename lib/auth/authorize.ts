@@ -6,7 +6,9 @@ import type { RoleName } from "@/lib/types";
 
 const PERMISSIONS = {
   "institutions:list": ["donor", "institution"],
+  "donations:list": ["donor", "institution"],
   "donations:create": ["donor"],
+  "donations:own": ["donor"],
   "donations:manage": ["institution"],
   "campaigns:list": ["donor", "institution"],
   "campaigns:manage": ["institution"],
