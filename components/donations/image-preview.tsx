@@ -4,52 +4,28 @@ import { cn } from "@/lib/utils";
 interface ImagePreviewProps {
   src: string;
   alt: string;
-  height?: string;
   className?: string;
-  imageClassName?: string;
-  sizes?: string;
-  blur?: boolean;
 }
 
-export function ImagePreview({
-  src,
-  alt,
-  height = "h-64",
-  className,
-  imageClassName,
-  sizes = "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw",
-  blur = false,
-}: ImagePreviewProps) {
-  const handleClick = () => {
-    window.open(src, "_blank");
-  };
-
+export function ImagePreview({ src, alt, className }: ImagePreviewProps) {
   return (
-    <div
+    <a
+      href={src}
+      target="_blank"
+      rel="noreferrer"
       className={cn(
-        "relative w-full rounded-md overflow-hidden border cursor-zoom-in transition-opacity hover:opacity-90",
-        height,
-        className
+        "relative block h-64 w-full cursor-zoom-in overflow-hidden rounded-md border transition-opacity hover:opacity-90",
+        className,
       )}
-      onClick={handleClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          handleClick();
-        }
-      }}
-      aria-label={`Ver imagen completa: ${alt}`}
     >
+      <span className="sr-only">Ver imagen completa: {alt}</span>
       <Image
         src={src}
         alt={alt}
         fill
-        className={cn("object-contain", imageClassName)}
-        style={blur ? { filter: "blur(6px)" } : undefined}
-        sizes={sizes}
+        className="object-contain"
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
       />
-    </div>
+    </a>
   );
 }

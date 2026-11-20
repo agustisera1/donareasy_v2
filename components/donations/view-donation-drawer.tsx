@@ -3,104 +3,89 @@
 import { Button } from "@/components/ui/button";
 import { DetailItem, DetailList } from "@/components/common/detail-list";
 import { DrawerLayout } from "@/components/common/drawer-layout";
-import { useDonationsContext } from "@/contexts/donations-context";
+import type { DonationWithRelations } from "@/lib/types";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { StatusBadge } from "./status-badge";
 import { CategoryBadge } from "./category-badge";
 import { DeliveryMethodBadge } from "./delivery-method-badge";
 import { ImagePreview } from "./image-preview";
+import { StatusBadge } from "./status-badge";
 
-export function ViewDonationDrawer() {
-  const { viewDrawerOpen, closeViewDrawer, selectedDonation } =
-    useDonationsContext();
+interface ViewDonationDrawerProps {
+  donation: DonationWithRelations;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
 
-  if (!selectedDonation) return null;
-
-  const isMoney = selectedDonation.amount !== null;
+export function ViewDonationDrawer({ donation, open, onOpenChange }: ViewDonationDrawerProps) {
+  const isMoney = donation.amount !== null;
 
   return (
     <DrawerLayout
-      open={viewDrawerOpen}
-      onOpenChange={closeViewDrawer}
+      open={open}
+      onOpenChange={onOpenChange}
       title="Detalles de la donación"
       description="Información registrada de la donación"
-      footer={<Button onClick={closeViewDrawer}>Cerrar</Button>}
+      footer={<Button onClick={() => onOpenChange(false)}>Cerrar</Button>}
     >
       <DetailList>
         {isMoney ? (
           <>
             <DetailItem label="Monto">
-              <span className="tabular-nums">
-                {formatCurrency(selectedDonation.amount ?? 0)}
-              </span>
+              <span className="tabular-nums">{formatCurrency(donation.amount ?? 0)}</span>
             </DetailItem>
-            {selectedDonation.attachment_name && (
-              <DetailItem label="Nombre del comprobante">
-                {selectedDonation.attachment_name}
-              </DetailItem>
+            {donation.attachment_name && (
+              <DetailItem label="Nombre del comprobante">{donation.attachment_name}</DetailItem>
             )}
           </>
         ) : (
           <>
-            {selectedDonation.name && (
-              <DetailItem label="Nombre">{selectedDonation.name}</DetailItem>
-            )}
-            {selectedDonation.description && (
-              <DetailItem label="Descripción">
-                {selectedDonation.description}
-              </DetailItem>
+            {donation.name && <DetailItem label="Nombre">{donation.name}</DetailItem>}
+            {donation.description && (
+              <DetailItem label="Descripción">{donation.description}</DetailItem>
             )}
           </>
         )}
 
-        {selectedDonation.attachment_url && (
+        {donation.attachment_url && (
           <DetailItem label="Imagen adjunta" stacked>
             <ImagePreview
-              src={selectedDonation.attachment_url}
-              alt={
-                isMoney ? "Comprobante de transferencia" : "Imagen de la donación"
-              }
+              src={donation.attachment_url}
+              alt={isMoney ? "Comprobante de transferencia" : "Imagen de la donación"}
             />
           </DetailItem>
         )}
 
         <DetailItem label="Estado">
-          <StatusBadge status={selectedDonation.status} />
+          <StatusBadge status={donation.status} />
         </DetailItem>
         <DetailItem label="Categoría">
-          <CategoryBadge category={selectedDonation.category} />
+          <CategoryBadge category={donation.category} />
         </DetailItem>
         <DetailItem label="Forma de entrega">
-          <DeliveryMethodBadge
-            deliveryMethod={selectedDonation.delivery_method}
-          />
+          <DeliveryMethodBadge deliveryMethod={donation.delivery_method} />
         </DetailItem>
-        {selectedDonation.campaign && (
-          <DetailItem label="Campaña">{selectedDonation.campaign.type}</DetailItem>
+        {donation.campaign && <DetailItem label="Campaña">{donation.campaign.type}</DetailItem>}
+        {donation.donor && (
+          <>
+            <DetailItem label="Donante">
+              {donation.donor.name} {donation.donor.lastname}
+            </DetailItem>
+            <DetailItem label="Contacto">{donation.donor.phone}</DetailItem>
+          </>
         )}
-        <DetailItem label="Donante">{selectedDonation.donor}</DetailItem>
-        <DetailItem label="Contacto">{selectedDonation.donor_phone}</DetailItem>
-        <DetailItem label="Fecha de creación">
-          {formatDate(selectedDonation.date_created)}
-        </DetailItem>
-        {selectedDonation.date_accepted && (
-          <DetailItem label="Fecha de aceptación">
-            {formatDate(selectedDonation.date_accepted)}
-          </DetailItem>
+        <DetailItem label="Fecha de creación">{formatDate(donation.date_created)}</DetailItem>
+        {donation.date_accepted && (
+          <DetailItem label="Fecha de aceptación">{formatDate(donation.date_accepted)}</DetailItem>
         )}
-        {selectedDonation.date_cancelled && (
-          <DetailItem label="Fecha de rechazo">
-            {formatDate(selectedDonation.date_cancelled)}
-          </DetailItem>
+        {donation.date_cancelled && (
+          <DetailItem label="Fecha de rechazo">{formatDate(donation.date_cancelled)}</DetailItem>
         )}
-        {selectedDonation.dellivered_date && (
-          <DetailItem label="Fecha de entrega">
-            {formatDate(selectedDonation.dellivered_date)}
-          </DetailItem>
+        {donation.dellivered_date && (
+          <DetailItem label="Fecha de entrega">{formatDate(donation.dellivered_date)}</DetailItem>
         )}
-        {selectedDonation.cancellation_reason && (
+        {donation.cancellation_reason && (
           <DetailItem label="Motivo de rechazo" stacked>
-            {selectedDonation.cancellation_reason}
+            {donation.cancellation_reason}
           </DetailItem>
         )}
       </DetailList>

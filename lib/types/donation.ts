@@ -26,7 +26,10 @@ export type Donation = {
   category: DonationCategory; // text NOT NULL
   institution_id: string | null; // uuid, NULL para donaciones abiertas
   campaign_id: string | null; // uuid, campaña desde la que se donó (opcional)
-  campaign?: { type: string } | null; // join con campaigns
-  donor: string; // WARNING: This is a string concatenation of the donor's name and lastname when retrieving from the database after joining with the DONOR TABLE
-  donor_phone: string; // Phone number from donors table join
+};
+
+// Fila de la lista con los joins que muestra la UI.
+export type DonationWithRelations = Donation & {
+  campaign: { type: string } | null;
+  donor: { name: string; lastname: string; phone: string } | null;
 };

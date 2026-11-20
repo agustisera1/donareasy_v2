@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { useDonationsContext } from "@/contexts/donations-context";
-import { rejectDonation } from "@/actions/donations/reject";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -13,103 +13,77 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { rejectDonation } from "@/actions/donations/reject";
+import { rejectDonationSchema, type RejectDonationInput } from "@/lib/validations";
 
-const REASON_MIN_LENGTH = 10;
+interface RejectDonationDialogProps {
+  donationId: number;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
 
-export function RejectDonationDialog() {
-  const { rejectDialogOpen, closeRejectDialog, selectedDonation, refetch } =
-    useDonationsContext();
-  const [rejectionReason, setRejectionReason] = useState("");
-  const [error, setError] = useState(false);
-  const [isPending, setIsPending] = useState(false);
+// Diálogo con contenido propio: form RHF dentro de un AlertDialog (04-frontend, ConfirmDialog).
+export function RejectDonationDialog({ donationId, open, onOpenChange }: RejectDonationDialogProps) {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<RejectDonationInput>({
+    resolver: zodResolver(rejectDonationSchema),
+    defaultValues: { donationId, reason: "" },
+  });
 
-  const reset = () => {
-    setRejectionReason("");
-    setError(false);
-    setIsPending(false);
+  function setOpen(next: boolean) {
+    if (isSubmitting) return;
+    if (!next) reset({ donationId, reason: "" });
+    onOpenChange(next);
   }
 
-
-  const handleRejectionReasonChange = (value: string) => {
-    setRejectionReason(value);
-    if (value.trim().length > 0 && value.trim().length < REASON_MIN_LENGTH) setError(true);
-    else setError(false);
-  };
-
-
-  const handleConfirm = async () => {
-    if (!selectedDonation) return;
-
-    const trimmedReason = rejectionReason.trim();
-    if (trimmedReason.length < REASON_MIN_LENGTH) {
-      setError(true);
-      return;
-    }
-
-    setIsPending(true);
-
-    try {
-      const result = await rejectDonation(selectedDonation.id, trimmedReason);
-
-      if (result.success) {
-        toast.success("Donación rechazada");
-        reset();
-        await refetch();
-        closeRejectDialog();
-      } else {
-        toast.error(result.error || "Error al rechazar la donación");
-        setIsPending(false);
-      }
-    } catch {
-      toast.error("Error al rechazar la donación");
-      setIsPending(false);
-    }
-  };
-
-  const handleOpenChange = (open: boolean) => {
-    if (!open && !isPending) {
-      reset();
-      closeRejectDialog();
-    }
-  };
-
-  const isValid = rejectionReason.trim().length >= REASON_MIN_LENGTH;
+  async function submit(values: RejectDonationInput) {
+    const result = await rejectDonation(values);
+    if (!result.ok) return void toast.error(result.error);
+    toast.success("Donación rechazada");
+    reset({ donationId, reason: "" });
+    onOpenChange(false);
+  }
 
   return (
-    <AlertDialog open={rejectDialogOpen} onOpenChange={handleOpenChange}>
+    <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>¿Rechazar donación?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Esta acción marcará la donación como rechazada, por favor proveenos el motivo de rechazo.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <div className="flex flex-col gap-2 leading-none">
-          <span className="text-xs text-gray-500">
-            Danos el detalle de por qué motivo la donación no puede ser aceptada.
-            Ej: &quot;Las fotos muestran los bienes muy deteriorados&quot; o &quot;El lote de alimentos provisto se encuentra expirado&quot;
-          </span>
-          <Textarea
-            id="rejection-reason"
-            value={rejectionReason}
-            onChange={(e) => handleRejectionReasonChange(e.target.value)}
-            className="min-h-24"
-            disabled={isPending}
-          />
-          <p className={cn("text-sm", error ? "text-red-500" : "text-muted-foreground")}>
-            El motivo debe tener al menos {REASON_MIN_LENGTH} caracteres
-          </p>
-        </div>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={handleConfirm} disabled={!isValid || isPending}>
-            Rechazar
-          </AlertDialogAction>
-        </AlertDialogFooter>
+        <form onSubmit={handleSubmit(submit)} className="grid gap-4">
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Rechazar la donación?</AlertDialogTitle>
+            <AlertDialogDescription>
+              La donación queda rechazada y el donante ve el motivo. No se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Field data-invalid={!!errors.reason}>
+            <FieldLabel htmlFor="reason">Motivo</FieldLabel>
+            <FieldDescription>
+              Ej: &quot;Las fotos muestran los bienes muy deteriorados&quot; o &quot;Los alimentos están
+              vencidos&quot;.
+            </FieldDescription>
+            <Textarea
+              id="reason"
+              className="min-h-24"
+              aria-invalid={!!errors.reason}
+              disabled={isSubmitting}
+              {...register("reason")}
+            />
+            <FieldError errors={[errors.reason]} />
+          </Field>
+          <AlertDialogFooter>
+            <AlertDialogCancel type="button" disabled={isSubmitting}>Cancelar</AlertDialogCancel>
+            <Button type="submit" variant="destructive" disabled={isSubmitting}>
+              {isSubmitting ? "Rechazando…" : "Rechazar"}
+            </Button>
+          </AlertDialogFooter>
+        </form>
       </AlertDialogContent>
-    </AlertDialog >
+    </AlertDialog>
   );
 }
