@@ -1,3 +1,4 @@
+import { isValidPhoneNumber } from "libphonenumber-js";
 import * as z from "zod";
 
 // Validaciones comunes reutilizables
@@ -53,15 +54,12 @@ export const citySchema = z
   .min(2, "La ciudad es requerida")
   .max(100, "La ciudad no puede exceder 100 caracteres");
 
+// libphonenumber-js puro (sin React): es el mismo motor que formatea ArPhoneInput.
 export const phoneSchema = z
   .string()
   .trim()
-  .min(10, "El teléfono debe tener al menos 10 caracteres")
-  .max(20, "El teléfono no puede exceder 20 caracteres")
-  .regex(
-    /^[\d\s\+\-\(\)]+$/,
-    "El teléfono solo puede contener números, espacios, +, - y paréntesis"
-  );
+  .min(1, "El teléfono es obligatorio")
+  .refine((value) => isValidPhoneNumber(value, "AR"), "Ingresá un teléfono válido de Argentina");
 
 export const directorSchema = z
   .string()

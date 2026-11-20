@@ -1,8 +1,9 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, Fragment } from "react";
+import { ArPhoneInput } from "@/components/common/ar-phone-input";
 import { DrawerLayout } from "@/components/common/drawer-layout";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
@@ -177,11 +178,19 @@ export function EditDrawer({
 
             <Field data-invalid={!!donorForm.formState.errors.phone}>
               <FieldLabel htmlFor="phone">Teléfono</FieldLabel>
-              <Input
-                id="phone"
-                aria-invalid={!!donorForm.formState.errors.phone}
-                {...donorForm.register("phone")}
-                placeholder="Teléfono"
+              <Controller
+                control={donorForm.control}
+                name="phone"
+                render={({ field }) => (
+                  <ArPhoneInput
+                    id="phone"
+                    autoComplete="tel"
+                    aria-invalid={!!donorForm.formState.errors.phone}
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                  />
+                )}
               />
               <FieldError errors={[donorForm.formState.errors.phone]} />
             </Field>
@@ -246,12 +255,20 @@ export function EditDrawer({
             </Field>
 
             <Field data-invalid={!!institutionForm.formState.errors.phone}>
-              <FieldLabel htmlFor="phone">Teléfono</FieldLabel>
-              <Input
-                id="phone"
-                aria-invalid={!!institutionForm.formState.errors.phone}
-                {...institutionForm.register("phone")}
-                placeholder="Teléfono"
+              <FieldLabel htmlFor="institution-phone">Teléfono</FieldLabel>
+              <Controller
+                control={institutionForm.control}
+                name="phone"
+                render={({ field }) => (
+                  <ArPhoneInput
+                    id="institution-phone"
+                    autoComplete="tel"
+                    aria-invalid={!!institutionForm.formState.errors.phone}
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                  />
+                )}
               />
               <FieldError errors={[institutionForm.formState.errors.phone]} />
             </Field>

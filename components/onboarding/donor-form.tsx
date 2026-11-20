@@ -1,10 +1,11 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { completeDonorOnboarding } from "@/actions/user/complete-onboarding";
+import { ArPhoneInput } from "@/components/common/ar-phone-input";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,6 +23,7 @@ export function DonorForm() {
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<DonorFormSchema>({
@@ -119,13 +121,19 @@ export function DonorForm() {
 
           <Field className="col-span-2" data-invalid={!!errors.phone}>
             <FieldLabel htmlFor="phone">Teléfono</FieldLabel>
-            <Input
-              id="phone"
-              type="tel"
-              autoComplete="tel"
-              aria-invalid={!!errors.phone}
-              {...register("phone")}
-              placeholder="+54 11 1234-5678"
+            <Controller
+              control={control}
+              name="phone"
+              render={({ field }) => (
+                <ArPhoneInput
+                  id="phone"
+                  autoComplete="tel"
+                  aria-invalid={!!errors.phone}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                />
+              )}
             />
             <FieldError errors={[errors.phone]} />
           </Field>

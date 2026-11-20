@@ -1,6 +1,8 @@
 "use client";
 
 import { Controller, useForm } from "react-hook-form";
+
+import { ArPhoneInput } from "@/components/common/ar-phone-input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -113,13 +115,19 @@ export function InstitutionForm() {
 
           <Field data-invalid={!!errors.phone}>
             <FieldLabel htmlFor="institution-phone">Teléfono</FieldLabel>
-            <Input
-              id="institution-phone"
-              type="tel"
-              autoComplete="tel"
-              aria-invalid={!!errors.phone}
-              {...register("phone")}
-              placeholder="+54 11 1234-5678"
+            <Controller
+              control={control}
+              name="phone"
+              render={({ field }) => (
+                <ArPhoneInput
+                  id="institution-phone"
+                  autoComplete="tel"
+                  aria-invalid={!!errors.phone}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                />
+              )}
             />
             <FieldError errors={[errors.phone]} />
           </Field>
