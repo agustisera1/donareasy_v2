@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { HistoryLink } from "@/components/common/history-link";
 import {
   Pagination,
   PaginationContent,
@@ -45,10 +45,10 @@ export function DataTablePagination({ current, pageCount }: DataTablePaginationP
         <PaginationItem>
           {current > 1 ? (
             <Button asChild variant="ghost" size="icon">
-              <Link href={hrefFor(current - 1)}>
+              <HistoryLink href={hrefFor(current - 1)}>
                 <ChevronLeftIcon />
                 <span className="sr-only">Ir a la página anterior</span>
-              </Link>
+              </HistoryLink>
             </Button>
           ) : (
             <Button variant="ghost" size="icon" disabled>
@@ -69,13 +69,13 @@ export function DataTablePagination({ current, pageCount }: DataTablePaginationP
                 variant={page === current ? "default" : "ghost"}
                 size="icon"
               >
-                <Link
+                <HistoryLink
                   href={hrefFor(page)}
                   aria-current={page === current ? "page" : undefined}
                   className="tabular-nums"
                 >
                   {page}
-                </Link>
+                </HistoryLink>
               </Button>
             </PaginationItem>
           )
@@ -83,10 +83,10 @@ export function DataTablePagination({ current, pageCount }: DataTablePaginationP
         <PaginationItem>
           {current < pageCount ? (
             <Button asChild variant="ghost" size="icon">
-              <Link href={hrefFor(current + 1)}>
+              <HistoryLink href={hrefFor(current + 1)}>
                 <ChevronRightIcon />
                 <span className="sr-only">Ir a la página siguiente</span>
-              </Link>
+              </HistoryLink>
             </Button>
           ) : (
             <Button variant="ghost" size="icon" disabled>

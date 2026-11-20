@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Check, Edit, Eye, HandCoins } from "lucide-react";
 import { toast } from "sonner";
@@ -10,7 +11,7 @@ import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { DataTable } from "@/components/common/data-table";
 import { DataTableColumnHeader } from "@/components/common/data-table-column-header";
 import { DataTableRowAction } from "@/components/common/data-table-row-action";
-import { DataTableTabs } from "@/components/common/data-table-tabs";
+import { DataTableTabs, parseTab } from "@/components/common/data-table-tabs";
 import { finishCampaign } from "@/actions/campaign/finish";
 import type { CampaignWithInstitution as Campaign, RoleName } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
@@ -35,14 +36,18 @@ type Panel = "create" | "view" | "edit" | "finish" | null;
 interface CampaignsDataTableProps {
   rows: Campaign[] | null;
   actor: CampaignsActor | null;
-  view: "all" | "mine";
 }
 
-export function CampaignsDataTable({ rows, actor, view }: CampaignsDataTableProps) {
+export function CampaignsDataTable({ rows, actor }: CampaignsDataTableProps) {
+  const view = parseTab(useSearchParams().get("view"), viewOptions);
   const [panel, setPanel] = useState<Panel>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = rows?.find((campaign) => campaign.id === selectedId) ?? null;
   const isInstitution = actor?.role === "institution";
+  const visibleRows =
+    view === "mine" && isInstitution
+      ? rows?.filter((campaign) => campaign.institution_id === actor.entityId)
+      : rows;
 
   function open(next: Exclude<Panel, null>, campaign?: Campaign) {
     if (campaign) setSelectedId(campaign.id);
@@ -136,7 +141,7 @@ export function CampaignsDataTable({ rows, actor, view }: CampaignsDataTableProp
     <>
       <DataTable
         columns={columns}
-        data={rows ?? []}
+        data={visibleRows ?? []}
         errorMessage={rows ? null : "No se pudieron cargar las campañas. Recargá la página."}
         emptyMessage={view === "mine" ? "Todavía no creaste campañas" : "No hay campañas disponibles"}
         countLabel={(count) => `${count} campaña(s)`}

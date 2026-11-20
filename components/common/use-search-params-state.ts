@@ -1,8 +1,9 @@
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import type { ColumnFiltersState, SortingState } from "@tanstack/react-table";
 
+// El estado de la tabla (orden, filtros, pestaña) se resuelve en el cliente: la URL cambia con la
+// History API, que Next sincroniza con useSearchParams sin pedirle la página al server.
 export function useSearchParamsState() {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -11,7 +12,7 @@ export function useSearchParamsState() {
     mutate(params);
     params.delete("page");
     const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    window.history.replaceState(null, "", query ? `${pathname}?${query}` : pathname);
   };
 
   return { searchParams, replace };

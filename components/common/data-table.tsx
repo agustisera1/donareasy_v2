@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, type ReactNode } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   flexRender,
@@ -38,6 +37,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { DataTablePagination } from "@/components/common/data-table-pagination";
+import { HistoryLink } from "@/components/common/history-link";
 import {
   parseColumnFilters,
   parseSorting,
@@ -86,7 +86,9 @@ export function DataTable<TData>({
   const filterIds = facetedFilters.map((filter) => filter.columnId);
   const rawSort = searchParams.get("sort");
   const rawFilters = filterIds.map((id) => `${id}=${searchParams.get(id) ?? ""}`).join("&");
-  const sorting = useMemo(() => parseSorting(rawSort), [rawSort]);
+  // La URL puede traer un orden de otra tabla: solo se aplica sobre columnas que existen acá.
+  const columnIds = columns.map((column) => column.id ?? ("accessorKey" in column ? String(column.accessorKey) : ""));
+  const sorting = parseSorting(rawSort).filter(({ id }) => columnIds.includes(id));
   const columnFilters = useMemo(() => {
     const params = new URLSearchParams(rawFilters);
     return parseColumnFilters(params, [...params.keys()]);
@@ -207,7 +209,7 @@ export function DataTable<TData>({
                   </EmptyHeader>
                   <EmptyContent>
                     <Button asChild variant="outline">
-                      <Link href={firstPageHref(pathname, searchParams)}>Ir a la primera página</Link>
+                      <HistoryLink href={firstPageHref(pathname, searchParams)}>Ir a la primera página</HistoryLink>
                     </Button>
                   </EmptyContent>
                 </Empty>

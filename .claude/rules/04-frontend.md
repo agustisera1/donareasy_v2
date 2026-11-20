@@ -47,7 +47,7 @@ semánticos en un solo lugar (p. ej. `status-badge.tsx`), no con clases sueltas 
 | `DataTable` | Tabla de datos (TanStack + `ui/table`): toolbar, filtros facetados, estados y paginación. Uso: `components/donations/donations-data-table.tsx` | Client |
 | `DataTableColumnHeader` | Header de columna ordenable | Client |
 | `DataTableFacetedFilter` | Filtro multi-select de valores enumerables con conteos (`getFacetedUniqueValues`); lo renderiza `DataTable` desde `facetedFilters` | Client |
-| `DataTablePagination` | `Pagination` de shadcn con links `?page=N` (`Button asChild` + `Link`) | Client |
+| `DataTablePagination` | `Pagination` de shadcn con links `?page=N` (`Button asChild` + `HistoryLink`) | Client |
 | `DataTableRowAction` | Botón de acción solo-ícono con `Tooltip`; con `href` navega con `Link` | Client |
 | `DrawerLayout` | Drawer lateral: header, cuerpo con scroll y footer. Uso: `components/donations/edit-donation-drawer.tsx` | Client |
 | `DatePicker` | Selector de fecha (`Popover` + `Calendar`), valor `yyyy-MM-dd`. Uso: `components/campaigns/campaign-form-drawer.tsx` | Client |
@@ -55,6 +55,9 @@ semánticos en un solo lugar (p. ej. `status-badge.tsx`), no con clases sueltas 
 | `DataTableTabs` | Pestañas de la toolbar (`Tabs` de shadcn) sincronizadas con un search param; `parseTab` lee el valor | Client |
 | `PasswordInput` | Input de contraseña con botón de mostrar / ocultar (`InputGroup`). Uso: `components/login-form.tsx` | Client |
 | `ConfirmDialog` | Confirmación de acción con efecto real (open + pending + retry; controlado o con `trigger`). Uso: `components/campaigns/campaigns-data-table.tsx` | Client |
+| `HistoryLink` | Link a otro estado de la misma vista (página, orden) con la History API, sin request al server. Uso: `components/common/data-table-pagination.tsx` | Client |
+| `MoneyInput` | Monto en ARS con máscara (Dice UI Mask Input); el valor es el número sin máscara. Uso: `components/donations/donation-form-fields.tsx` | Client |
+| `ArPhoneInput` | Teléfono de Argentina (ReUI Phone Input / libphonenumber), valor en E.164. Uso: `components/guest/guest-access-form.tsx` | Client |
 
 Primitivos objetivo (se crean en `common/` la primera vez que se necesitan):
 
