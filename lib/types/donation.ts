@@ -25,6 +25,8 @@ export type Donation = {
   delivery_method: DeliveryMethod; // text NOT NULL
   category: DonationCategory; // text NOT NULL
   institution_id: string | null; // uuid, NULL para donaciones abiertas
+  campaign_id: string | null; // uuid, campaña desde la que se donó (opcional)
+  campaign?: { type: string } | null; // join con campaigns
   donor: string; // WARNING: This is a string concatenation of the donor's name and lastname when retrieving from the database after joining with the DONOR TABLE
   donor_phone: string; // Phone number from donors table join
 };

@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   try {
     let query = supabase
       .from("donations")
-      .select("*, donors(name,lastname,phone)")
+      .select("*, donors(name,lastname,phone), campaign:campaigns(type)")
       .order("date_created", { ascending: false });
 
     // Si se proporciona donor_id, filtrar por ese donante

@@ -10,6 +10,8 @@ export type Campaign = {
   description: string; // text
   quantity: string | null; // text (nullable)
   institution_id: string; // uuid
-  finished: boolean | null; // boolean (nullable)
+  finished: boolean; // boolean NOT NULL DEFAULT false
 };
+
+export type CampaignWithInstitution = Campaign & { institution: { name: string } | null };
 

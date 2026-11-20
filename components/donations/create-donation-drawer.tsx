@@ -24,7 +24,7 @@ import { useDonationsContext } from "@/contexts/donations-context";
 import { createClient } from "@/lib/supabase/client";
 import { Institution } from "@/lib/types";
 import { Textarea } from "../ui/textarea";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Fragment } from "react";
 import { ImagePreview } from "./image-preview";
 import {
@@ -39,12 +39,23 @@ import {
 
 type DonationFormData = DonationFormSchema;
 
+const emptyDonationForm: DonationFormData = {
+  institution_id: "",
+  campaign_id: undefined,
+  open_donation: false,
+  donation_type: "goods",
+  delivery_method: "pickup",
+  category: "supplies",
+  amount: "",
+  attachment_name: null,
+  name: "",
+  description: "",
+};
+
 export function CreateDonationDrawer() {
   const {
     createDrawerOpen,
-    openCreateDrawer,
     closeCreateDrawer,
-    donor,
     refetch,
   } = useDonationsContext();
   const [isLoading, setIsLoading] = useState(false);
@@ -53,9 +64,13 @@ export function CreateDonationDrawer() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const campaignId = searchParams.get("campaign_id");
-  const institutionId = searchParams.get("institution_id");
+  const campaignInstitutionId = searchParams.get("institution_id");
+  // "Donar" desde una campaña llega con ?campaign_id: el drawer abierto se deriva de la URL.
+  const open = createDrawerOpen || !!campaignId;
 
   const {
     register,
@@ -68,15 +83,9 @@ export function CreateDonationDrawer() {
     resolver: zodResolver(donationSchema),
     mode: "onChange",
     defaultValues: {
-      institution_id: "",
-      open_donation: false,
-      donation_type: "goods",
-      delivery_method: "pickup",
-      category: "supplies",
-      amount: "",
-      attachment_name: null,
-      name: "",
-      description: "",
+      ...emptyDonationForm,
+      institution_id: campaignInstitutionId ?? "",
+      campaign_id: campaignId ?? undefined,
     },
   });
 
@@ -86,10 +95,10 @@ export function CreateDonationDrawer() {
 
   // Cargar instituciones al abrir el drawer
   useEffect(() => {
-    if (createDrawerOpen) {
+    if (open) {
       loadInstitutions();
     }
-  }, [createDrawerOpen]);
+  }, [open]);
 
   // Manejar preview cuando se selecciona un nuevo archivo
   useEffect(() => {
@@ -134,23 +143,6 @@ export function CreateDonationDrawer() {
     }
   }, [donationType, setValue]);
 
-  useEffect(() => {
-    if (campaignId && institutionId) {
-      openCreateDrawer();
-      const institution = institutions?.find(
-        (institution) => institution.id === institutionId
-      );
-      if (institution) setValue("institution_id", institution.id);
-    }
-  }, [
-    loadingInstitutions,
-    campaignId,
-    institutionId,
-    setValue,
-    institutions,
-    openCreateDrawer,
-  ]);
-
   const loadInstitutions = async () => {
     setLoadingInstitutions(true);
     try {
@@ -172,9 +164,10 @@ export function CreateDonationDrawer() {
 
   // Resetear el formulario cuando se cierra el drawer
   const handleClose = () => {
-    reset();
+    reset(emptyDonationForm);
     setImagePreview(null);
     closeCreateDrawer();
+    if (campaignId) router.replace(pathname);
   };
 
   // Resetear el input de imagen
@@ -187,13 +180,6 @@ export function CreateDonationDrawer() {
   };
 
   const onSubmit = async (data: DonationFormData) => {
-    if (!donor || !donor.id) {
-      toast.error("Error", {
-        description: "No se pudo obtener la información del donante.",
-      });
-      return;
-    }
-
     setIsLoading(true);
 
     try {
@@ -228,59 +214,32 @@ export function CreateDonationDrawer() {
         attachmentFileName = uploadResult.fileName || file.name;
       }
 
-      const donationData: {
-        institution_id: string | null;
-        donor_id: string;
-        attachment_url: string;
-        status: "pending";
-        delivery_method: "pickup" | "shipment" | "agreement" | "transfer";
-        category: "supplies" | "clothing" | "food" | "other";
-        name?: string | null;
-        description?: string | null;
-        amount?: number | null;
-        attachment_name?: string | null;
-      } = {
-        institution_id: data.open_donation ? null : (data.institution_id || null),
-        donor_id: donor.id,
-        attachment_url: attachmentUrl,
-        status: "pending",
-        delivery_method: data.delivery_method,
+      const institutionId = data.open_donation ? null : data.institution_id || null;
+      const isMoney = data.donation_type === "money";
+      // La campaña solo se conserva si la donación sigue dirigida a su institución.
+      const keepsCampaign =
+        !!data.campaign_id && !!institutionId && institutionId === campaignInstitutionId;
+
+      const result = await createDonation({
+        institutionId,
+        campaignId: keepsCampaign ? data.campaign_id : undefined,
+        deliveryMethod: data.delivery_method,
         category: data.category,
-      };
+        name: isMoney ? null : data.name || null,
+        description: isMoney ? null : data.description || null,
+        amount: isMoney && data.amount ? Number(data.amount) : null,
+        attachmentUrl,
+        attachmentName: attachmentFileName || null,
+      });
 
-      if (data.donation_type === "money") {
-        if (data.amount) {
-          const amountNum = parseFloat(data.amount);
-          if (!isNaN(amountNum)) {
-            donationData.amount = amountNum;
-          }
-        }
-        donationData.attachment_name = attachmentFileName || null;
-        donationData.name = null;
-        donationData.description = null;
-      } else {
-        donationData.name = data.name || null;
-        donationData.description = data.description || null;
-        donationData.attachment_name = attachmentFileName || null;
-        donationData.amount = null;
-      }
-
-      const result = await createDonation(donationData);
-
-      if (!result.success) {
-        toast.error("Error al crear la donación", {
-          description: result.error || "Ocurrió un error inesperado",
-        });
+      if (!result.ok) {
+        toast.error(result.error);
         return;
       }
 
-      toast.success("Donación creada!", {
-        description: "La donación se ha creado correctamente.",
-      });
-
-      reset();
-      closeCreateDrawer();
-      refetch(); // Refrescar la lista después de crear exitosamente
+      toast.success("Donación creada");
+      handleClose();
+      refetch();
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Ocurrió un error inesperado";
@@ -295,7 +254,7 @@ export function CreateDonationDrawer() {
 
   return (
     <DrawerLayout
-      open={createDrawerOpen}
+      open={open}
       onOpenChange={handleClose}
       title="Crear nueva donación"
       description="Completa los datos para crear una nueva donación"
@@ -333,7 +292,7 @@ export function CreateDonationDrawer() {
                 onCheckedChange={(checked) =>
                   setValue("open_donation", checked, { shouldValidate: true })
                 }
-                disabled={isLoading}
+                disabled={isLoading || !!campaignId}
               />
             </div>
           </div>
@@ -342,12 +301,11 @@ export function CreateDonationDrawer() {
             onValueChange={(value) => {
               setValue("institution_id", value, { shouldValidate: true });
             }}
-            disabled={loadingInstitutions || isLoading || openDonation}
+            disabled={loadingInstitutions || isLoading || openDonation || !!campaignId}
           >
             <SelectTrigger className="w-full">
               <SelectValue
                 placeholder={openDonation ? "Sin preferencia de institución" : "Selecciona una institución"}
-                defaultValue={institutionId || undefined}
               />
             </SelectTrigger>
             <SelectContent>

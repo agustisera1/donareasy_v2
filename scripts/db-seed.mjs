@@ -212,7 +212,7 @@ async function seed() {
       finished,
     };
   });
-  await insertReturningIds(supabase, "campaigns", campaigns);
+  const campaignIds = await insertReturningIds(supabase, "campaigns", campaigns);
   console.log(`✓ ${campaigns.length} campañas`);
 
   const statuses = [
@@ -231,8 +231,17 @@ async function seed() {
     buildDonation(imageUrls, donorIds[0], null, "pending", 2),
     buildDonation(imageUrls, donorIds[1], null, "pending", 1)
   );
+  // Parte de las dirigidas se vincula a una campaña activa de su misma institución.
+  const activeCampaigns = campaigns
+    .map((campaign, i) => ({ ...campaign, id: campaignIds[i] }))
+    .filter((campaign) => !campaign.finished);
+  for (const donation of donations) {
+    const options = activeCampaigns.filter((c) => c.institution_id === donation.institution_id);
+    if (options.length > 0 && random() < 0.5) donation.campaign_id = pick(options).id;
+  }
   await insertReturningIds(supabase, "donations", donations);
-  console.log(`✓ ${donations.length} donaciones (2 abiertas, sin institución)`);
+  const linked = donations.filter((d) => d.campaign_id).length;
+  console.log(`✓ ${donations.length} donaciones (2 abiertas, ${linked} vinculadas a campañas)`);
 
   console.log(`\nCuentas demo (contraseña: ${PASSWORD}):`);
   for (const { email, profile } of INSTITUTIONS) console.log(`  institución  ${email}  (${profile.name})`);
