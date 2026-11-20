@@ -23,6 +23,13 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 
 ## Architecture Overview
 
+**Alcance:** proyecto universitario que se demuestra en localhost, en entorno de desarrollo, con un
+solo usuario. Producción no existe ni va a existir y no hay usuarios reales. El objetivo es
+demostrar un ciclo cerrado de cada feature para un usuario. No se contemplan aspectos productivos
+(concurrencia, carreras, idempotencia, rate limit, buckets privados, retención, resiliencia): no
+se proponen, no se implementan y no se listan como pendientes ni limitaciones. Los criterios de
+`.claude/rules/` que apuntan a eso no aplican.
+
 **Donareasy** is a Next.js 16 (App Router) donation platform for Argentina connecting donors with institutions. The app uses Supabase for auth and database, TanStack Query for client-side caching, and shadcn/ui + Tailwind for styling.
 
 ### Route Structure

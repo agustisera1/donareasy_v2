@@ -1,7 +1,6 @@
 "use client";
 
 import { Mail, Instagram } from "lucide-react";
-import { DocumentationButton } from "@/components/documentation-button";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
@@ -11,7 +10,6 @@ export function Footer() {
   return (
     <footer className="w-full flex items-center justify-start border-t mx-auto text-center text-xs gap-8 py-4 px-6 sticky bottom-0 bg-background">
       <div className="flex items-center gap-2">
-        <DocumentationButton />
         <Button
           variant="ghost"
           size="sm"
