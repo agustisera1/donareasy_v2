@@ -23,7 +23,14 @@ export function InfoTooltip({ label, children, side, className }: InfoTooltipPro
           <span className="sr-only">{label}</span>
         </Button>
       </TooltipTrigger>
-      <TooltipContent side={side} className={cn("max-w-sm", className)}>
+      <TooltipContent
+        side={side}
+        collisionPadding={8}
+        className={cn(
+          "max-h-(--radix-tooltip-content-available-height) max-w-sm overflow-y-auto",
+          className,
+        )}
+      >
         {children}
       </TooltipContent>
     </Tooltip>
