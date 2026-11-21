@@ -6,11 +6,18 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
-  // components/ui/** es shadcn vendorizado: no lo sometemos a reglas más estrictas que su upstream.
+  // components/ui/** y hooks/use-mobile.ts son shadcn vendorizado: no los sometemos a reglas más estrictas que su upstream.
   {
-    files: ["components/ui/**"],
+    files: ["components/ui/**", "hooks/use-mobile.ts"],
     rules: {
       "react-hooks/set-state-in-effect": "off",
+    },
+  },
+  // useReactTable no es memoizable: el React Compiler saltea DataTable a propósito.
+  {
+    files: ["components/common/data-table.tsx"],
+    rules: {
+      "react-hooks/incompatible-library": "off",
     },
   },
   // set-state-in-effect solo mira setters de useState: esto cubre el dispatch de useReducer.

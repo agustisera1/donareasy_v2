@@ -100,8 +100,6 @@ todavía leen por `app/api` → hooks → contexts, y sus actions no usan `autho
    default `'donnor'` de `roles.name`.
 4. Tipos generados con `supabase gen types` en `lib/types/database.ts`.
 5. Landing real y `metadata` en las páginas.
-6. Lint: `hooks/use-mobile.ts` hace setState en un efecto (error) y `components/common/data-table.tsx`
-   tiene un warning.
 
 ## 7. Alcance
 
