@@ -10,6 +10,8 @@ function getHeaderContent(pathname: string) {
       return ["Campañas", "Visualiza y gestiona las campañas"];
     case "/dashboard/institutions":
       return ["Instituciones", "Visualiza el listado de instituciones"];
+    case "/dashboard/metrics":
+      return ["Métricas", "Resumen de las donaciones que recibe tu institución"];
     default:
       return ["", ""];
   }

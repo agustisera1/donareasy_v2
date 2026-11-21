@@ -42,30 +42,26 @@ Estados:
 | Donar como invitado | Listo | — | RPC `create_guest_donation`: consume el token y crea donante y donación en una transacción (sin doble submit ni donante huérfano). El link vencido redirige a `/donate?expired=1`, que muestra un aviso. Remitente `onboarding@resend.dev`: solo entrega al mail dueño de la cuenta de Resend. Falta probar la API key de Resend |
 | Directorio de instituciones | Listo | — | Excluye a la institución propia de la lista |
 | Detalle de institución | Listo | — | — |
-| Métricas de institución (drawer) | **Roto para demo** | `supabase/migrations/20261117160000_rls_policies.sql:112-118`, `actions/institutions/metrics.ts:114-145` | Ver §2 |
-| Página `/dashboard/metrics` | Sin hacer | `app/dashboard/metrics/page.tsx` | Placeholder, fuera del menú |
+| Métricas de institución (drawer) | Listo | — | Ver §2 |
+| Métricas de campaña (drawer) | Listo | — | Acción "Ver métricas" en la tabla de campañas. Ver §2 |
+| Página `/dashboard/metrics` | Listo | — | Métricas completas de la institución logueada; ítem de menú solo para ese rol. Un donante que entra a mano vuelve a `/dashboard` |
 | Donaciones de dinero / necesidades | Fuera de alcance | — | Se borraron los placeholders |
 | Notificaciones | Sin hacer | `notifications`, `notification_reads` en el schema | Tablas y publicación realtime sin uso en la app |
 | Botón "Descargar documentación" | Fuera de alcance | — | Se borró: el PDF no existía |
 
-## 2. Métricas: problema y regla
+## 2. Métricas: regla e implementación
 
-**Problema actual.** El drawer se abre desde el directorio para cualquier institución y lee las
-donaciones con el cliente del usuario. La RLS de `donations` solo deja ver las propias: un donante ve
-las que hizo y una institución las que recibió. Por eso las métricas de otra institución salen
-parciales o en 0. Y una institución no puede ver las suyas, porque el directorio la excluye. Además,
-`actions/institutions/metrics.ts` cuenta mal:
-- no cuenta `delivered`, así que los porcentajes no suman 100
-- no cuenta el método `transfer`
-- suma las donaciones rechazadas a "Total recaudado"
-- es una lectura hecha como Server Action (R5)
-
-**Regla:**
-- **Métricas completas** (con montos): solo las ve una institución que mira **sus propias** métricas.
+**Regla** (aplica igual a instituciones y a campañas):
+- **Métricas completas** (con lo recaudado): solo las ve la institución dueña.
 - **Métricas públicas:** las ve cualquier otro caso (un donante, u otra institución):
-  - tasas de aceptación y rechazo
-  - conteos por estado, categoría y método de entrega
+  - tasa de aceptación
+  - conteos por estado (y por categoría y método de entrega en instituciones)
   - **cantidad** de donaciones de dinero, sin montos
+
+**Implementación.** La función SQL `donation_metrics(p_institution_id, p_campaign_id)`
+(`security definer`) agrega las donaciones y devuelve montos solo si quien consulta es la dueña.
+Las queries de `queries/metrics/` la llaman y los drawers las consumen por
+`app/api/{institutions,campaigns}/[id]/metrics`. Lo recaudado suma aceptadas y entregadas.
 
 ## 3. Guion de demo
 
@@ -76,23 +72,23 @@ Usuarios del seed (`npm run db:seed`), todos con password `demo1234`: `hogar@dem
 |---|---|---|
 | 1 | Hogar inicia sesión y crea una campaña | Listo |
 | 2 | Lucía ve la campaña, toca "Donar" y dona con foto | Listo |
-| 3 | Lucía abre las métricas públicas del Hogar en el directorio | Datos incorrectos (§2) |
+| 3 | Lucía abre las métricas públicas del Hogar en el directorio | Listo |
 | 4 | Hogar acepta y marca como entregada la donación | Listo |
-| 5 | Hogar ve sus métricas completas | Sin hacer (§2) |
+| 5 | Hogar ve sus métricas completas | Listo |
 | 6 | Un invitado pide el link por mail (al de la cuenta de Resend) y dona | Listo. Falta probar la API key de Resend |
 
 ## 4. Cortes a cerrar para la demo
 
 | Corte | Estado | Qué hacer |
 |---|---|---|
-| Métricas | Pendiente | Función `institution_public_metrics(p_institution_id)` `security definer`, con `search_path` vacío y `execute` solo para `authenticated`: devuelve únicamente conteos. Query `queries/institutions/get-institution-metrics.ts` que devuelve `full` (propia, bajo RLS, con montos de aceptadas y entregadas) o `public` (rpc). Route handler `app/api/institutions/[id]/metrics` para el drawer. Página `/dashboard/metrics` para la institución logueada, con ítem de menú solo para ese rol. Se borra `actions/institutions/metrics.ts` |
+| Métricas | Hecho | — |
 | Invitado | Hecho | — |
 | Upload | Hecho | — |
 | Limpieza | Hecho | — |
 
 ## 5. Estado de las capas respecto de `.claude/rules`
 
-Campañas y donaciones (con el invitado) ya siguen `01-capas.md`. Instituciones, métricas y perfil
+Campañas, donaciones (con el invitado) y métricas ya siguen `01-capas.md`. Instituciones y perfil
 todavía leen por `app/api` → hooks → contexts, y sus actions no usan `authorize` ni `ServiceResult`.
 
 ## 6. Backlog de refactor (después de la demo)
@@ -104,6 +100,8 @@ todavía leen por `app/api` → hooks → contexts, y sus actions no usan `autho
    default `'donnor'` de `roles.name`.
 4. Tipos generados con `supabase gen types` en `lib/types/database.ts`.
 5. Landing real y `metadata` en las páginas.
+6. Lint: `hooks/use-mobile.ts` hace setState en un efecto (error) y `components/common/data-table.tsx`
+   tiene un warning.
 
 ## 7. Alcance
 

@@ -58,12 +58,14 @@ semánticos en un solo lugar (p. ej. `status-badge.tsx`), no con clases sueltas 
 | `HistoryLink` | Link a otro estado de la misma vista (página, orden) con la History API, sin request al server. Uso: `components/common/data-table-pagination.tsx` | Client |
 | `MoneyInput` | Monto en ARS con máscara (Dice UI Mask Input); el valor es el número sin máscara. Uso: `components/donations/donation-form-fields.tsx` | Client |
 | `ArPhoneInput` | Teléfono de Argentina (ReUI Phone Input / libphonenumber), valor en E.164. Uso: `components/guest/guest-access-form.tsx` | Client |
+| `StatCard` | KPI: etiqueta, valor y aclaración opcional. Uso: `components/institutions/institution-metrics.tsx` | ✓ |
+| `BreakdownList` | Reparto de un total en barras (`Progress`) con conteo y %; `toBreakdownItems(counts, labels)` arma los items. Uso: `components/campaigns/campaign-metrics.tsx` | ✓ |
+| `EmptyState` | Estado vacío sobre `ui/empty` (ícono, título, descripción, acción opcionales). Uso: `components/institutions/institution-metrics.tsx` | ✓ |
 
 Primitivos objetivo (se crean en `common/` la primera vez que se necesitan):
 
 | Primitivo | Qué resuelve | Server-safe |
 |-----------|--------------|-------------|
-| `EmptyState` | Estado vacío (título + descripción + acción) | ✓ |
 | `Money` | Monto en ARS con `formatCurrency` | ✓ |
 
 Cada primitivo nuevo se suma a esta tabla con su referencia de uso.

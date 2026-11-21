@@ -1,4 +1,11 @@
-import type { DeliveryMethod, DonationCategory } from "@/lib/types";
+import type { DeliveryMethod, DonationCategory, DonationStatus } from "@/lib/types";
+
+export const donationStatusTranslations: Record<DonationStatus, string> = {
+  pending: "Pendiente",
+  accepted: "Aceptada",
+  delivered: "Entregada",
+  rejected: "Rechazada",
+};
 
 // Traducciones y descripciones para las formas de entrega
 export const deliveryMethodTranslations: Record<
@@ -53,3 +60,11 @@ export const categoryTranslations: Record<
       "Para donaciones que no encajan en las categorías anteriores. Ejemplos: muebles, electrodomésticos, juguetes, libros, medicamentos (con receta), equipamiento médico, etc.",
   },
 };
+
+export const deliveryMethodLabels = Object.fromEntries(
+  Object.entries(deliveryMethodTranslations).map(([key, { label }]) => [key, label]),
+) as Record<DeliveryMethod, string>;
+
+export const categoryLabels = Object.fromEntries(
+  Object.entries(categoryTranslations).map(([key, { label }]) => [key, label]),
+) as Record<DonationCategory, string>;

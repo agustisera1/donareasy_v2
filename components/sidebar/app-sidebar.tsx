@@ -1,6 +1,7 @@
 "use client";
 import {
   Building,
+  ChartLine,
   ChevronUp,
   HandCoins,
   ListChecks,
@@ -46,6 +47,12 @@ const items = [
     title: "Instituciones",
     url: `/dashboard/institutions`,
     icon: Building,
+  },
+  {
+    title: "Métricas",
+    url: `/dashboard/metrics`,
+    icon: ChartLine,
+    role: "institution",
   },
 ];
 
@@ -98,7 +105,7 @@ export function AppSidebar({
           <SidebarGroup>
             <SidebarGroupLabel>Navegación</SidebarGroupLabel>
             <SidebarMenu>
-              {items.map((item) => (
+              {items.filter((item) => !item.role || item.role === user?.role).map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild

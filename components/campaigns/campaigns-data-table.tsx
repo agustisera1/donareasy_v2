@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Check, Edit, Eye, HandCoins } from "lucide-react";
+import { ChartLine, Check, Edit, Eye, HandCoins } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { DataTableTabs, parseTab } from "@/components/common/data-table-tabs";
 import { finishCampaign } from "@/actions/campaign/finish";
 import type { CampaignWithInstitution as Campaign, RoleName } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
+import { CampaignMetricsDrawer } from "./campaign-metrics-drawer";
 import { CampaignStatusBadge } from "./campaign-status-badge";
 import { CreateCampaignDrawer } from "./create-campaign-drawer";
 import { EditCampaignDrawer } from "./edit-campaign-drawer";
@@ -31,7 +32,7 @@ const statusOptions = [
 ];
 
 type CampaignsActor = { role: RoleName; entityId: string };
-type Panel = "create" | "view" | "edit" | "finish" | null;
+type Panel = "create" | "view" | "metrics" | "edit" | "finish" | null;
 
 interface CampaignsDataTableProps {
   rows: Campaign[] | null;
@@ -114,6 +115,11 @@ export function CampaignsDataTable({ rows, actor }: CampaignsDataTableProps) {
         return (
           <div className="flex gap-1">
             <DataTableRowAction label="Ver detalle" icon={<Eye />} onClick={() => open("view", campaign)} />
+            <DataTableRowAction
+              label="Ver métricas"
+              icon={<ChartLine />}
+              onClick={() => open("metrics", campaign)}
+            />
             {canDonate && <DataTableRowAction label="Donar" icon={<HandCoins />} href={donateHref} />}
             {canManage && (
               <>
@@ -159,6 +165,7 @@ export function CampaignsDataTable({ rows, actor }: CampaignsDataTableProps) {
       {selected && (
         <>
           <ViewCampaignDrawer campaign={selected} open={panel === "view"} onOpenChange={close} />
+          <CampaignMetricsDrawer campaign={selected} open={panel === "metrics"} onOpenChange={close} />
           <EditCampaignDrawer
             key={selected.id}
             campaign={selected}

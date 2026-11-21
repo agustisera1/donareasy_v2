@@ -1,13 +1,6 @@
 import { Badge } from "@/components/ui/badge";
-
-type DonationStatus = "accepted" | "rejected" | "pending" | "delivered";
-
-const statusLabels: Record<DonationStatus, string> = {
-  accepted: "Aceptada",
-  rejected: "Rechazada",
-  pending: "Pendiente",
-  delivered: "Entregada",
-};
+import { donationStatusTranslations } from "@/lib/constants";
+import type { DonationStatus } from "@/lib/types";
 
 const statusTones: Record<DonationStatus, string> = {
   accepted: "bg-success/15 text-success dark:bg-success/20",
@@ -17,5 +10,5 @@ const statusTones: Record<DonationStatus, string> = {
 };
 
 export function StatusBadge({ status }: { status: DonationStatus }) {
-  return <Badge className={statusTones[status]}>{statusLabels[status]}</Badge>;
+  return <Badge className={statusTones[status]}>{donationStatusTranslations[status]}</Badge>;
 }

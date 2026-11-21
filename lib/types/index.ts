@@ -8,6 +8,7 @@ export * from "./donation-types";
 export * from "./donor";
 export * from "./good";
 export * from "./institution";
+export * from "./metrics";
 export * from "./role";
 export * from "./user";
 export * from "./user-role";
