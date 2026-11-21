@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { Controller, useWatch, type UseFormReturn } from "react-hook-form";
-import { Eraser, ImagePlus, Info } from "lucide-react";
+import { Eraser, ImagePlus } from "lucide-react";
 
+import { InfoTooltip, InfoTooltipList } from "@/components/common/info-tooltip";
 import { MoneyInput } from "@/components/common/money-input";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
@@ -11,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { categoryTranslations, deliveryMethodTranslations } from "@/lib/constants";
 import type { DonationCategory, DeliveryMethod } from "@/lib/types";
 import { ATTACHMENT_MIME_TYPES, type DonationFormValues } from "@/lib/validations";
@@ -153,9 +153,11 @@ export function DonationFormFields({
           <Field className="col-span-2" data-invalid={!!errors.deliveryMethod}>
             <div className="flex items-center gap-2">
               <FieldLabel htmlFor="deliveryMethod">Forma de entrega</FieldLabel>
-              <InfoTooltip
-                items={GOODS_DELIVERY_METHODS.map((value) => deliveryMethodTranslations[value])}
-              />
+              <InfoTooltip label="Qué significa cada forma de entrega">
+                <InfoTooltipList
+                  items={GOODS_DELIVERY_METHODS.map((value) => deliveryMethodTranslations[value])}
+                />
+              </InfoTooltip>
             </div>
             <Controller
               control={control}
@@ -181,7 +183,9 @@ export function DonationFormFields({
           <Field className="col-span-2" data-invalid={!!errors.category}>
             <div className="flex items-center gap-2">
               <FieldLabel htmlFor="category">Categoría</FieldLabel>
-              <InfoTooltip items={CATEGORIES.map((value) => categoryTranslations[value])} />
+              <InfoTooltip label="Qué incluye cada categoría">
+                <InfoTooltipList items={CATEGORIES.map((value) => categoryTranslations[value])} />
+              </InfoTooltip>
             </div>
             <Controller
               control={control}
@@ -240,29 +244,6 @@ export function DonationFormFields({
         )}
       />
     </div>
-  );
-}
-
-function InfoTooltip({ items }: { items: { label: string; description: string }[] }) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button type="button" variant="ghost" size="icon-xs">
-          <Info className="text-muted-foreground" />
-          <span className="sr-only">Más información</span>
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent className="max-w-sm">
-        <div className="space-y-3">
-          {items.map((item) => (
-            <div key={item.label}>
-              <p className="text-sm font-semibold">{item.label}</p>
-              <p className="text-xs text-muted-foreground">{item.description}</p>
-            </div>
-          ))}
-        </div>
-      </TooltipContent>
-    </Tooltip>
   );
 }
 

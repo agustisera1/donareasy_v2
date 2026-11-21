@@ -62,6 +62,7 @@ semánticos en un solo lugar (p. ej. `status-badge.tsx`), no con clases sueltas 
 | `ArPhoneInput` | Teléfono de Argentina (ReUI Phone Input / libphonenumber), valor en E.164. Uso: `components/guest/guest-access-form.tsx` | Client |
 | `StatCard` | KPI: etiqueta, valor y aclaración opcional. Uso: `components/institutions/institution-metrics.tsx` | ✓ |
 | `BreakdownList` | Reparto de un total en barras (`Progress`) con conteo y %; `toBreakdownItems(counts, labels)` arma los items. Uso: `components/campaigns/campaign-metrics.tsx` | ✓ |
+| `InfoTooltip`, `InfoTooltipList` | Ícono ⓘ con acento `tertiary` y tooltip de contenido rico; `InfoTooltipList` lista pares etiqueta / descripción. Uso: `components/donations/donation-form-fields.tsx` | Client |
 | `EmptyState` | Estado vacío sobre `ui/empty` (ícono, título, descripción, acción opcionales). Uso: `components/institutions/institution-metrics.tsx` | ✓ |
 
 Primitivos objetivo (se crean en `common/` la primera vez que se necesitan):
