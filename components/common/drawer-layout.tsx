@@ -16,7 +16,6 @@ interface DrawerLayoutProps {
   footer: ReactNode;
   children: ReactNode;
   className?: string;
-  dismissible?: boolean;
 }
 
 export function DrawerLayout({
@@ -27,15 +26,9 @@ export function DrawerLayout({
   footer,
   children,
   className,
-  dismissible,
 }: DrawerLayoutProps) {
   return (
-    <Drawer
-      direction="right"
-      open={open}
-      onOpenChange={onOpenChange}
-      dismissible={dismissible}
-    >
+    <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
       <DrawerContent className={className}>
         <DrawerHeader className="border-b">
           <DrawerTitle className="text-lg font-semibold">{title}</DrawerTitle>

@@ -59,7 +59,6 @@ export function EditDonationDrawer({ donation, open, onOpenChange }: EditDonatio
       onOpenChange={(next) => !next && close()}
       title="Editar donación"
       description="Podés editarla mientras siga pendiente"
-      dismissible={false}
       footer={
         <>
           <Button type="button" variant="outline" onClick={close} disabled={isSubmitting}>
