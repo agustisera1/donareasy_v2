@@ -27,6 +27,8 @@ components/<feature>/ Componentes de feature: componen common/ + ui/ + actions.
 Regla de dependencia: `feature → common → ui`. Un primitivo de `common/` **nunca** importa de una
 feature ni llama a una action: recibe datos y callbacks por props. Si algo de shadcn no alcanza, se
 envuelve en `common/`, no se edita en `ui/`. Una feature no importa de otra feature.
+Excepción: `ui/tooltip.tsx` usa los tokens `--tooltip` / `--tooltip-foreground` en vez de
+`foreground` / `background` (al regenerarlo, reaplicar).
 
 ### Tokens de diseño
 
