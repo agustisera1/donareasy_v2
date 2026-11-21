@@ -3,11 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { DetailItem, DetailList } from "@/components/common/detail-list";
 import { DrawerLayout } from "@/components/common/drawer-layout";
+import { ImagePreview } from "@/components/common/image-preview";
 import type { DonationWithRelations } from "@/lib/types";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { CategoryBadge } from "./category-badge";
 import { DeliveryMethodBadge } from "./delivery-method-badge";
-import { ImagePreview } from "./image-preview";
 import { StatusBadge } from "./status-badge";
 
 interface ViewDonationDrawerProps {

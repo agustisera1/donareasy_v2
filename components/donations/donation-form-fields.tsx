@@ -1,12 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { Controller, useWatch, type UseFormReturn } from "react-hook-form";
-import { Eraser, ImagePlus } from "lucide-react";
 
+import { ImageInput } from "@/components/common/image-input";
 import { InfoTooltip, InfoTooltipList } from "@/components/common/info-tooltip";
 import { MoneyInput } from "@/components/common/money-input";
-import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -16,7 +14,6 @@ import { categoryTranslations, deliveryMethodTranslations } from "@/lib/constant
 import type { DonationCategory, DeliveryMethod } from "@/lib/types";
 import { ATTACHMENT_MIME_TYPES, type DonationFormValues } from "@/lib/validations";
 import type { InstitutionOption } from "./donation-form-model";
-import { ImagePreview } from "./image-preview";
 
 const GOODS_DELIVERY_METHODS: DeliveryMethod[] = ["pickup", "shipment", "agreement"];
 const CATEGORIES: DonationCategory[] = ["supplies", "clothing", "food", "other"];
@@ -256,47 +253,20 @@ interface AttachmentFieldProps {
 }
 
 function AttachmentField({ label, file, onChange, currentImageUrl, error }: AttachmentFieldProps) {
-  const [preview, setPreview] = useState<string | null>(null);
-
-  // El object URL se crea y se libera en los handlers: es la única forma de ver el archivo local.
-  function select(next: File | null) {
-    if (preview) URL.revokeObjectURL(preview);
-    setPreview(next ? URL.createObjectURL(next) : null);
-    onChange(next);
-  }
-
-  const shown = preview ?? (file ? null : currentImageUrl);
-
   return (
     <Field className="col-span-2" data-invalid={!!error}>
-      <div className="flex items-center gap-2">
-        <FieldLabel htmlFor="attachment" className="flex-1">{label}</FieldLabel>
-        {file && (
-          <Button type="button" variant="outline" size="icon-sm" onClick={() => select(null)}>
-            <Eraser />
-            <span className="sr-only">Quitar imagen</span>
-          </Button>
-        )}
-        <Button type="button" variant="outline" size="icon-sm" asChild>
-          <label htmlFor="attachment" className="cursor-pointer">
-            <ImagePlus />
-            <span className="sr-only">{file || currentImageUrl ? "Reemplazar imagen" : "Adjuntar imagen"}</span>
-          </label>
-        </Button>
-      </div>
-      <input
+      <FieldLabel htmlFor="attachment">{label}</FieldLabel>
+      <ImageInput
         id="attachment"
-        type="file"
-        className="sr-only"
+        label={label}
         accept={ATTACHMENT_MIME_TYPES.join(",")}
-        aria-invalid={!!error}
-        onChange={(event) => {
-          select(event.target.files?.[0] ?? null);
-          event.target.value = "";
-        }}
+        hint="PNG, JPG o WebP de hasta 5 MB"
+        file={file}
+        currentUrl={currentImageUrl}
+        onChange={onChange}
+        invalid={!!error}
       />
       <FieldError errors={[error]} />
-      {shown && <ImagePreview src={shown} alt={label} />}
     </Field>
   );
 }
