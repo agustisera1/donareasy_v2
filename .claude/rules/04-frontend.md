@@ -46,13 +46,14 @@ semánticos en un solo lugar (p. ej. `status-badge.tsx`), no con clases sueltas 
 
 | Primitivo | Qué resuelve | Server-safe |
 |-----------|--------------|-------------|
-| `DataTable` | Tabla de datos (TanStack + `ui/table`): toolbar, filtros facetados, estados y paginación. Uso: `components/donations/donations-data-table.tsx` | Client |
+| `DataTable` | Tabla de datos (TanStack + `ui/table`): toolbar, filtros facetados, búsqueda, estados y paginación. Uso: `components/donations/donations-data-table.tsx` | Client |
 | `DataTableColumnHeader` | Header de columna ordenable | Client |
 | `DataTableFacetedFilter` | Filtro multi-select de valores enumerables con conteos (`getFacetedUniqueValues`); lo renderiza `DataTable` desde `facetedFilters` | Client |
 | `DataTablePagination` | `Pagination` de shadcn con links `?page=N` (`Button asChild` + `HistoryLink`) | Client |
 | `DataTableRowAction` | Botón de acción solo-ícono con `Tooltip`; con `href` navega con `Link` | Client |
 | `DrawerLayout` | Drawer lateral: header, cuerpo con scroll y footer. Uso: `components/donations/edit-donation-drawer.tsx` | Client |
 | `DatePicker` | Selector de fecha (`Popover` + `Calendar`), valor `yyyy-MM-dd`. Uso: `components/campaigns/campaign-form-drawer.tsx` | Client |
+| `DetailCard` | `Card` con título (e ícono opcional) para agrupar datos de un detalle. Uso: `components/institutions/view-institution-drawer.tsx` | ✓ |
 | `DetailList`, `DetailItem` | Pares etiqueta / valor de solo lectura. Uso: `components/donations/view-donation-drawer.tsx` | ✓ |
 | `DataTableTabs` | Pestañas de la toolbar (`Tabs` de shadcn) sincronizadas con un search param; `parseTab` lee el valor | Client |
 | `PasswordInput` | Input de contraseña con botón de mostrar / ocultar (`InputGroup`). Uso: `components/login-form.tsx` | Client |
@@ -80,8 +81,9 @@ Cada primitivo nuevo se suma a esta tabla con su referencia de uso.
 | Situación | Solución |
 |-----------|----------|
 | Encabezado de una página del dashboard | Título y subtítulo en `getHeaderContent` de `components/header.tsx` (lo renderiza el layout) — la página no arma su propio `<h1>` |
+| Drawer de lectura (detalle, perfil, métricas) | `DrawerLayout wide`; el título es el nombre del item; arriba una fila de `StatCard size="sm"` con los datos clave y abajo los datos agrupados por tema en `DetailCard` + `DetailList`, una debajo de otra (`gap-3`) |
 | Fila de formulario (label + control + error) | `Field` de `ui/` — nunca reconstruir el `<div className="grid gap-2">` a mano |
-| Tabla de datos | `DataTable` — la feature solo define `columns`, `toolbar`, `actions` y `facetedFilters`. Página, pestaña, orden y filtros viven en la URL (`?page=`, `?view=`, `?sort=`, `?status=`) |
+| Tabla de datos | `DataTable` — ver "Patrón de tabla de datos" |
 | Columna de acciones de una tabla | `header: "Acciones"` y un `DataTableRowAction` por acción, con un label que diga qué hace ("Ver detalle", "Editar") |
 | Filtro por valores enumerables (estado, categoría) | `facetedFilters` de `DataTable` + `filterFn: "arrIncludesSome"` en la columna; nunca un `filterFn` a mano ni un popover en el header |
 | Mensaje de error de un campo | `FieldError` — nunca `<p className="text-sm text-red-500">` |
@@ -94,6 +96,25 @@ Cada primitivo nuevo se suma a esta tabla con su referencia de uso.
 | Prop de un Server Component a un Client Component | Solo datos serializables o un elemento ya renderizado (`icon={<X />}`); nunca la referencia a un componente o función |
 | Trigger de un Dialog/Drawer | Se arma **dentro** del Client Component que tiene el Dialog; nunca llega pre-armado desde un Server Component |
 | `Button` que navega | `<Button asChild><Link href="…">…</Link></Button>` |
+
+### Patrón de tabla de datos
+
+Toda tabla es un `<feature>-data-table.tsx` client que recibe `rows` (o `null` si la query falló) y
+el `actor`, y le pasa a `DataTable`:
+
+| Prop | Qué define |
+|------|------------|
+| `columns` | Texto ordenable con `DataTableColumnHeader`; enums con `filterFn: "arrIncludesSome"`; un valor derivado (nombre visible, relación) con `id` + `accessorFn`, así se ordena y se busca por lo que se ve; última columna "Acciones" con un `DataTableRowAction` por acción |
+| `search` | `placeholder` + `columnIds` de las columnas de texto. Sin distinguir mayúsculas ni tildes |
+| `facetedFilters` | Un filtro por columna enumerable (estado, categoría) |
+| `toolbar` | Pestañas (`DataTableTabs`) que recortan `rows` antes de pasarlas |
+| `actions` | Botón de crear, a la derecha |
+| `errorMessage`, `emptyMessage`, `countLabel` | Textos de error, vacío y conteo ("N campaña(s)") |
+
+`DataTable` pagina de a 10 y resuelve los estados (error, vacío, sin resultados, página inexistente).
+Búsqueda, página, orden, pestaña y filtros viven en la URL (`?q=`, `?page=`, `?sort=`, `?view=`,
+`?<columna>=`); cambiar cualquiera vuelve a la página 1. Los drawers y diálogos de la fila se abren
+con un `panel` + `selectedId` en `useState` y el item se deriva de `rows` por id.
 
 ### Diseño de estados
 

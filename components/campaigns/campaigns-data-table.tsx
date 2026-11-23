@@ -160,6 +160,7 @@ export function CampaignsDataTable({ rows, actor }: CampaignsDataTableProps) {
           )
         }
         facetedFilters={[{ columnId: "status", title: "Estado", options: statusOptions }]}
+        search={{ placeholder: "Buscar por nombre o institución…", columnIds: ["type", "institution"] }}
       />
       {isInstitution && <CreateCampaignDrawer open={panel === "create"} onOpenChange={close} />}
       {selected && (

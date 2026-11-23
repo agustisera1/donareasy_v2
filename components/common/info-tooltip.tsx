@@ -19,7 +19,7 @@ export function InfoTooltip({ label, children, side, className }: InfoTooltipPro
     <Tooltip>
       <TooltipTrigger asChild>
         <Button type="button" variant="ghost" size="icon-xs">
-          <Info className="text-tertiary" />
+          <Info className="size-4 text-tertiary" />
           <span className="sr-only">{label}</span>
         </Button>
       </TooltipTrigger>

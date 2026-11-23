@@ -15,7 +15,8 @@ interface DrawerLayoutProps {
   description: ReactNode;
   footer: ReactNode;
   children: ReactNode;
-  className?: string;
+  /** Drawers de lectura con cards en grilla (detalle, perfil, métricas). */
+  wide?: boolean;
 }
 
 export function DrawerLayout({
@@ -25,11 +26,11 @@ export function DrawerLayout({
   description,
   footer,
   children,
-  className,
+  wide = false,
 }: DrawerLayoutProps) {
   return (
     <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className={className}>
+      <DrawerContent className={wide ? "data-[vaul-drawer-direction=right]:sm:max-w-lg" : undefined}>
         <DrawerHeader className="border-b">
           <DrawerTitle className="text-lg font-semibold">{title}</DrawerTitle>
           <DrawerDescription>{description}</DrawerDescription>

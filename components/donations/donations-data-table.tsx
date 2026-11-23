@@ -99,14 +99,26 @@ export function DonationsDataTable({ rows, actor, institutions }: DonationsDataT
 
   const columns: ColumnDef<Donation>[] = [
     {
-      accessorKey: "name",
+      id: "name",
+      accessorFn: (donation) => (donation.amount !== null ? "Donación monetaria" : donation.name || "Bienes"),
       header: ({ column }) => <DataTableColumnHeader column={column} title="Nombre" />,
-      cell: ({ row }) => (
-        <span className="font-medium">
-          {row.original.amount !== null ? "Donación monetaria" : row.original.name || "Bienes"}
-        </span>
-      ),
+      cell: ({ getValue }) => <span className="font-medium">{getValue<string>()}</span>,
     },
+    {
+      id: "campaign",
+      accessorFn: (donation) => donation.campaign?.type ?? "",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Campaña" />,
+      cell: ({ getValue }) => getValue<string>() || <span className="text-muted-foreground">Sin campaña</span>,
+    },
+    ...(isInstitution
+      ? [
+          {
+            id: "donor",
+            accessorFn: (donation) => (donation.donor ? `${donation.donor.name} ${donation.donor.lastname}` : ""),
+            header: ({ column }) => <DataTableColumnHeader column={column} title="Donante" />,
+          } satisfies ColumnDef<Donation>,
+        ]
+      : []),
     {
       accessorKey: "status",
       filterFn: "arrIncludesSome",
@@ -179,6 +191,10 @@ export function DonationsDataTable({ rows, actor, institutions }: DonationsDataT
             </Button>
           )
         }
+        search={{
+          placeholder: isInstitution ? "Buscar por nombre, campaña o donante…" : "Buscar por nombre o campaña…",
+          columnIds: ["name", "campaign", "donor"],
+        }}
         facetedFilters={[
           { columnId: "status", title: "Estado", options: statusOptions },
           { columnId: "category", title: "Categoría", options: categoryOptions },

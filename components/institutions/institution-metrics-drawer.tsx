@@ -23,7 +23,7 @@ export function InstitutionMetricsDrawer({ institution, open, onOpenChange }: In
       title={`Métricas de ${institution.name}`}
       description="Resumen de las donaciones que recibe la institución"
       footer={<Button onClick={() => onOpenChange(false)}>Cerrar</Button>}
-      className="data-[vaul-drawer-direction=right]:sm:max-w-2xl"
+      wide
     >
       {isError ? (
         <p className="text-sm text-muted-foreground">No se pudieron cargar las métricas. Recargá la página.</p>

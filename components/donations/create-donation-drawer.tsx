@@ -64,6 +64,7 @@ export function CreateDonationDrawer({
     <DrawerLayout
       open={open}
       onOpenChange={(next) => !next && close()}
+      wide
       title="Nueva donación"
       description={campaign ? "Tu donación va a la campaña elegida" : "Completá los datos de tu donación"}
       footer={

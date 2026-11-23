@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useRef, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import {
   flexRender,
@@ -27,7 +27,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { CircleAlertIcon, InboxIcon, SearchXIcon, XIcon } from "lucide-react";
+import { CircleAlertIcon, InboxIcon, SearchIcon, SearchXIcon, XIcon } from "lucide-react";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import {
   Empty,
   EmptyContent,
@@ -49,6 +50,7 @@ import {
   DataTableFacetedFilter,
   type FacetedFilterOption,
 } from "@/components/common/data-table-faceted-filter";
+import { matchesSearch } from "@/components/common/data-table-search";
 
 const PAGE_SIZE = 10;
 
@@ -56,6 +58,11 @@ export interface FacetedFilterConfig {
   columnId: string;
   title: string;
   options: readonly FacetedFilterOption[];
+}
+
+export interface SearchConfig {
+  placeholder: string;
+  columnIds: string[];
 }
 
 interface DataTableProps<TData> {
@@ -67,6 +74,7 @@ interface DataTableProps<TData> {
   toolbar?: ReactNode;
   actions?: ReactNode;
   facetedFilters?: FacetedFilterConfig[];
+  search?: SearchConfig;
 }
 
 export function DataTable<TData>({
@@ -78,6 +86,7 @@ export function DataTable<TData>({
   toolbar,
   actions,
   facetedFilters = [],
+  search,
 }: DataTableProps<TData>) {
   const pathname = usePathname();
   const { searchParams, replace } = useSearchParamsState();
@@ -92,6 +101,10 @@ export function DataTable<TData>({
     return parseColumnFilters(params, [...params.keys()]);
   }, [rawFilters]);
 
+  const globalFilter = searchParams.get("q") ?? "";
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const isFiltered = columnFilters.length > 0 || globalFilter !== "";
+
   const page = Number(searchParams.get("page"));
   const pageIndex = Number.isInteger(page) && page > 1 ? page - 1 : 0;
 
@@ -103,6 +116,19 @@ export function DataTable<TData>({
   const onColumnFiltersChange: OnChangeFn<ColumnFiltersState> = (updater) => {
     const next = functionalUpdate(updater, columnFilters);
     replace((params) => writeColumnFilters(params, filterIds, next));
+  };
+
+  const onSearchChange = (value: string) => {
+    replace((params) => (value.trim() ? params.set("q", value) : params.delete("q")));
+  };
+
+  // El input no es controlado (lo escribe el usuario y la URL lo sigue): al limpiar se vacía a mano.
+  const resetFilters = () => {
+    replace((params) => {
+      writeColumnFilters(params, filterIds, []);
+      params.delete("q");
+    });
+    if (searchInputRef.current) searchInputRef.current.value = "";
   };
 
   const table = useReactTable({
@@ -117,9 +143,12 @@ export function DataTable<TData>({
     onSortingChange,
     autoResetPageIndex: false,
     onColumnFiltersChange,
+    globalFilterFn: matchesSearch,
+    getColumnCanGlobalFilter: (column) => search?.columnIds.includes(column.id) ?? false,
     state: {
       sorting,
       columnFilters,
+      globalFilter,
       pagination: { pageIndex, pageSize: PAGE_SIZE },
     },
   });
@@ -129,7 +158,7 @@ export function DataTable<TData>({
 
   return (
     <div className="flex flex-col gap-4">
-      {(toolbar || actions || facetedFilters.length > 0) && (
+      {(toolbar || actions || search || facetedFilters.length > 0) && (
         <div className="flex items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-2">
             {toolbar}
@@ -144,8 +173,23 @@ export function DataTable<TData>({
                 />
               ) : null;
             })}
-            {columnFilters.length > 0 && (
-              <Button variant="ghost" size="lg" onClick={() => table.resetColumnFilters()}>
+            {search && (
+              <InputGroup className="h-9 w-full sm:w-72">
+                <InputGroupInput
+                  ref={searchInputRef}
+                  type="search"
+                  aria-label={search.placeholder}
+                  placeholder={search.placeholder}
+                  defaultValue={globalFilter}
+                  onChange={(event) => onSearchChange(event.target.value)}
+                />
+                <InputGroupAddon>
+                  <SearchIcon />
+                </InputGroupAddon>
+              </InputGroup>
+            )}
+            {isFiltered && (
+              <Button variant="ghost" size="lg" onClick={resetFilters}>
                 Limpiar filtros
                 <XIcon data-icon="inline-end" />
               </Button>
@@ -210,7 +254,7 @@ export function DataTable<TData>({
                   </EmptyContent>
                 </Empty>
               </StatusRow>
-            ) : columnFilters.length > 0 ? (
+            ) : isFiltered ? (
               <StatusRow colSpan={visibleColumns}>
                 <Empty>
                   <EmptyHeader>
@@ -221,7 +265,7 @@ export function DataTable<TData>({
                     <EmptyDescription>Probá con otros valores o limpiá los filtros.</EmptyDescription>
                   </EmptyHeader>
                   <EmptyContent>
-                    <Button variant="outline" onClick={() => table.resetColumnFilters()}>
+                    <Button variant="outline" onClick={resetFilters}>
                       Limpiar filtros
                     </Button>
                   </EmptyContent>
