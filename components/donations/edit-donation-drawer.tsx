@@ -57,6 +57,7 @@ export function EditDonationDrawer({ donation, open, onOpenChange }: EditDonatio
     <DrawerLayout
       open={open}
       onOpenChange={(next) => !next && close()}
+      wide
       title="Editar donación"
       description="Podés editarla mientras siga pendiente"
       footer={

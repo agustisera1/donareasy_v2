@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Eraser, ImagePlus } from "lucide-react";
 
 import { ImagePreview } from "@/components/common/image-preview";
@@ -15,6 +15,8 @@ interface ImageInputProps {
   currentUrl?: string | null;
   onChange: (file: File | null) => void;
   invalid?: boolean;
+  /** Ubica las acciones (Quitar / Reemplazar) fuera del bloque, p. ej. en el header de una card. */
+  layout?: (parts: { body: ReactNode; actions: ReactNode }) => ReactNode;
 }
 
 export function ImageInput({
@@ -26,6 +28,7 @@ export function ImageInput({
   currentUrl = null,
   onChange,
   invalid = false,
+  layout = defaultLayout,
 }: ImageInputProps) {
   const [preview, setPreview] = useState<string | null>(null);
 
@@ -53,23 +56,30 @@ export function ImageInput({
   );
 
   if (!shown)
-    return (
-      <label
-        htmlFor={id}
-        className="flex h-40 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-input p-4 text-center text-muted-foreground transition-colors hover:border-primary hover:bg-muted/50 has-focus-visible:border-ring has-focus-visible:ring-3 has-focus-visible:ring-ring/50 has-aria-invalid:border-destructive"
-      >
-        {input}
-        <ImagePlus className="size-8" />
-        <span className="text-sm font-medium text-foreground">Subí una imagen</span>
-        {hint && <span className="text-xs">{hint}</span>}
-      </label>
-    );
+    return layout({
+      actions: null,
+      body: (
+        <label
+          htmlFor={id}
+          className="flex h-40 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-input p-4 text-center text-muted-foreground transition-colors hover:border-primary hover:bg-muted/50 has-focus-visible:border-ring has-focus-visible:ring-3 has-focus-visible:ring-ring/50 has-aria-invalid:border-destructive"
+        >
+          {input}
+          <ImagePlus className="size-8" />
+          <span className="text-sm font-medium text-foreground">Subí una imagen</span>
+          {hint && <span className="text-xs">{hint}</span>}
+        </label>
+      ),
+    });
 
-  return (
-    <div className="space-y-2">
-      {input}
-      <ImagePreview src={shown} alt={label} />
-      <div className="flex justify-end gap-2">
+  return layout({
+    body: (
+      <>
+        {input}
+        <ImagePreview src={shown} alt={label} />
+      </>
+    ),
+    actions: (
+      <div className="flex gap-2">
         {file && (
           <Button type="button" variant="outline" size="sm" onClick={() => select(null)}>
             <Eraser />
@@ -83,6 +93,15 @@ export function ImageInput({
           </label>
         </Button>
       </div>
+    ),
+  });
+}
+
+function defaultLayout({ body, actions }: { body: ReactNode; actions: ReactNode }) {
+  return (
+    <div className="space-y-2">
+      {body}
+      {actions && <div className="flex justify-end">{actions}</div>}
     </div>
   );
 }

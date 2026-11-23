@@ -7,7 +7,7 @@ function getHeaderContent(pathname: string) {
     case "/dashboard/donations":
       return ["Donaciones", "Visualiza y gestiona las donaciones"];
     case "/dashboard/campaigns":
-      return ["Campañas", "Visualiza y gestiona las campañas"];
+      return ["Campañas", "Las campañas son anuncios abiertos que hacen las instituciones para recibir donaciones particulares, por ejemplo campañas alimenticias o colectas de dinero hospitalarias. Podés ver el estado actual de cada campaña en su detalle y sus métricas."];
     case "/dashboard/institutions":
       return ["Instituciones", "Visualiza el listado de instituciones"];
     case "/dashboard/metrics":

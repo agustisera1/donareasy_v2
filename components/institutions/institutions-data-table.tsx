@@ -81,6 +81,10 @@ export function InstitutionsDataTable({ rows }: InstitutionsDataTableProps) {
         errorMessage={rows ? null : "No se pudieron cargar las instituciones. Recargá la página."}
         emptyMessage="No hay instituciones disponibles"
         countLabel={(count) => `${count} institución(es)`}
+        search={{
+          placeholder: "Buscar por nombre, director o ubicación…",
+          columnIds: ["name", "director", "city", "province"],
+        }}
       />
       {selected && (
         <>

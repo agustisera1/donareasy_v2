@@ -9,9 +9,10 @@ export const hasEnvVars =
 /**
  * Formatea una fecha en formato de string ISO a formato legible en español (Argentina)
  * @param dateString - String de fecha en formato ISO (ej: "2024-01-15T00:00:00.000Z")
- * @returns String formateado (ej: "15 de enero de 2024")
+ * @param style - "long" (ej: "15 de enero de 2024") o "short" (ej: "15/01/2024")
  */
-export function formatDate(dateString: string | null): string {
+export function formatDate(dateString: string | null, style: "long" | "short" = "long"): string {
+  const pattern = style === "short" ? "dd/MM/yyyy" : "d 'de' MMMM 'de' yyyy";
   if (!dateString) {
     console.warn("[formatDate]: dateString is null");
     return "";
@@ -21,11 +22,11 @@ export function formatDate(dateString: string | null): string {
     const [year, month, day] = dateString.split("-").map(Number);
     // month - 1 porque JavaScript usa índices 0-11 para los meses
     const date = new Date(year, month - 1, day);
-    return format(date, "d 'de' MMMM 'de' yyyy", { locale: es });
+    return format(date, pattern, { locale: es });
   }
 
   // Para fechas ISO con hora
-  return format(parseISO(dateString), "d 'de' MMMM 'de' yyyy", { locale: es });
+  return format(parseISO(dateString), pattern, { locale: es });
 }
 
 /**

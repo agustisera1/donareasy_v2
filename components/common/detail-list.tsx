@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 export function DetailList({ children }: { children: ReactNode }) {
   return (
-    <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-4 text-sm">
+    <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-3 text-sm">
       {children}
     </dl>
   );

@@ -17,8 +17,8 @@ export function CampaignMetrics({ metrics }: { metrics: DonationMetrics }) {
       />
     );
   return (
-    <div className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-3">
+    <div className="space-y-3">
+      <div className="grid gap-3 sm:grid-cols-3">
         <StatCard label="Donaciones recibidas" value={metrics.total} />
         <StatCard
           label="Tasa de aceptación"

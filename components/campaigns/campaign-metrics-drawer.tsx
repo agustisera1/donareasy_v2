@@ -23,7 +23,7 @@ export function CampaignMetricsDrawer({ campaign, open, onOpenChange }: Campaign
       title={`Métricas de ${campaign.type}`}
       description="Resumen de las donaciones hechas a la campaña"
       footer={<Button onClick={() => onOpenChange(false)}>Cerrar</Button>}
-      className="data-[vaul-drawer-direction=right]:sm:max-w-2xl"
+      wide
     >
       {isError ? (
         <p className="text-sm text-muted-foreground">No se pudieron cargar las métricas. Recargá la página.</p>

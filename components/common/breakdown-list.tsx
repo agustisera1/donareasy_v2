@@ -13,13 +13,13 @@ interface BreakdownListProps {
 
 export function BreakdownList({ title, description, items, total }: BreakdownListProps) {
   return (
-    <Card>
+    <Card className="gap-3 py-3 [--card-spacing:--spacing(3)]">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
       <CardContent>
-        <ul className="space-y-4">
+        <ul className="space-y-3">
           {items.map((item) => {
             const percentage = calculatePercentage(item.count, total, 0);
             return (
