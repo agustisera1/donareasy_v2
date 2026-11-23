@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Ban, Check, Edit, Eye, Package, X } from "lucide-react";
 import { toast } from "sonner";
@@ -21,7 +21,7 @@ import type { ServiceResult } from "@/lib/shared/result";
 import type { DonationWithRelations as Donation, RoleName } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import { CategoryBadge } from "./category-badge";
-import { CreateDonationDrawer, type DonationCampaign } from "./create-donation-drawer";
+import { CreateDonationDrawer } from "./create-donation-drawer";
 import { donationTypeTabs, parseDonationTypeTab, type InstitutionOption } from "./donation-form-model";
 import { EditDonationDrawer } from "./edit-donation-drawer";
 import { RejectDonationDialog } from "./reject-donation-dialog";
@@ -47,12 +47,11 @@ interface DonationsDataTableProps {
   rows: Donation[] | null;
   actor: DonationsActor | null;
   institutions: InstitutionOption[];
-  campaign: DonationCampaign | null;
 }
 
-export function DonationsDataTable({ rows, actor, institutions, campaign }: DonationsDataTableProps) {
-  const router = useRouter();
-  const type = parseDonationTypeTab(useSearchParams().get("type") ?? undefined);
+export function DonationsDataTable({ rows, actor, institutions }: DonationsDataTableProps) {
+  const searchParams = useSearchParams();
+  const type = parseDonationTypeTab(searchParams.get("type") ?? undefined);
   const visibleRows =
     type === "all" ? rows : rows?.filter((donation) => (donation.amount !== null) === (type === "money"));
   const pathname = usePathname();
@@ -62,6 +61,12 @@ export function DonationsDataTable({ rows, actor, institutions, campaign }: Dona
   const isDonor = actor?.role === "donor";
   const isInstitution = actor?.role === "institution";
   const entityId = actor?.entityId ?? "";
+  const campaignId = searchParams.get("campaign_id");
+  const campaignInstitutionId = searchParams.get("institution_id");
+  const campaign =
+    isDonor && campaignId && campaignInstitutionId
+      ? { campaignId, institutionId: campaignInstitutionId }
+      : null;
 
   function open(next: Exclude<Panel, null>, donation?: Donation) {
     if (donation) setSelectedId(donation.id);
@@ -72,11 +77,12 @@ export function DonationsDataTable({ rows, actor, institutions, campaign }: Dona
     if (!open) setPanel(null);
   }
 
-  // "Donar" desde una campaña llega con ?campaign_id: el drawer abierto se deriva de la URL.
+  // "Donar" desde una campaña llega con ?campaign_id: el drawer abierto se deriva de la URL, y al
+  // cerrar se saca el param con la History API (sin esperar al server).
   function closeCreate(open: boolean) {
     if (open) return;
     setPanel(null);
-    if (campaign) router.replace(pathname);
+    if (campaign) window.history.replaceState(null, "", pathname);
   }
 
   function confirmWith(action: (input: { donationId: number }) => Promise<ServiceResult<null>>, success: string) {

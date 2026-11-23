@@ -66,7 +66,6 @@ export function CampaignFormDrawer({
       onOpenChange={(next) => !next && close()}
       title={title}
       description={description}
-      dismissible={false}
       footer={
         <>
           <Button type="button" variant="outline" onClick={close} disabled={isSubmitting}>

@@ -66,7 +66,6 @@ export function CreateDonationDrawer({
       onOpenChange={(next) => !next && close()}
       title="Nueva donación"
       description={campaign ? "Tu donación va a la campaña elegida" : "Completá los datos de tu donación"}
-      dismissible={false}
       footer={
         <>
           <Button type="button" variant="outline" onClick={close} disabled={isSubmitting}>
