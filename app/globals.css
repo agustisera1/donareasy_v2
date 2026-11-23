@@ -162,7 +162,13 @@
   }
   html {
     @apply font-sans;
+    scrollbar-gutter: stable;
   }
+}
+
+/* El gutter estable ya reserva el scrollbar; react-remove-scroll-bar (scroll-lock de Radix) lo compensaría de nuevo. */
+html body[data-scroll-locked] {
+  margin-right: 0 !important;
 }
 
 /* Fuera de @layer: si no, el `transition-colors` del Input le gana y Chrome pinta su fondo de autocompletado. */
