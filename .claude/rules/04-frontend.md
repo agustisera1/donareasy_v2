@@ -65,7 +65,7 @@ semánticos en un solo lugar (p. ej. `status-badge.tsx`), no con clases sueltas 
 | `BreakdownList` | Reparto de un total en barras (`Progress`) con conteo y %; `toBreakdownItems(counts, labels)` arma los items. Uso: `components/campaigns/campaign-metrics.tsx` | ✓ |
 | `InfoTooltip`, `InfoTooltipList` | Ícono ⓘ con acento `tertiary` y tooltip de contenido rico; `InfoTooltipList` lista pares etiqueta / descripción. Uso: `components/donations/donation-form-fields.tsx` | Client |
 | `ImageInput` | Carga de una imagen: zona `border-dashed` que abre el selector y, con imagen, preview con Reemplazar / Quitar. Uso: `components/donations/donation-form-fields.tsx` | Client |
-| `ImagePreview` | Imagen con `next/image` que abre el original en otra pestaña. Uso: `components/donations/view-donation-drawer.tsx` | ✓ |
+| `ImagePreview` | Imagen con `next/image`; al clickearla abre un visor (`Dialog`) con zoom por pasos. Uso: `components/donations/view-donation-drawer.tsx` | Client |
 | `EmptyState` | Estado vacío sobre `ui/empty` (ícono, título, descripción, acción opcionales). Uso: `components/institutions/institution-metrics.tsx` | ✓ |
 
 Primitivos objetivo (se crean en `common/` la primera vez que se necesitan):
