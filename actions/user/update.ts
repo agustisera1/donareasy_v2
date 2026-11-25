@@ -1,94 +1,48 @@
 "use server";
 
+import { authorize } from "@/lib/auth/authorize";
+import { fail, unexpected, type ServiceResult } from "@/lib/shared/result";
+import { revalidatePaths } from "@/lib/shared/revalidate";
 import { createClient } from "@/lib/supabase/server";
+import {
+  donorEditSchema,
+  institutionEditSchema,
+  type DonorEditFormSchema,
+  type InstitutionEditFormSchema,
+} from "@/lib/validations";
 
-// Tipo para actualizar datos de donor
-export type DonorUpdateData = {
-  name: string;
-  lastname: string;
-  dni: string; // Se convierte a number antes de actualizar
-  phone: string;
-  address: string;
-  province: string;
-  city: string;
-};
+export async function updateDonor(input: DonorEditFormSchema): Promise<ServiceResult<null>> {
+  const auth = await authorize("profile:donor");
+  if (!auth.ok) return auth;
 
-// Tipo para actualizar datos de institution
-export type InstitutionUpdateData = {
-  director: string;
-  phone: string;
-  address: string;
-  province: string;
-  city: string;
-  bank: string;
-  lore?: string; // Opcional
-};
+  const parsed = donorEditSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", parsed.error.issues[0].message);
 
-export async function updateDonor(formData: DonorUpdateData, userId: string) {
   const supabase = await createClient();
+  const { error } = await supabase
+    .from("donors")
+    .update({ ...parsed.data, dni: parseInt(parsed.data.dni, 10) })
+    .eq("id", auth.data.entityId);
+  if (error) return unexpected("[updateDonor]", error);
 
-  try {
-    // Actualizar la tabla donors usando user_id
-    const { error: donorError } = await supabase
-      .from("donors")
-      .update({
-        name: formData.name,
-        lastname: formData.lastname,
-        dni: parseInt(formData.dni, 10),
-        address: formData.address,
-        province: formData.province,
-        city: formData.city,
-        phone: formData.phone,
-      })
-      .eq("user_id", userId);
-
-    if (donorError) {
-      throw new Error(`Error updating donor: ${donorError.message}`);
-    }
-
-    return { success: true };
-  } catch (error) {
-    console.error("Error in updateDonor:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
+  revalidatePaths([{ path: "/dashboard", type: "layout" }]);
+  return { ok: true, data: null };
 }
 
-export async function updateInstitution(
-  formData: InstitutionUpdateData,
-  userId: string
-) {
+export async function updateInstitution(input: InstitutionEditFormSchema): Promise<ServiceResult<null>> {
+  const auth = await authorize("profile:institution");
+  if (!auth.ok) return auth;
+
+  const parsed = institutionEditSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", parsed.error.issues[0].message);
+
   const supabase = await createClient();
+  const { error } = await supabase
+    .from("institutions")
+    .update({ ...parsed.data, lore: parsed.data.lore || null })
+    .eq("id", auth.data.entityId);
+  if (error) return unexpected("[updateInstitution]", error);
 
-  try {
-    // Actualizar la tabla institutions usando user_id
-    const { error: institutionError } = await supabase
-      .from("institutions")
-      .update({
-        director: formData.director,
-        address: formData.address,
-        province: formData.province,
-        city: formData.city,
-        phone: formData.phone,
-        bank: formData.bank,
-        lore: formData.lore || null,
-      })
-      .eq("user_id", userId);
-
-    if (institutionError) {
-      throw new Error(
-        `Error updating institution: ${institutionError.message}`
-      );
-    }
-
-    return { success: true };
-  } catch (error) {
-    console.error("Error in updateInstitution:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
+  revalidatePaths([{ path: "/dashboard", type: "layout" }]);
+  return { ok: true, data: null };
 }

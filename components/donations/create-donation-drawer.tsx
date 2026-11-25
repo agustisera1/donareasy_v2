@@ -2,11 +2,13 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { DrawerLayout } from "@/components/common/drawer-layout";
 import { Button } from "@/components/ui/button";
 import { createDonation } from "@/actions/donations/create";
+import { metricsKeys } from "@/hooks/metrics-keys";
 import { uploadAttachments } from "@/lib/uploads/upload-attachments";
 import { donationFormSchema, type DonationFormValues } from "@/lib/validations";
 import { DonationFormFields } from "./donation-form-fields";
@@ -32,6 +34,7 @@ export function CreateDonationDrawer({
   institutions,
   campaign,
 }: CreateDonationDrawerProps) {
+  const queryClient = useQueryClient();
   const defaultValues = { ...emptyDonationForm, institutionId: campaign?.institutionId ?? "" };
   const form = useForm<DonationFormValues>({
     resolver: zodResolver(donationFormSchema),
@@ -56,6 +59,7 @@ export function CreateDonationDrawer({
     });
     if (!result.ok) return void toast.error(result.error);
 
+    void queryClient.invalidateQueries({ queryKey: metricsKeys.all });
     toast.success("Donación creada");
     close();
   }

@@ -8,6 +8,8 @@ const supabaseHostname = process.env.NEXT_PUBLIC_SUPABASE_URL
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  partialPrefetching: true,
+  experimental: { staleTimes: { dynamic: 30 } },
   images: {
     remotePatterns: supabaseHostname
       ? [

@@ -2,7 +2,10 @@
 
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, Fragment } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Fragment } from "react";
+import { toast } from "sonner";
+import { updateDonor, updateInstitution } from "@/actions/user/update";
 import { ArPhoneInput } from "@/components/common/ar-phone-input";
 import { DrawerLayout } from "@/components/common/drawer-layout";
 import { Button } from "@/components/ui/button";
@@ -16,7 +19,8 @@ import {
   type DonorEditFormSchema,
   type InstitutionEditFormSchema,
 } from "@/lib/validations";
-import { useUpdateUser } from "@/hooks/use-update-user";
+import { userKeys } from "@/hooks/user-keys";
+import type { ServiceResult } from "@/lib/shared/result";
 
 type DonorEditFormData = DonorEditFormSchema;
 type InstitutionEditFormData = InstitutionEditFormSchema;
@@ -25,23 +29,20 @@ interface EditDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user: DonorData | InstitutionData | null;
-  onUpdateSuccess?: () => void; // Callback opcional para refrescar datos después de actualizar
 }
 
 export function EditDrawer({
   open,
   onOpenChange,
   user,
-  onUpdateSuccess,
 }: EditDrawerProps) {
   const isDonor = user?.role === "donor";
   const isInstitution = user?.role === "institution";
-  const { updateUser, isLoading } = useUpdateUser();
+  const queryClient = useQueryClient();
 
   // Form para donor
   const donorForm = useForm<DonorEditFormData>({
     resolver: zodResolver(donorEditSchema),
-    mode: "onChange", // Validar en tiempo real
     defaultValues: {
       name: "",
       lastname: "",
@@ -51,12 +52,22 @@ export function EditDrawer({
       province: "",
       city: "",
     },
+    values: isDonor
+      ? {
+          name: user.name,
+          lastname: user.lastname,
+          dni: user.dni.toString(),
+          phone: user.phone,
+          address: user.address,
+          province: user.province,
+          city: user.city,
+        }
+      : undefined,
   });
 
   // Form para institution
   const institutionForm = useForm<InstitutionEditFormData>({
     resolver: zodResolver(institutionEditSchema),
-    mode: "onChange", // Validar en tiempo real
     defaultValues: {
       director: "",
       phone: "",
@@ -66,49 +77,41 @@ export function EditDrawer({
       bank: "",
       lore: "",
     },
+    values: isInstitution
+      ? {
+          director: user.director,
+          phone: user.phone,
+          address: user.address,
+          province: user.province,
+          city: user.city,
+          bank: user.bank || "",
+          lore: user.lore || "",
+        }
+      : undefined,
   });
 
-  // Actualizar valores del formulario cuando se abre el drawer o cuando cambian los datos del usuario
-  useEffect(() => {
-    if (!open || !user) return;
+  const isSubmitting = donorForm.formState.isSubmitting || institutionForm.formState.isSubmitting;
 
-    if (isDonor) {
-      donorForm.reset({
-        name: user.name,
-        lastname: user.lastname,
-        dni: user.dni.toString(),
-        phone: user.phone,
-        address: user.address,
-        province: user.province,
-        city: user.city,
-      });
-    } else if (isInstitution) {
-      institutionForm.reset({
-        director: user.director,
-        phone: user.phone,
-        address: user.address,
-        province: user.province,
-        city: user.city,
-        bank: user.bank || "",
-        lore: user.lore || "",
-      });
-    }
-  }, [open, user, isDonor, isInstitution, donorForm, institutionForm]);
+  function close() {
+    donorForm.reset();
+    institutionForm.reset();
+    onOpenChange(false);
+  }
 
-  const onSubmit = async (
-    data: DonorEditFormData | InstitutionEditFormData
-  ) => {
-    const success = await updateUser(data, user);
-    if (success) {
-      onOpenChange(false);
-      onUpdateSuccess?.(); // Refrescar datos después de actualizar exitosamente
-    }
-  };
+  async function finish(result: ServiceResult<null>) {
+    if (!result.ok) return void toast.error(result.error);
+    await queryClient.invalidateQueries({ queryKey: userKeys.all });
+    toast.success("Perfil actualizado");
+    close();
+  }
+
+  const submitDonor = donorForm.handleSubmit(async (data) => finish(await updateDonor(data)));
+  const submitInstitution = institutionForm.handleSubmit(async (data) => finish(await updateInstitution(data)));
 
   return (
     <DrawerLayout
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={(next) => (next ? onOpenChange(true) : close())}
       title="Editar perfil"
       description="Editar los datos del usuario"
       footer={
@@ -116,28 +119,24 @@ export function EditDrawer({
           <Button
             type="button"
             variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isLoading}
+            onClick={close}
+            disabled={isSubmitting}
           >
             Cancelar
           </Button>
           <Button
-            type="button"
-            onClick={
-              isDonor
-                ? donorForm.handleSubmit(onSubmit)
-                : institutionForm.handleSubmit(onSubmit)
-            }
-            disabled={isLoading || (!isDonor && !isInstitution)}
+            type="submit"
+            form="edit-profile-form"
+            disabled={isSubmitting || (!isDonor && !isInstitution)}
           >
-            {isLoading ? "Guardando…" : "Guardar cambios"}
+            {isSubmitting ? "Guardando…" : "Guardar cambios"}
           </Button>
         </>
       }
     >
       {isDonor ? (
         <Fragment>
-          <form className="grid grid-cols-2 gap-4">
+          <form id="edit-profile-form" onSubmit={submitDonor} className="grid grid-cols-2 gap-4">
             <Field data-invalid={!!donorForm.formState.errors.name}>
               <FieldLabel htmlFor="name">Nombre</FieldLabel>
               <Input
@@ -231,7 +230,7 @@ export function EditDrawer({
         </Fragment>
       ) : isInstitution ? (
         <Fragment>
-          <form className="grid grid-cols-2 gap-4">
+          <form id="edit-profile-form" onSubmit={submitInstitution} className="grid grid-cols-2 gap-4">
             <Field data-invalid={!!institutionForm.formState.errors.director}>
               <FieldLabel htmlFor="director">Director</FieldLabel>
               <Input

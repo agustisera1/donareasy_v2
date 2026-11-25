@@ -1,8 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
-import { authErrorMessage } from "@/lib/auth-errors";
+import { signIn } from "@/actions/auth/sign-in";
 import { loginSchema, type LoginInput } from "@/lib/validations";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,14 +16,12 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/common/password-input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
-  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -35,17 +32,9 @@ export function LoginForm({
     defaultValues: { email: "", password: "" },
   });
 
-  async function onSubmit({ email, password }: LoginInput) {
-    const supabase = createClient();
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return setError("root", { message: authErrorMessage(error) });
-
-    const { data: profile } = await supabase
-      .from("users")
-      .select("onboarding_complete")
-      .eq("id", data.user.id)
-      .maybeSingle();
-    router.push(profile?.onboarding_complete ? "/dashboard" : "/onboarding");
+  async function onSubmit(data: LoginInput) {
+    const result = await signIn(data);
+    if (!result.ok) setError("root", { message: result.error });
   }
 
   return (

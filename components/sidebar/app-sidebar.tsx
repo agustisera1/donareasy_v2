@@ -23,8 +23,9 @@ import {
 import Link from "next/link";
 import { DropdownMenuContent, DropdownMenuItem } from "../ui/dropdown-menu";
 import { DropdownMenu, DropdownMenuTrigger } from "../ui/dropdown-menu";
-import { usePathname, useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { usePathname } from "next/navigation";
+import { toast } from "sonner";
+import { signOut } from "@/actions/auth/sign-out";
 import { Fragment, useState } from "react";
 import { ProfileDrawer } from "./profile-drawer";
 import { EditDrawer } from "./edit-drawer";
@@ -61,7 +62,6 @@ export function AppSidebar({
 }: {
   mode?: "dashboard" | "onboarding";
 }) {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -70,7 +70,6 @@ export function AppSidebar({
   const {
     user,
     loading: loadingUser,
-    refetch,
   } = useUser({
     enabled: mode !== "onboarding",
   });
@@ -78,12 +77,9 @@ export function AppSidebar({
   const pathname = usePathname();
   const isActive = (url: string) => pathname === url;
   const logout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    // Limpiar el cache de TanStack Query, especialmente el del usuario
-    queryClient.removeQueries({ queryKey: ["user"] });
-    queryClient.clear(); // Limpiar todo el cache para evitar datos de sesión anterior
-    router.push("/auth/login");
+    queryClient.clear();
+    const result = await signOut();
+    if (!result.ok) toast.error(result.error);
   };
 
   const popAccountDialog = () => setProfileDialogOpen(true);
@@ -129,7 +125,6 @@ export function AppSidebar({
           open={editDialogOpen}
           onOpenChange={setEditDialogOpen}
           user={user}
-          onUpdateSuccess={refetch}
         />
 
         <ProfileDrawer
