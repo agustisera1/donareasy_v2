@@ -12,6 +12,8 @@ const PERMISSIONS = {
   "donations:manage": ["institution"],
   "campaigns:list": ["donor", "institution"],
   "campaigns:manage": ["institution"],
+  "profile:donor": ["donor"],
+  "profile:institution": ["institution"],
 } as const satisfies Record<string, readonly RoleName[]>;
 
 export type Permission = keyof typeof PERMISSIONS;

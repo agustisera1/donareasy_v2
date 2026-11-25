@@ -2,6 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import {
@@ -17,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
 import { rejectDonation } from "@/actions/donations/reject";
+import { metricsKeys } from "@/hooks/metrics-keys";
 import { rejectDonationSchema, type RejectDonationInput } from "@/lib/validations";
 
 interface RejectDonationDialogProps {
@@ -27,6 +29,7 @@ interface RejectDonationDialogProps {
 
 // Diálogo con contenido propio: form RHF dentro de un AlertDialog (04-frontend, ConfirmDialog).
 export function RejectDonationDialog({ donationId, open, onOpenChange }: RejectDonationDialogProps) {
+  const queryClient = useQueryClient();
   const {
     register,
     handleSubmit,
@@ -46,6 +49,7 @@ export function RejectDonationDialog({ donationId, open, onOpenChange }: RejectD
   async function submit(values: RejectDonationInput) {
     const result = await rejectDonation(values);
     if (!result.ok) return void toast.error(result.error);
+    void queryClient.invalidateQueries({ queryKey: metricsKeys.all });
     toast.success("Donación rechazada");
     reset({ donationId, reason: "" });
     onOpenChange(false);

@@ -2,6 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { unexpected, type ServiceResult } from "@/lib/shared/result";
 
@@ -10,6 +11,8 @@ export type AccountStatus = "onboarding" | "pending" | "active";
 // Sin authorize: el estado de cuenta es previo al rol. Sin sesión, va al login.
 export const getAccountStatus = cache(
   async (): Promise<ServiceResult<AccountStatus>> => {
+    // getUser() usa Date.now() internamente: se excluye del prerender.
+    await connection();
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) redirect("/auth/login");

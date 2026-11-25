@@ -2,11 +2,13 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { DrawerLayout } from "@/components/common/drawer-layout";
 import { Button } from "@/components/ui/button";
 import { updateDonation } from "@/actions/donations/update";
+import { metricsKeys } from "@/hooks/metrics-keys";
 import type { Donation } from "@/lib/types";
 import { uploadAttachments } from "@/lib/uploads/upload-attachments";
 import { editDonationFormSchema, type DonationFormValues } from "@/lib/validations";
@@ -21,6 +23,7 @@ interface EditDonationDrawerProps {
 
 // Se monta con `key={donation.id}`: cambiar de donación resetea el form sin un efecto.
 export function EditDonationDrawer({ donation, open, onOpenChange }: EditDonationDrawerProps) {
+  const queryClient = useQueryClient();
   const defaultValues = formValuesFromDonation(donation);
   const form = useForm<DonationFormValues>({
     resolver: zodResolver(editDonationFormSchema),
@@ -48,6 +51,7 @@ export function EditDonationDrawer({ donation, open, onOpenChange }: EditDonatio
     });
     if (!result.ok) return void toast.error(result.error);
 
+    void queryClient.invalidateQueries({ queryKey: metricsKeys.all });
     toast.success("Donación actualizada");
     reset({ ...values, attachment: null });
     onOpenChange(false);

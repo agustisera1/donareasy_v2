@@ -4,6 +4,7 @@ import { useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Ban, Check, Edit, Eye, Package, X } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import { DataTableTabs } from "@/components/common/data-table-tabs";
 import { acceptDonation } from "@/actions/donations/accept";
 import { cancelDonation } from "@/actions/donations/cancel";
 import { deliverDonation } from "@/actions/donations/deliver";
+import { metricsKeys } from "@/hooks/metrics-keys";
 import { categoryTranslations } from "@/lib/constants";
 import { canAccept, canDeliver, canEditOrCancel, canReject } from "@/lib/policies/donation";
 import type { ServiceResult } from "@/lib/shared/result";
@@ -50,6 +52,7 @@ interface DonationsDataTableProps {
 }
 
 export function DonationsDataTable({ rows, actor, institutions }: DonationsDataTableProps) {
+  const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const type = parseDonationTypeTab(searchParams.get("type") ?? undefined);
   const visibleRows =
@@ -93,6 +96,7 @@ export function DonationsDataTable({ rows, actor, institutions }: DonationsDataT
         toast.error(result.error);
         return false;
       }
+      void queryClient.invalidateQueries({ queryKey: metricsKeys.all });
       toast.success(success);
     };
   }

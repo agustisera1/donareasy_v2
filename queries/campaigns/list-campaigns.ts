@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cacheLife } from "next/cache";
 import { authorize, type Actor } from "@/lib/auth/authorize";
 import { createClient } from "@/lib/supabase/server";
 import { unexpected, type ServiceResult } from "@/lib/shared/result";
@@ -8,6 +9,9 @@ import type { CampaignWithInstitution } from "@/lib/types";
 const MAX_CAMPAIGNS = 100;
 
 export async function listCampaigns(): Promise<ServiceResult<{ campaigns: CampaignWithInstitution[]; actor: Actor }>> {
+  "use cache: private";
+  cacheLife("minutes");
+
   const auth = await authorize("campaigns:list");
   if (!auth.ok) return auth;
 

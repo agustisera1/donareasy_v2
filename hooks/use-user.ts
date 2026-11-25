@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { userKeys } from "./user-keys";
 import { DonorData, InstitutionData } from "@/app/api/user/route";
 
 interface UseUserOptions {
@@ -11,17 +12,16 @@ interface UseUserReturn {
   user: DonorData | InstitutionData | null;
   loading: boolean;
   error: Error | null;
-  refetch: () => Promise<void>;
 }
 
 /**
- * Hook para manejar el estado del usuario y proporcionar función de refetch
+ * Hook para manejar el estado del usuario
  * Implementado con TanStack Query para caché automático, deduplicación y revalidación
  *
  * @param options - Opciones del hook
  * @param options.enabled - Si se debe hacer fetch automáticamente (default: true)
  *
- * @returns {UseUserReturn} Objeto con user, loading, error y refetch
+ * @returns {UseUserReturn} Objeto con user, loading y error
  */
 export function useUser(
   options: UseUserOptions = { enabled: true }
@@ -30,9 +30,8 @@ export function useUser(
     data: user = null,
     isLoading,
     error,
-    refetch: queryRefetch,
   } = useQuery({
-    queryKey: ["user"],
+    queryKey: userKeys.all,
     queryFn: async () => {
       const response = await fetch("/api/user");
 
@@ -48,16 +47,10 @@ export function useUser(
     gcTime: 10 * 60 * 1000, // 10 minutos - tiempo en caché
   });
 
-  // Wrapper para refetch que mantiene la misma firma que antes
-  const refetch = async () => {
-    await queryRefetch();
-  };
-
   return {
     user,
     loading: isLoading,
     error:
       error instanceof Error ? error : error ? new Error(String(error)) : null,
-    refetch,
   };
 }
